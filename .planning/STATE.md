@@ -12,7 +12,7 @@
 
 ```text
 [Phase 0: Base Skeleton & DB Setup] ◄── [VỊ TRÍ HIỆN TẠI - CHUẨN BỊ THỰC THI]
-  ├── Task-001: Maven Spring Boot 3.x Skeleton
+  ├── Task-001: Maven Spring Boot 4.x & Java 22 Skeleton
   ├── Task-002: Kết nối SQL Server ute_express
   ├── Task-003: Khung Dual SecurityFilterChain & BCrypt
   └── Task-004: Master Layout JSP Fragments Bootstrap 5
@@ -37,7 +37,7 @@
 
 ## 3. CÁC QUYẾT ĐỊNH KIẾN TRÚC ĐÃ KÝ DUYỆT (ACTIVE ADRs)
 
-Toàn bộ 7 quyết định dưới đây đã được Trưởng nhóm (User) phê duyệt theo **Phương án 1** trong Giao thức dừng khẩn cấp (Stop-The-Line Protocol):
+Toàn bộ 8 quyết định dưới đây đã được Trưởng nhóm (User) phê duyệt:
 
 * **ADR-01: Định tuyến Ma trận Tĩnh (Route Matrix Rules):**
   - Giữ nguyên CSDL 25 bảng của `schema.sql`, không thêm bảng `hub_routing_rules`.
@@ -57,6 +57,9 @@ Toàn bộ 7 quyết định dưới đây đã được Trưởng nhóm (User) 
   - Sử dụng 3 trạng thái chi tiết theo DDL: `MATCHED` (Khớp), `SHORTAGE` (Thiếu tiền), `OVERAGE` (Thừa tiền).
 * **ADR-07: Thống Nhất Quy Mô 25 Bảng Vật Lý:**
   - Xác nhận hệ thống có chính xác 25 bảng vật lý / 25 thực thể JPA chia đều cho 3 thành viên theo tỷ lệ 9 - 7 - 9.
+* **ADR-08: Nền tảng Runtime Spring Boot 4.x và Java 22:**
+  - Áp dụng Spring Boot 4.x và Java 22 (`<java.version>22</java.version>`) tương thích hoàn hảo với môi trường máy chủ phát triển (JDK 22, Maven 3.9.11).
+  - Tuân thủ 100% toàn bộ bài giảng và danh mục cấm tại `docs/rule.md`.
 
 ---
 

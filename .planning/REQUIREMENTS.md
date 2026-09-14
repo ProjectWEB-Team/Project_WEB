@@ -2,7 +2,8 @@
 ## Hệ thống Quản lý Chuỗi Giao nhận Logistics UTEExpress
 **Framework Quản phối:** GSD Core on Antigravity  
 **Phiên bản:** 1.0 (Ground Truth Synchronized)  
-**Nguồn chuẩn:** `docs/UTEExpress_Workflow.md`, `docs/LECTURE_STANDARDS.md`, `docs/schema.sql`, `docs/ERD.md`  
+**Nguồn chuẩn:** `docs/rule.md` (Bài giảng đầy đủ ThS. Nguyễn Hữu Trung - HCMUTE), `docs/UTEExpress_Workflow.md`, `docs/schema.sql`, `docs/ERD.md`  
+**Công nghệ & Runtime:** Spring Boot 4.x + Java 22 (JDK 22) + Maven 3.9.x + SQL Server 2019+  
 **Quyết định phê duyệt:** Phương án 1 cho cả 7 điểm xung đột (Bảo toàn nguyên vẹn 25 bảng vật lý trong `schema.sql`).
 
 ---
@@ -16,9 +17,10 @@
 
 ### 1.2. Nguồn Chân lý Duy nhất (Single Source of Truth)
 1. **Cơ sở dữ liệu vật lý:** 25 bảng chuẩn hóa theo `docs/schema.sql` (hệ quản trị Microsoft SQL Server 2019+).
-2. **Quy chuẩn lập trình:** `docs/LECTURE_STANDARDS.md` (ThS. Nguyễn Hữu Trung - HCMUTE): Kiến trúc 3 tầng, PRG Pattern, Dual Validation, JPA Fetch LAZY, BCrypt, Clean Code.
+2. **Quy chuẩn lập trình toàn diện:** `docs/rule.md` (Toàn bộ bài giảng và quy chuẩn ThS. Nguyễn Hữu Trung - HCMUTE): Kiến trúc 3 tầng, PRG Pattern, Dual Validation, JPA Fetch LAZY, BCrypt, Clean Code, 10 nguyên tắc Clean Code và danh mục cấm tuyệt đối.
 3. **Mô hình thực thể:** `docs/ERD.md` chia 4 cụm phân hệ.
 4. **Nghiệp vụ chi tiết:** 109 mục nghiệp vụ trong `docs/UTEExpress_Workflow.md`.
+5. **Nền tảng thực thi:** Spring Boot 4.x trên nền Java 22 (JDK 22) kết nối SQL Server 2019+.
 
 ---
 

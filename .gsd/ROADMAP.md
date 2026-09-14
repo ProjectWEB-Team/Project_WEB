@@ -50,13 +50,13 @@ Mọi thành viên và Subagent khi hoàn thành một đơn vị công việc *
 ---
 
 ## PHASE 0: BASE SKELETON & DATABASE SETUP
-* **Mục tiêu:** Thiết lập khung dự án Maven Spring Boot 3.x, kết nối SQL Server, cấu hình bảo mật kép Dual SecurityFilterChain, chuẩn bị master layout Bootstrap 5 và kiểm thử kết nối CSDL 25 bảng.
+* **Mục tiêu:** Thiết lập khung dự án Maven Spring Boot 4.x với Java 22 (JDK 22), kết nối SQL Server, cấu hình bảo mật kép Dual SecurityFilterChain, chuẩn bị master layout Bootstrap 5 và kiểm thử kết nối CSDL 25 bảng.
 * **Người thực hiện chính:** `[TV1 - Team Lead]` (Hỗ trợ: `[TV2]`, `[TV3]` review)
 
 ### Danh sách Task Phase 0:
-* [ ] `TASK-001` `[TV1]` **Khởi tạo Maven Project Spring Boot 3.x:**
-  - Thiết lập `pom.xml` với Java 17+, Spring Boot Starter Web, Spring Data JPA, Spring Security, Spring Mail, Spring WebSocket, Jakarta Servlet/JSP API, JSTL 3.0 Jakarta (`jakarta.servlet.jsp.jstl`), `mssql-jdbc`.
-  - Deliverable: Project build thành công bằng `mvn clean compile`.
+* [ ] `TASK-001` `[TV1]` **Khởi tạo Maven Project Spring Boot 4.x & Java 22:**
+  - Thiết lập `pom.xml` với `spring-boot-starter-parent` 4.x, `<java.version>22</java.version>`, Spring Boot Starter Web, Spring Data JPA, Spring Security, Spring Mail, Spring WebSocket, Jakarta Servlet/JSP API, JSTL 3.0 Jakarta (`jakarta.servlet.jsp.jstl`), `mssql-jdbc`.
+  - Deliverable: Project build thành công bằng `mvn clean compile` trên JDK 22.
 * [ ] `TASK-002` `[TV1]` **Cấu hình Kết nối CSDL SQL Server:**
   - Tạo `src/main/resources/application.properties` kết nối SQL Server cổng 1433, database `ute_express`.
   - Cấu hình `spring.jpa.hibernate.ddl-auto=none` (bảo toàn schema.sql vật lý, cấm tự ý drop/alter table).

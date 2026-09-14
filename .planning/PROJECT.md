@@ -7,13 +7,13 @@ UTEExpress là hệ thống website quản lý chuỗi giao nhận Logistics thu
 Đảm bảo tính toàn vẹn và minh bạch của chuỗi cung ứng logistics: Mỗi kiện hàng đều được theo dõi vết trạng thái chính xác qua 13 State Machine chuẩn, kiểm soát chặt chẽ quá trình đóng bao/dỡ bao chống thất lạc, đối soát dòng tiền COD chuẩn xác và tự động bồi thường khi phát sinh sự cố.
 
 ## Architecture & Technology Stack
-- **Framework:** Spring Boot 3.x (Java 17+)
+- **Framework:** Spring Boot 4.x (Java 22, JDK 22)
 - **Presentation:** Spring MVC + JSP/JSTL 3.0 Jakarta + Bootstrap 5.3 Admin Layout
-- **Data Access:** Spring Data JPA / Hibernate 6.x + Microsoft SQL Server 2019+
+- **Data Access:** Spring Data JPA / Hibernate + Microsoft SQL Server 2019+
 - **Security:** Dual SecurityFilterChain (@Order(1) JWT Stateless cho REST API Mobile; @Order(2) Session Cookie cho Web SSR)
 - **Realtime:** Spring WebSocket STOMP (/ws)
 - **Database Schema:** 25 bảng vật lý chuẩn hóa (docs/schema.sql)
-- **Architecture Standards:** Tuân thủ 100% docs/LECTURE_STANDARDS.md (Kiến trúc 3 tầng, PRG Pattern, Dual Validation, JPA Fetch LAZY, BCrypt, Clean Code)
+- **Architecture Standards:** Tuân thủ 100% docs/rule.md (Bài giảng đầy đủ ThS. Nguyễn Hữu Trung - HCMUTE: Kiến trúc 3 tầng, PRG Pattern, Dual Validation, JPA Fetch LAZY, BCrypt, Clean Code)
 
 ## Team Allocation (Vertical Full-Stack Slices)
 1. **Thành viên 1 (Team Lead):** Phân hệ Vận hành Bưu cục & Trung chuyển Liên Hub (9 Entities: `hubs`, `employee_profiles`, `vehicles`, `transport_trips`, `parcel_containers`, `container_items`, `handovers`, `handover_containers`, `incidents`).
