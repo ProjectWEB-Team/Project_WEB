@@ -70,9 +70,12 @@ Mọi thành viên và Subagent khi hoàn thành một đơn vị công việc *
   - Deliverable: Khung bảo mật khởi động đạt chuẩn, các URL public truy cập được.
 * [ ] `TASK-004` `[TV3]` **Thiết lập Master Layout JSP Fragments & Bootstrap 5:**
   - Tạo cấu trúc thư mục `/WEB-INF/views/layout/`: `header.jsp`, `sidebar.jsp`, `footer.jsp`, `base.jsp`.
-  - Nhúng CDN Bootstrap 5.3, Bootstrap Icons, FontAwesome, jQuery.
+  - Nhúng CDN Bootstrap 5.3, Bootstrap Icons, FontAwesome, jQuery theo đúng `docs/UI_DESIGN_SYSTEM.md`.
   - Khai báo đúng chuẩn Taglib JSTL 3.0 Jakarta: `<%@ taglib prefix="c" uri="https://jakarta.ee/tags/jstl/core" %>`.
-  - Deliverable: Màn hình mẫu `index.jsp` sử dụng `<jsp:include>` render layout hoàn hảo không vỡ CSS.
+  - Thiết lập cấu trúc thẻ bảng màu chuẩn UTEExpress: Primary Navy `#0a2540`, Express Blue `#0d6efd`, Neutral Light `#f8fafc`.
+  - `[UI-STANDARD]`: Kích hoạt skill `gsd-ui-phase` / `gsd-ui-review` để thẩm định và kiểm tra độ tương thích responsive trên 3 kích thước (Mobile, Tablet, Desktop) và 6 trụ cột thị giác.
+  - `[EXECUTION-PIPELINE]`: Tuân thủ quy trình 4 nhịp: (1) Dựng cấu trúc layout base -> (2) Tích hợp fragments và menu điều hướng -> (3) Kích hoạt Skill UI/UX để áp chuẩn Bootstrap & `docs/UI_DESIGN_SYSTEM.md` -> (4) Kiểm thử và Atomic Commit.
+  - Deliverable: Màn hình mẫu `index.jsp` sử dụng `<jsp:include>` render layout hoàn hảo không vỡ CSS, đạt audit giao diện.
 
 ---
 
@@ -96,6 +99,9 @@ Mọi thành viên và Subagent khi hoàn thành một đơn vị công việc *
 * [ ] `TASK-105` `[TV1]` **UI Skeleton: Màn hình Hub Staff & Linehaul Driver:**
   - Tạo các view JSP thô trong `/WEB-INF/views/hub/`: `inbound.jsp`, `sorting.jsp`, `outbound.jsp`.
   - Tạo view JSP trong `/WEB-INF/views/driver/`: `trips.jsp`, `handover.jsp`.
+  - Bắt buộc áp dụng 13 Status Badges, Card Stat Counter, Action Card quét mã theo `docs/UI_DESIGN_SYSTEM.md`.
+  - `[UI-STANDARD]`: Bắt buộc kích hoạt skill `gsd-ui-review` (hoặc `gsd-ui-phase`) để thẩm định và chấm điểm 6 trụ cột thị giác đạt chuẩn trước khi hoàn thành task.
+  - `[EXECUTION-PIPELINE]`: Tuân thủ quy trình 4 nhịp: (1) Dựng Entity/Service -> (2) Dựng form/bảng JSP thô bắt đúng JSTL/EL -> (3) Kích hoạt Skill UI/UX để áp chuẩn Bootstrap & `docs/UI_DESIGN_SYSTEM.md` -> (4) Kiểm thử và Atomic Commit.
 
 ### Phân hệ 2 — `[TV2]` Cổng Khách hàng, Hiện trường & Realtime (7 Entities)
 * [ ] `TASK-106` `[TV2]` **Entity & Repo: Users:**
@@ -111,9 +117,12 @@ Mọi thành viên và Subagent khi hoàn thành một đơn vị công việc *
   - Tạo `ShipmentAssignment.java`, `PickupAttempt.java`, `DeliveryAttempt.java`.
   - Viết Repositories tương ứng.
 * [ ] `TASK-110` `[TV2]` **UI Skeleton: Trang chủ, Public Tracking & Mobile Shipper:**
-  - Tạo view `/WEB-INF/views/guest/`: `home.jsp`, `tracking.jsp` (Data Masking), `calculator.jsp`.
+  - Tạo view `/WEB-INF/views/guest/`: `home.jsp`, `tracking.jsp` (Data Masking & Vertical Stepper Timeline), `calculator.jsp`.
   - Tạo view `/WEB-INF/views/user/`: `create-shipment.jsp`, `my-shipments.jsp`.
   - Tạo view `/WEB-INF/views/shipper/`: `tasks.jsp`, `delivery-action.jsp`.
+  - Bắt buộc áp dụng Data Masking và Timeline CSS class theo `docs/UI_DESIGN_SYSTEM.md`.
+  - `[UI-STANDARD]`: Bắt buộc kích hoạt skill `gsd-ui-review` (hoặc `gsd-ui-phase`) để thẩm định và chấm điểm 6 trụ cột thị giác đạt chuẩn trước khi hoàn thành task.
+  - `[EXECUTION-PIPELINE]`: Tuân thủ quy trình 4 nhịp: (1) Dựng Entity/Service -> (2) Dựng form/bảng JSP thô bắt đúng JSTL/EL -> (3) Kích hoạt Skill UI/UX để áp chuẩn Bootstrap & `docs/UI_DESIGN_SYSTEM.md` -> (4) Kiểm thử và Atomic Commit.
 
 ### Phân hệ 3 — `[TV3]` Quản trị Mạng lưới, Báo cáo & Tài chính Đối soát (9 Entities)
 * [ ] `TASK-111` `[TV3]` **Entity & Repo: Wallets & PricingPolicies:**
@@ -130,6 +139,9 @@ Mọi thành viên và Subagent khi hoàn thành một đơn vị công việc *
 * [ ] `TASK-115` `[TV3]` **UI Skeleton: Admin & Manager Dashboard:**
   - Tạo view `/WEB-INF/views/admin/`: `hubs.jsp`, `pricing.jsp`, `employees.jsp`, `withdrawals.jsp`.
   - Tạo view `/WEB-INF/views/manager/`: `dashboard.jsp`, `reconciliation.jsp`, `daily-report.jsp`.
+  - Bắt buộc dùng chuẩn Card Stat Counter, Table Striped Hover, 13 Status Badges theo `docs/UI_DESIGN_SYSTEM.md`.
+  - `[UI-STANDARD]`: Bắt buộc kích hoạt skill `gsd-ui-review` (hoặc `gsd-ui-phase`) để thẩm định và chấm điểm 6 trụ cột thị giác đạt chuẩn trước khi hoàn thành task.
+  - `[EXECUTION-PIPELINE]`: Tuân thủ quy trình 4 nhịp: (1) Dựng Entity/Service -> (2) Dựng form/bảng JSP thô bắt đúng JSTL/EL -> (3) Kích hoạt Skill UI/UX để áp chuẩn Bootstrap & `docs/UI_DESIGN_SYSTEM.md` -> (4) Kiểm thử và Atomic Commit.
 
 ---
 
@@ -147,6 +159,9 @@ Mọi thành viên và Subagent khi hoàn thành một đơn vị công việc *
 * [ ] `TASK-203` `[TV1]` **TripManagementService & Controllers:**
   - Xây dựng `TransportTripService`: Khởi hành chuyến xe (`IN_TRANSIT`), đến nơi (`ARRIVED`).
   - Xây dựng `HubOperationController` và `LinehaulDriverController` xử lý PRG pattern sau mỗi lần quét mã.
+  - Tích hợp Dual Validation: validate Server-side, binding `errors` và `formData` vào view khi quét mã sai hoặc thiếu dữ liệu.
+  - `[UI-STANDARD]`: Kích hoạt skill `gsd-ui-review` kiểm tra thông báo flash messages, feedback lỗi form và trạng thái xe/kiện.
+  - `[EXECUTION-PIPELINE]`: Tuân thủ quy trình 4 nhịp: (1) Dựng Entity/Service -> (2) Dựng form/bảng JSP thô bắt đúng JSTL/EL -> (3) Kích hoạt Skill UI/UX để áp chuẩn Bootstrap & `docs/UI_DESIGN_SYSTEM.md` -> (4) Kiểm thử và Atomic Commit.
 
 ### Phân hệ 2 — `[TV2]` Nghiệp vụ Khách hàng & Hiện trường Shipper
 * [ ] `TASK-204` `[TV2]` **AuthService & OTP Email Verification:**
@@ -162,6 +177,9 @@ Mọi thành viên và Subagent khi hoàn thành một đơn vị công việc *
     - Xử lý thất bại: Phân loại Nhóm 1 (Hẹn lại tối đa 3 lần/3 ngày) vs Nhóm 2 (Fast-fail bom hàng/sai địa chỉ chuyển hoàn ngay).
 * [ ] `TASK-207` `[TV2]` **Customer & Shipper Controllers:**
   - Xây dựng `CustomerShipmentController`, `PublicTrackingController` (áp dụng che mờ Data Masking), `ShipperController` (kèm REST API `/api/shipper/**`).
+  - Tích hợp Dual Validation: hiển thị lỗi form tạo đơn, giữ nguyên dữ liệu đã nhập, không echo password.
+  - `[UI-STANDARD]`: Kích hoạt skill `gsd-ui-review` kiểm tra Form Ergonomics (giữ giá trị cũ, feedback lỗi đỏ d-block), Stepper Timeline và Data Masking.
+  - `[EXECUTION-PIPELINE]`: Tuân thủ quy trình 4 nhịp: (1) Dựng Entity/Service -> (2) Dựng form/bảng JSP thô bắt đúng JSTL/EL -> (3) Kích hoạt Skill UI/UX để áp chuẩn Bootstrap & `docs/UI_DESIGN_SYSTEM.md` -> (4) Kiểm thử và Atomic Commit.
 
 ### Phân hệ 3 — `[TV3]` Nghiệp vụ Quản trị, Báo cáo & Tài chính Đối soát
 * [ ] `TASK-208` `[TV3]` **NetworkManagementService & PricingPolicyService:**
@@ -178,6 +196,9 @@ Mọi thành viên và Subagent khi hoàn thành một đơn vị công việc *
   - Xây dựng `DisposedExceptionService`: Quản lý hàng hoàn quá hạn 7 ngày (hoặc 2 phút Demo) không nhận -> duyệt tiêu hủy/thanh lý `CLOSED_EXCEPTION (closure_reason = DISPOSED)`.
 * [ ] `TASK-211` `[TV3]` **Admin & Manager Controllers:**
   - Xây dựng `AdminController` và `ManagerController`, tuân thủ PRG pattern và Dual Validation.
+  - Xử lý các luồng duyệt rút tiền, đối soát ca Shipper lệch tiền, hiển thị flash message Toast/Alert chuẩn UX.
+  - `[UI-STANDARD]`: Kích hoạt skill `gsd-ui-review` kiểm tra các bảng đối soát, badge màu lệch tiền (`SHORTAGE`), modal xác nhận duyệt.
+  - `[EXECUTION-PIPELINE]`: Tuân thủ quy trình 4 nhịp: (1) Dựng Entity/Service -> (2) Dựng form/bảng JSP thô bắt đúng JSTL/EL -> (3) Kích hoạt Skill UI/UX để áp chuẩn Bootstrap & `docs/UI_DESIGN_SYSTEM.md` -> (4) Kiểm thử và Atomic Commit.
 
 ---
 

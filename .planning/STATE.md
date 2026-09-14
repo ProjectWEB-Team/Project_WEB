@@ -60,6 +60,10 @@ Toàn bộ 8 quyết định dưới đây đã được Trưởng nhóm (User) 
 * **ADR-08: Nền tảng Runtime Spring Boot 4.x và Java 22:**
   - Áp dụng Spring Boot 4.x và Java 22 (`<java.version>22</java.version>`) tương thích hoàn hảo với môi trường máy chủ phát triển (JDK 22, Maven 3.9.11).
   - Tuân thủ 100% toàn bộ bài giảng và danh mục cấm tại `docs/rule.md`.
+* **ADR-09: Chuẩn hóa UI/UX Design System & Tự động hóa Thẩm định Giao diện:**
+  - Thiết lập `docs/UI_DESIGN_SYSTEM.md` làm bộ quy chuẩn thiết kế duy nhất cho toàn bộ hệ thống (Bootstrap 5.3, bảng màu Navy/Express Blue `#0a2540` / `#0d6efd`, 13 Status Badges chuẩn, Form Ergonomics, Vertical Stepper Timeline, Data Masking).
+  - Tự động hóa kiểm soát phân mảnh giao diện giữa 3 thành viên: Ràng buộc mọi task presentation với tiêu chuẩn `[UI-STANDARD]` (kích hoạt skill `gsd-ui-review` / `gsd-ui-phase` để audit 6 trụ cột thị giác) và quy trình 4 nhịp `[EXECUTION-PIPELINE]`.
+  - Cấm tuyệt đối CSS inline và việc tự ý cài thêm CSS framework ngoại lai.
 
 ---
 
@@ -72,6 +76,7 @@ Mọi commit của cả 3 thành viên phải tuân thủ nghiêm ngặt:
 4. **Dual Validation:** Server-side nạp `errors` và `formData` vào Model khi forward lại trang form lỗi. Không echo password.
 5. **JPA LAZY:** 100% `@ManyToOne` và `@OneToOne` bắt buộc khai báo `fetch = FetchType.LAZY`. Dùng JPQL `JOIN FETCH` để triệt tiêu N+1 Query.
 6. **Bảo mật:** Mật khẩu băm bằng `BCryptPasswordEncoder`. Cookie session có `HttpOnly = true, SameSite = Lax`.
+7. **UI/UX Design System:** 100% các trang JSP sinh ra bắt buộc đối chiếu và tuân thủ `docs/UI_DESIGN_SYSTEM.md` (Bootstrap 5 native, bảng màu Express Blue, 13 Status Badges chuẩn, Form validation feedback, Stepper Timeline, Data Masking). Tuyệt đối cấm inline CSS và CSS framework ngoại lai.
 
 ---
 

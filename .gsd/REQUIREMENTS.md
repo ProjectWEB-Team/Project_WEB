@@ -254,11 +254,22 @@ Tất cả mã nguồn do các thành viên và Agent sinh ra phải vượt qua
 [BẮT BUỘC] 6. BẢO MẬT: Mật khẩu băm bằng BCryptPasswordEncoder. Session cookie cấu hình HttpOnly = true, SameSite = Lax.
 [BẮT BUỘC] 7. DI CONSTRUCTOR: 100% dùng Constructor Injection, CẤM dùng Field Injection (@Autowired trên thuộc tính).
 [BẮT BUỘC] 8. NAMESPACE JAKARTA: Dùng jakarta.servlet.*, jakarta.persistence.*, jakarta.validation.*. CẤM dùng javax.* (ngoại trừ javax.sql.DataSource).
+[BẮT BUỘC] 9. UI/UX DESIGN SYSTEM: 100% các trang JSP sinh ra bắt buộc đối chiếu và tuân thủ `docs/UI_DESIGN_SYSTEM.md` (Bootstrap 5 native, bảng màu Express Blue, 13 Status Badges chuẩn, Form validation feedback, Stepper Timeline, Data Masking).
 ```
 
 ---
 
-## 8. DANH MỤC CẤM TUYỆT ĐỐI (PROHIBITED CHECKLIST)
+## 8. QUY CHUẨN THIẾT KẾ GIAO DIỆN (UI/UX DESIGN SYSTEM INVARIANTS)
+
+Để triệt tiêu tình trạng 3 thành viên làm giao diện mỗi người một phách, toàn bộ hệ thống Presentation bắt buộc áp dụng:
+1. **Nguồn chuẩn:** Mọi trang JSP sinh ra bắt buộc đối chiếu với tài liệu `docs/UI_DESIGN_SYSTEM.md`.
+2. **Quy chuẩn 13 Status Badges:** Bắt buộc dùng đúng class Bootstrap 5 đã định nghĩa (ví dụ: `DELIVERED` dùng `badge bg-success`, `OUT_FOR_DELIVERY` dùng `badge bg-primary fw-bold`, `RETURN_TO_SENDER` dùng `badge bg-warning text-dark`, `CLOSED_EXCEPTION` dùng `badge bg-dark text-white`...).
+3. **CẤM Inline CSS & Thư viện ngoài:** Tuyệt đối không viết `style="..."` trực tiếp trong HTML; cấm tự ý cài thêm framework CSS ngoài Bootstrap 5.3 đã định nghĩa trong layout chung.
+4. **Form Ergonomics:** Giữ lại `${formData.field}` và báo lỗi đỏ bằng `<div class="invalid-feedback d-block">${errors.field}</div>`.
+
+---
+
+## 9. DANH MỤC CẤM TUYỆT ĐỐI (PROHIBITED CHECKLIST)
 
 1. **CẤM** Controller gọi trực tiếp `Repository` hoặc `EntityManager`.
 2. **CẤM** viết SQL, JDBC hoặc mã Java scriptlet `<% ... %>` bên trong các file `.jsp`.
@@ -267,3 +278,5 @@ Tất cả mã nguồn do các thành viên và Agent sinh ra phải vượt qua
 5. **CẤM** thực hiện lệnh POST thành công mà dùng `forward` thay vì `redirect` (vi phạm PRG).
 6. **CẤM** nuốt lỗi Exception (Empty catch block) hoặc trả thông tin Stack trace kỹ thuật cho Client.
 7. **CẤM** làm việc theo tầng ngang; phân chia công việc sai lệch ranh giới thực thể giữa 3 thành viên.
+8. **CẤM** viết style CSS inline hoặc tự ý đưa CSS framework khác ngoài Bootstrap 5 gây vỡ layout chung.
+9. **CẤM** tự ý thay đổi màu sắc hoặc kiểu hiển thị của 13 Status Badges ngoài quy chuẩn `docs/UI_DESIGN_SYSTEM.md`.
