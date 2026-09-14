@@ -1,93 +1,162 @@
 # UTEEXPRESS — UI/UX DESIGN SYSTEM SPECIFICATION
-## Quy chuẩn Thiết kế Giao diện & Trải nghiệm Người dùng Dùng chung
+## Quy chuẩn Thiết kế Giao diện & Trải nghiệm Người dùng Chuẩn Logistics UTEExpress
 **Dự án:** UTEExpress - Hệ thống Quản lý Chuỗi Giao nhận Logistics  
+**Nhận diện Thương hiệu:** Trường Đại học Sư phạm Kỹ thuật TP.HCM (HCMUTE) Logistics Enterprise  
 **Nền tảng Giao diện:** Spring Boot 4.x + JSP/JSTL 3.0 Jakarta + Bootstrap 5.3 + Bootstrap Icons  
-**Mục đích:** Ngăn chặn phân mảnh UI/UX giữa 3 thành viên, đồng bộ hóa thẩm mỹ chuyên nghiệp chuẩn Logistics Enterprise.
+**Mục đích:** Xóa bỏ triệt để giao diện AI generic tím/navy, chuẩn hóa bảng màu Deep Cobalt Blue & Safety Orange, bảo đảm độ tương phản cao cho nghiệp vụ kho và tài xế/shipper ngoài hiện trường.
 
 ---
 
 ## 1. NGUYÊN TẮC CỐT LÕI (CORE DESIGN PRINCIPLES)
 
-1. **Bootstrap 5 Native & Zero Inline CSS:**
-   - Sử dụng 100% hệ thống utility classes của Bootstrap 5.3 (`d-flex`, `gap-3`, `p-3`, `shadow-sm`, `rounded-3`...).
-   - **CẤM TUYỆT ĐỐI** viết style inline `<div style="color: red; margin-top: 10px;">`.
-   - Các tùy biến nhận diện thương hiệu chỉ được định nghĩa tập trung trong file `src/main/webapp/assets/css/ute-express.css`.
-2. **Không Scriptlet & Tuân thủ JSTL 3.0 Jakarta:**
+1. **Chuẩn Nhận diện HCMUTE Logistics (Authentic Brand Identity):**
+   - Màu chủ đạo là **Deep Cobalt Blue (`#0F3D78`)** — màu sắc biểu trưng cho uy tín, kỷ luật kỹ thuật và bản sắc HCMUTE.
+   - Màu hành động / chuyển phát là **Express Safety Orange (`#F26522`)** — kích thích thị giác, độ nhận diện cao chuyên biệt cho các nút thao tác giao hàng, quét mã, thu tiền COD.
+   - Màu nền giao diện là **Industrial Gray (`#F1F5F9`)** — chống lóa mắt khi nhân viên kho và shipper thao tác liên tục trong ca làm việc.
+2. **Độ tương phản cao cho Hiện trường & Kho vận (High-Contrast Ergonomics):**
+   - Màn hình tác nghiệp bưu cục (Hub Inbound/Outbound) và màn hình di động của Shipper ngoài trời bắt buộc phải có độ tương phản đạt chuẩn WCAG AA/AAA (tỷ lệ tương phản tối thiểu 4.5:1 cho text thông thường, 3:1 cho badge lớn).
+   - 13 Trạng thái vận đơn (`ShipmentStatus`) được mã hóa màu sắc tách biệt hoàn toàn, cấm dùng các gam màu pastel nhạt gây nhầm lẫn khi quét kiện hàng.
+3. **Bootstrap 5 Native & Zero Inline CSS:**
+   - Tận dụng 100% hệ thống utility classes của Bootstrap 5.3 kết hợp với bộ biến CSS thương hiệu chuẩn tại `src/main/webapp/assets/css/ute-express.css`.
+   - **CẤM TUYỆT ĐỐI** viết CSS inline trực tiếp vào thẻ HTML (`style="..."`).
+4. **Không Scriptlet & Tuân thủ JSTL 3.0 Jakarta:**
    - 100% View JSP sử dụng cú pháp EL `${}` và Jakarta JSTL (`c:out`, `c:if`, `c:choose`, `c:forEach`, `fmt:formatNumber`, `fn:escapeXml`).
    - Thoát chuỗi an toàn chống XSS: `<c:out value="${shipment.trackingNumber}" />`.
-3. **Dual Validation Feedback:**
-   - Mọi form input khi có lỗi server-side phải add class `is-invalid` vào thẻ input và hiển thị lỗi ngay bên dưới bằng `<div class="invalid-feedback d-block">${errors.field}</div>`.
-   - Giữ lại giá trị người dùng đã nhập: `value="${fn:escapeXml(formData.field)}"`. Cấm echo lại password.
-4. **Mobile-First & Responsive Breakpoints:**
-   - Màn hình Shipper và Mobile Tracking tối ưu trên màn hình nhỏ (`col-12 col-md-6 col-lg-4`).
-   - Bảng biểu danh sách bắt buộc bọc trong `<div class="table-responsive">`.
+5. **Dual Validation Feedback & Form Ergonomics:**
+   - Mọi form khi submit có lỗi Server-side phải add class `is-invalid` vào thẻ input và hiển thị lỗi ngay bên dưới: `<div class="invalid-feedback d-block">${errors.field}</div>`.
+   - Giữ lại giá trị người dùng đã nhập: `value="${fn:escapeXml(formData.field)}"`. Tuyệt đối không echo lại password.
 
 ---
 
-## 2. BẢNG MÀU THƯƠNG HIỆU & TYPOGRAPHY (COLOR PALETTE & TYPE)
+## 2. BẢNG MÀU THƯƠNG HIỆU & HỆ THỐNG PHÂN CẤP (COLOR SYSTEM)
 
-### 2.1. Brand Colors (Màu Nhận diện Logistics)
-* **Primary (Express Navy / Royal Blue):** `#0a2540` (Navy đậm) và `#0d6efd` (Royal Blue) — Đại diện cho sự tin cậy, tốc độ và công nghệ giao vận.
-* **Secondary (Steel Gray):** `#6c757d` — Dùng cho subtext, viền bảng, trạng thái chờ.
-* **Background Canvas:** `#f8f9fa` (Light Gray) cho toàn bộ background ứng dụng; `#ffffff` cho card/panel container.
+### 2.1. Brand Palette (Bảng màu Cốt lõi)
 
-### 2.2. Semantic Feedback Colors (Màu Ngữ nghĩa)
-* **Success (Xanh lục):** `#198754` (`bg-success`, `text-success`) — Dùng cho: Giao thành công (`DELIVERED`), Đã thanh toán (`PAID`), Hoàn thành ca (`COMPLETED`).
-* **Warning (Vàng cam):** `#ffc107` (`bg-warning text-dark`) — Dùng cho: Chờ bàn giao (`WAITING_FOR_HANDOVER`), Đang lấy hàng (`PICKED_UP`), Chuyển hoàn (`RETURN_TO_SENDER`).
-* **Danger (Đỏ cảnh báo):** `#dc3545` (`bg-danger`) — Dùng cho: Giao thất bại (`FAILED`), Hủy đơn (`CANCELLED`), Biên bản sự cố (`INCIDENT`), Lệch tiền thiếu (`SHORTAGE`).
-* **Info (Xanh lơ Cyan):** `#0dcaf0` (`bg-info text-dark`) — Dùng cho: Đang trung chuyển (`IN_TRANSIT`), Chuyến xe xe tải (`Trips`).
-* **Dark (Đen xám):** `#212529` (`bg-dark`) — Dùng cho: Đóng ngoại lệ bồi thường/tiêu hủy (`CLOSED_EXCEPTION`).
+| Tên màu | Mã HEX | Vai trò kỹ thuật & Ngữ cảnh sử dụng | Class CSS Utility |
+|---|---|---|---|
+| **HCMUTE Cobalt Blue** | `#0F3D78` | **Primary Brand Color:** Dùng cho Topbar, Sidebar active item, tiêu đề bảng, liên kết chính, logo thương hiệu. | `.bg-ute-primary`, `.text-ute-primary` |
+| **Express Safety Orange** | `#F26522` | **Accent / Primary CTA:** Dùng cho nút tạo đơn mới, nút xác nhận giao hàng, nút thu tiền COD, icon cảnh báo chú ý cao. | `.bg-ute-accent`, `.btn-ute-accent` |
+| **Industrial Gray Canvas** | `#F1F5F9` | **App Background:** Màu nền tổng thể chống chói mắt, tạo độ sâu tách biệt với các thẻ Card màu trắng `#FFFFFF`. | `.bg-ute-canvas` |
+| **Pure White** | `#FFFFFF` | **Surface / Card Background:** Nền card, container dữ liệu, bảng danh sách. | `.bg-white` |
+| **Dark Slate (Main Text)** | `#1E293B` | **Text chính:** Màu chữ tiêu đề, dữ liệu quan trọng, đảm bảo độ tương phản tối đa trên nền trắng/xám. | `.text-ute-dark` |
+| **Muted Slate (Subtext)** | `#64748B` | **Text phụ:** Nhãn mô tả, timestamp, thông tin metadata. | `.text-ute-muted` |
+| **Border Gray** | `#CBD5E1` | **Đường phân cách:** Viền card, phân tách dòng bảng, input border. | `.border-ute` |
 
-### 2.3. Typography
-* **Font Family:** `system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif`.
-* **Font Size & Weight:**
-  - Page Title: `h3 fw-bold text-dark mb-3`
-  - Section Title: `h5 fw-semibold text-secondary mb-2`
-  - Body Text: `fs-6 text-dark` (14px - 16px)
-  - Small / Meta info: `small text-muted` (12px)
+### 2.2. CSS Custom Properties (`src/main/webapp/assets/css/ute-express.css`)
+```css
+:root {
+    --ute-primary: #0F3D78;
+    --ute-primary-dark: #0A2852;
+    --ute-primary-light: #EBF2FA;
+    --ute-accent: #F26522;
+    --ute-accent-hover: #D85213;
+    --ute-accent-light: #FFF0E8;
+    --ute-canvas: #F1F5F9;
+    --ute-surface: #FFFFFF;
+    --ute-text-main: #1E293B;
+    --ute-text-muted: #64748B;
+    --ute-border: #CBD5E1;
+}
+
+body {
+    background-color: var(--ute-canvas);
+    color: var(--ute-text-main);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.bg-ute-primary { background-color: var(--ute-primary) !important; color: #FFFFFF !important; }
+.text-ute-primary { color: var(--ute-primary) !important; }
+.bg-ute-accent { background-color: var(--ute-accent) !important; color: #FFFFFF !important; }
+.text-ute-accent { color: var(--ute-accent) !important; }
+
+/* Nút bấm CTA chính mang màu Express Safety Orange */
+.btn-ute-accent {
+    background-color: var(--ute-accent);
+    border-color: var(--ute-accent);
+    color: #FFFFFF;
+    font-weight: 600;
+}
+.btn-ute-accent:hover, .btn-ute-accent:focus {
+    background-color: var(--ute-accent-hover);
+    border-color: var(--ute-accent-hover);
+    color: #FFFFFF;
+}
+
+/* Nút bấm thứ cấp phong cách Deep Cobalt */
+.btn-ute-primary {
+    background-color: var(--ute-primary);
+    border-color: var(--ute-primary);
+    color: #FFFFFF;
+    font-weight: 600;
+}
+.btn-ute-primary:hover, .btn-ute-primary:focus {
+    background-color: var(--ute-primary-dark);
+    border-color: var(--ute-primary-dark);
+    color: #FFFFFF;
+}
+```
 
 ---
 
-## 3. QUY CHUẨN BADGES CHO 13 TRẠNG THÁI VẬN ĐƠN (13 SHIPMENT STATUSES)
+## 3. QUY CHUẨN ĐỘ TƯƠNG PHẢN CAO CHO 13 TRẠNG THÁI VẬN ĐƠN (13 STATUS BADGES)
 
-Cả 3 thành viên bắt buộc sử dụng đúng mã class Bootstrap 5 dưới đây khi hiển thị trạng thái vận đơn, không tự chế màu sắc:
+Trong môi trường kho vận ánh sáng mạnh và shipper di chuyển ngoài trời, màu sắc badge phải có độ tương phản vượt trội (chữ trắng trên nền đậm, hoặc chữ đen trên nền vàng rực rỡ):
 
-| Mã Enum `ShipmentStatus` | Class Badge Bootstrap 5 Chuẩn | Nhãn hiển thị Tiếng Việt |
-|---|---|---|
-| `CREATED` | `<span class="badge bg-secondary">Mới tạo</span>` | Mới tạo |
-| `WAITING_FOR_PAYMENT` | `<span class="badge bg-warning text-dark">Chờ thanh toán</span>` | Chờ thanh toán |
-| `WAITING_FOR_HANDOVER` | `<span class="badge bg-info text-dark">Chờ bàn giao</span>` | Chờ bàn giao |
-| `PICKED_UP` | `<span class="badge bg-primary">Đã lấy hàng</span>` | Đã lấy hàng |
-| `AT_HUB` | `<span class="badge bg-primary">Tại bưu cục</span>` | Tại bưu cục |
-| `IN_TRANSIT` | `<span class="badge bg-info text-white">Đang trung chuyển</span>` | Đang trung chuyển |
-| `OUT_FOR_DELIVERY` | `<span class="badge bg-primary fw-bold">Đang phát hàng</span>` | Đang phát hàng |
-| `FAILED` | `<span class="badge bg-danger">Giao thất bại</span>` | Giao thất bại |
-| `DELIVERED` | `<span class="badge bg-success">Giao thành công</span>` | Giao thành công |
-| `RETURN_TO_SENDER` | `<span class="badge bg-warning text-dark">Đang chuyển hoàn</span>` | Đang chuyển hoàn |
-| `RETURNED_TO_SENDER` | `<span class="badge bg-secondary">Đã hoàn trả</span>` | Đã hoàn trả |
-| `CANCELLED` | `<span class="badge bg-danger">Đã hủy</span>` | Đã hủy |
-| `CLOSED_EXCEPTION` | `<span class="badge bg-dark text-white">Đóng ngoại lệ</span>` | Đóng ngoại lệ |
+| Mã Enum `ShipmentStatus` | Nhãn Tiếng Việt | Mã Màu Nền HEX | Màu Chữ | Class Bootstrap & Custom | Độ tương phản & Ý nghĩa nghiệp vụ |
+|---|---|---|---|---|---|
+| `CREATED` | Mới tạo | `#64748B` (Slate) | Trắng | `<span class="badge bg-secondary">Mới tạo</span>` | Đơn mới tạo trên Web, chưa vào bưu cục. |
+| `WAITING_FOR_PAYMENT` | Chờ thanh toán | `#D97706` (Amber) | Trắng | `<span class="badge bg-warning text-dark fw-bold">Chờ thanh toán</span>` | Chờ người gửi thanh toán cước trực tuyến VNPay. |
+| `WAITING_FOR_HANDOVER` | Chờ bàn giao | `#0284C7` (Sky Blue) | Trắng | `<span class="badge bg-info text-white fw-bold">Chờ bàn giao</span>` | Đã duyệt cước, chờ tiếp nhận vật lý. |
+| `PICKED_UP` | Đã lấy hàng | `#4F46E5` (Indigo) | Trắng | `<span class="badge text-white fw-bold" style="background-color: #4F46E5;">Đã lấy hàng</span>` hoặc `<span class="badge badge-picked-up">Đã lấy hàng</span>` | Shipper đã nhận kiện từ người gửi. |
+| `AT_HUB` | Tại bưu cục | `#0F3D78` (Cobalt Blue) | Trắng | `<span class="badge bg-ute-primary fw-bold">Tại bưu cục</span>` | Kiện đã quét Inbound vào bưu cục, chờ phân loại. |
+| `IN_TRANSIT` | Đang trung chuyển | `#7C3AED` (Purple) | Trắng | `<span class="badge text-white fw-bold" style="background-color: #7C3AED;">Đang trung chuyển</span>` hoặc `<span class="badge badge-in-transit">Đang trung chuyển</span>` | Kiện đã đóng bao và xe tải Linehaul đang chạy. |
+| `OUT_FOR_DELIVERY` | Đang phát hàng | `#F26522` (Safety Orange) | Trắng | `<span class="badge bg-ute-accent fw-bold text-uppercase">Đang phát hàng</span>` | Shipper bưu cục phát đang giao kiện tận tay người nhận. |
+| `FAILED` | Giao thất bại | `#DC2626` (Crimson Red) | Trắng | `<span class="badge bg-danger fw-bold">Giao thất bại</span>` | Không phát được (Hẹn lại hoặc Khách từ chối). |
+| `DELIVERED` | Giao thành công | `#16A34A` (Emerald Green) | Trắng | `<span class="badge bg-success fw-bold">Giao thành công</span>` | Khách đã nhận hàng và hoàn tất tiền COD. |
+| `RETURN_TO_SENDER` | Đang chuyển hoàn | `#C2410C` (Rust Orange) | Trắng | `<span class="badge text-white fw-bold" style="background-color: #C2410C;">Đang chuyển hoàn</span>` hoặc `<span class="badge badge-return">Đang chuyển hoàn</span>` | Đang quay đầu về lại bưu cục gốc. |
+| `RETURNED_TO_SENDER` | Đã hoàn trả | `#475569` (Dark Slate) | Trắng | `<span class="badge bg-secondary fw-bold">Đã hoàn trả</span>` | Người gửi đã nhận lại kiện và thanh toán phí hoàn. |
+| `CANCELLED` | Đã hủy | `#991B1B` (Dark Red) | Trắng | `<span class="badge bg-danger text-white">Đã hủy</span>` | Hủy đơn trước khi kiện vào mạng lưới. |
+| `CLOSED_EXCEPTION` | Đóng ngoại lệ | `#0F172A` (Obsidian Dark) | Trắng | `<span class="badge bg-dark text-white fw-bold">Đóng ngoại lệ</span>` | Sự cố mất hàng đền bù hoặc tồn kho tiêu hủy. |
+
+> [!IMPORTANT]
+> **Cấu hình lớp CSS Badge tiện ích trong `ute-express.css`:**
+> Nhóm phát triển định nghĩa sẵn các class để gọi tiện lợi trong thẻ JSP:
+> ```css
+> .badge-picked-up { background-color: #4F46E5 !important; color: #FFFFFF !important; }
+> .badge-in-transit { background-color: #7C3AED !important; color: #FFFFFF !important; }
+> .badge-return { background-color: #C2410C !important; color: #FFFFFF !important; }
+> .badge-at-hub { background-color: #0F3D78 !important; color: #FFFFFF !important; }
+> .badge-out-delivery { background-color: #F26522 !important; color: #FFFFFF !important; }
+> ```
 
 ---
 
 ## 4. MẪU COMPONENT CHUẨN HÓA (REUSABLE UI COMPONENTS)
 
-### 4.1. Cấu trúc Card Kiện hàng (Shipment Card)
+### 4.1. Cấu trúc Thẻ Kiện hàng (Shipment Card)
 ```jsp
-<div class="card border-0 shadow-sm mb-3 rounded-3">
+<div class="card border-0 shadow-sm mb-3 rounded-3 bg-white">
     <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
         <div>
             <span class="text-muted small">Mã vận đơn:</span>
-            <span class="fw-bold text-primary font-monospace ms-1"><c:out value="${shipment.trackingNumber}" /></span>
+            <span class="fw-bold text-ute-primary font-monospace ms-1 fs-6">
+                <c:out value="${shipment.trackingNumber}" />
+            </span>
         </div>
         <div>
-            <%-- Render Badge theo đúng bảng quy chuẩn Mục 3 --%>
+            <%-- Render Badge theo đúng quy chuẩn Mục 3 --%>
             <c:choose>
                 <c:when test="${shipment.currentStatus == 'DELIVERED'}">
-                    <span class="badge bg-success">Giao thành công</span>
+                    <span class="badge bg-success fw-bold">Giao thành công</span>
                 </c:when>
                 <c:when test="${shipment.currentStatus == 'OUT_FOR_DELIVERY'}">
-                    <span class="badge bg-primary fw-bold">Đang phát hàng</span>
+                    <span class="badge bg-ute-accent fw-bold text-uppercase">Đang phát hàng</span>
+                </c:when>
+                <c:when test="${shipment.currentStatus == 'AT_HUB'}">
+                    <span class="badge bg-ute-primary fw-bold">Tại bưu cục</span>
+                </c:when>
+                <c:when test="${shipment.currentStatus == 'FAILED'}">
+                    <span class="badge bg-danger fw-bold">Giao thất bại</span>
                 </c:when>
                 <c:otherwise>
                     <span class="badge bg-secondary"><c:out value="${shipment.currentStatus}" /></span>
@@ -97,65 +166,79 @@ Cả 3 thành viên bắt buộc sử dụng đúng mã class Bootstrap 5 dướ
     </div>
     <div class="card-body">
         <div class="row g-2">
-            <div class="col-md-6">
-                <p class="mb-1 small text-muted">Người gửi:</p>
-                <p class="mb-0 fw-semibold"><c:out value="${shipment.senderName}" /> - <c:out value="${shipment.senderPhone}" /></p>
-                <p class="small text-secondary mb-0"><c:out value="${shipment.senderAddress}" /></p>
+            <div class="col-md-6 border-end-md">
+                <p class="mb-1 small text-muted"><i class="bi bi-geo-alt text-ute-primary me-1"></i>Người gửi:</p>
+                <p class="mb-0 fw-semibold text-ute-dark"><c:out value="${shipment.senderName}" /> - <c:out value="${shipment.senderPhone}" /></p>
+                <p class="small text-muted mb-0 text-truncate"><c:out value="${shipment.senderAddress}" /></p>
             </div>
             <div class="col-md-6">
-                <p class="mb-1 small text-muted">Người nhận:</p>
-                <p class="mb-0 fw-semibold"><c:out value="${shipment.receiverName}" /> - <c:out value="${shipment.receiverPhone}" /></p>
-                <p class="small text-secondary mb-0"><c:out value="${shipment.receiverAddress}" /></p>
+                <p class="mb-1 small text-muted"><i class="bi bi-pin-map text-ute-accent me-1"></i>Người nhận:</p>
+                <p class="mb-0 fw-semibold text-ute-dark"><c:out value="${shipment.receiverName}" /> - <c:out value="${shipment.receiverPhone}" /></p>
+                <p class="small text-muted mb-0 text-truncate"><c:out value="${shipment.receiverAddress}" /></p>
             </div>
         </div>
     </div>
-    <div class="card-footer bg-light py-2 d-flex justify-content-between align-items-center">
-        <span class="small text-muted">Tiền COD: <strong class="text-danger"><fmt:formatNumber value="${shipment.codAmount}" type="currency" currencySymbol="₫" /></strong></span>
-        <a href="${pageContext.request.contextPath}/shipments/detail?id=${shipment.id}" class="btn btn-sm btn-outline-primary rounded-pill px-3">Chi tiết</a>
+    <div class="card-footer bg-white border-top py-2 d-flex justify-content-between align-items-center">
+        <span class="small text-muted">
+            Tiền thu hộ COD: <strong class="text-danger fs-6"><fmt:formatNumber value="${shipment.codAmount}" type="currency" currencySymbol="₫" /></strong>
+        </span>
+        <a href="${pageContext.request.contextPath}/shipments/detail?id=${shipment.id}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+            Chi tiết <i class="bi bi-arrow-right ms-1"></i>
+        </a>
     </div>
 </div>
 ```
 
 ---
 
-### 4.2. Cấu trúc Bảng Danh sách (Data Table)
-Mọi bảng quản trị trong hệ thống phải tuân thủ markup:
+### 4.2. Cấu trúc Bảng Danh sách Nghiệp vụ (Data Table)
 ```jsp
 <div class="table-responsive bg-white rounded-3 shadow-sm p-3">
-    <table class="table table-hover table-striped align-middle mb-0">
-        <thead class="table-light">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light border-bottom">
             <tr>
-                <th scope="col" class="text-center" style="width: 50px;">#</th>
-                <th scope="col">Mã vận đơn</th>
+                <th scope="col" class="text-center text-muted" style="width: 50px;">#</th>
+                <th scope="col" class="text-ute-primary fw-bold">Mã vận đơn</th>
                 <th scope="col">Người gửi</th>
                 <th scope="col">Người nhận</th>
                 <th scope="col" class="text-end">Tiền COD</th>
                 <th scope="col" class="text-center">Trạng thái</th>
-                <th scope="col" class="text-center" style="width: 120px;">Thao tác</th>
+                <th scope="col" class="text-center" style="width: 130px;">Thao tác</th>
             </tr>
         </thead>
         <tbody>
             <c:forEach var="item" items="${shipments}" varStatus="loop">
                 <tr>
                     <td class="text-center text-muted"><c:out value="${loop.index + 1}" /></td>
-                    <td><span class="font-monospace fw-bold text-primary"><c:out value="${item.trackingNumber}" /></span></td>
+                    <td>
+                        <span class="font-monospace fw-bold text-ute-primary">
+                            <c:out value="${item.trackingNumber}" />
+                        </span>
+                    </td>
                     <td><c:out value="${item.senderName}" /></td>
                     <td><c:out value="${item.receiverName}" /></td>
-                    <td class="text-end fw-semibold text-danger">
+                    <td class="text-end fw-bold text-danger">
                         <fmt:formatNumber value="${item.codAmount}" type="currency" currencySymbol="₫" />
                     </td>
                     <td class="text-center">
-                        <%-- Badge theo chuẩn Mục 3 --%>
+                        <%-- Badge theo quy chuẩn Mục 3 --%>
                     </td>
                     <td class="text-center">
-                        <a href="..." class="btn btn-sm btn-outline-secondary me-1" title="Xem"><i class="bi bi-eye"></i></a>
+                        <a href="${pageContext.request.contextPath}/shipments/detail?id=${item.id}" class="btn btn-sm btn-light border me-1" title="Chi tiết">
+                            <i class="bi bi-eye text-ute-primary"></i>
+                        </a>
+                        <c:if test="${item.currentStatus == 'OUT_FOR_DELIVERY'}">
+                            <a href="${pageContext.request.contextPath}/shipper/deliver?id=${item.id}" class="btn btn-sm btn-ute-accent" title="Giao hàng">
+                                <i class="bi bi-check2-circle"></i>
+                            </a>
+                        </c:if>
                     </td>
                 </tr>
             </c:forEach>
             <c:if test="${empty shipments}">
                 <tr>
-                    <td colspan="7" class="text-center py-4 text-muted">
-                        <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary"></i>
+                    <td colspan="7" class="text-center py-5 text-muted">
+                        <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary opacity-50"></i>
                         Không có dữ liệu vận đơn phù hợp.
                     </td>
                 </tr>
@@ -168,12 +251,12 @@ Mọi bảng quản trị trong hệ thống phải tuân thủ markup:
 ---
 
 ### 4.3. Cấu trúc Form Input Chuẩn & Dual Validation Feedback
-Áp dụng mẫu form đồng bộ giữ dữ liệu `${formData}` và xuất thông báo lỗi `${errors}`:
+Nút Submit kích hoạt hành động vận đơn áp dụng **Express Safety Orange (`btn-ute-accent`)**:
 ```jsp
-<form action="${pageContext.request.contextPath}/user/shipments/create" method="post" class="needs-validation">
-    <!-- CSRF Token (nếu có) -->
+<form action="${pageContext.request.contextPath}/user/shipments/create" method="post" class="needs-validation bg-white p-4 rounded-3 shadow-sm">
+    <!-- CSRF Token -->
     <div class="mb-3">
-        <label for="receiverPhone" class="form-label fw-semibold">Số điện thoại người nhận <span class="text-danger">*</span></label>
+        <label for="receiverPhone" class="form-label fw-semibold text-ute-dark">Số điện thoại người nhận <span class="text-danger">*</span></label>
         <input type="tel" 
                class="form-control ${not empty errors.receiverPhone ? 'is-invalid' : ''}" 
                id="receiverPhone" 
@@ -182,14 +265,14 @@ Mọi bảng quản trị trong hệ thống phải tuân thủ markup:
                placeholder="Ví dụ: 0981234567" 
                required>
         <c:if test="${not empty errors.receiverPhone}">
-            <div class="invalid-feedback d-block">
-                <c:out value="${errors.receiverPhone}" />
+            <div class="invalid-feedback d-block fw-semibold">
+                <i class="bi bi-exclamation-circle me-1"></i><c:out value="${errors.receiverPhone}" />
             </div>
         </c:if>
     </div>
 
     <div class="mb-3">
-        <label for="weight" class="form-label fw-semibold">Khối lượng kiện (gram) <span class="text-danger">*</span></label>
+        <label for="weight" class="form-label fw-semibold text-ute-dark">Khối lượng kiện hàng (gram) <span class="text-danger">*</span></label>
         <input type="number" 
                class="form-control ${not empty errors.weight ? 'is-invalid' : ''}" 
                id="weight" 
@@ -199,57 +282,56 @@ Mọi bảng quản trị trong hệ thống phải tuân thủ markup:
                max="50000" 
                required>
         <c:if test="${not empty errors.weight}">
-            <div class="invalid-feedback d-block">
-                <c:out value="${errors.weight}" />
+            <div class="invalid-feedback d-block fw-semibold">
+                <i class="bi bi-exclamation-circle me-1"></i><c:out value="${errors.weight}" />
             </div>
         </c:if>
     </div>
 
-    <div class="d-flex justify-content-end gap-2 mt-4">
-        <a href="${pageContext.request.contextPath}/user/shipments" class="btn btn-light px-4">Hủy</a>
-        <button type="submit" class="btn btn-primary px-4 fw-semibold">Tạo vận đơn</button>
+    <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+        <a href="${pageContext.request.contextPath}/user/shipments" class="btn btn-light px-4 border">Hủy bỏ</a>
+        <button type="submit" class="btn btn-ute-accent px-4 py-2 shadow-sm">
+            <i class="bi bi-box-seam me-1"></i> Tạo Vận Đơn Ngay
+        </button>
     </div>
 </form>
 ```
 
 ---
 
-### 4.4. Cấu trúc Stepper Timeline Tra cứu Hành trình (Vertical Stepper)
-Sử dụng cấu trúc dòng thời gian chuẩn cho màn hình Tra cứu Public Tracking:
+### 4.4. Cấu trúc Dòng thời gian Hành trình (Vertical Stepper Timeline)
 ```html
 <div class="tracking-timeline position-relative ps-4 my-4">
-    <!-- Line nối giữa các node: định nghĩa trong ute-express.css -->
-    
     <!-- Step 1: Đã giao thành công -->
     <div class="timeline-item position-relative pb-4">
-        <div class="timeline-marker bg-success text-white rounded-circle position-absolute start-0 top-0 d-flex align-items-center justify-content-center" style="width: 28px; height: 28px; margin-left: -14px;">
-            <i class="bi bi-check-lg small"></i>
+        <div class="timeline-marker bg-success text-white rounded-circle position-absolute start-0 top-0 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px; margin-left: -15px;">
+            <i class="bi bi-check-lg fw-bold"></i>
         </div>
         <div class="timeline-content ms-3">
             <h6 class="fw-bold mb-0 text-success">Giao hàng thành công</h6>
-            <p class="small text-muted mb-1">14:30 - 15/09/2026 | Người nhận: Đã ký nhận</p>
-            <p class="small text-secondary mb-0">Shipper Nguyễn Văn B (Mã: SHP01) đã thu hộ COD 500.000₫.</p>
+            <p class="small text-muted mb-1">14:30 - 15/09/2026 | Người nhận đã ký nhận</p>
+            <p class="small text-ute-dark mb-0">Shipper Nguyễn Văn B (Mã: SHP01) đã thu hộ COD 500.000₫.</p>
         </div>
     </div>
 
-    <!-- Step 2: Đang giao hàng -->
+    <!-- Step 2: Đang phát hàng (Active State mang màu Express Safety Orange) -->
     <div class="timeline-item position-relative pb-4">
-        <div class="timeline-marker bg-primary text-white rounded-circle position-absolute start-0 top-0 d-flex align-items-center justify-content-center" style="width: 28px; height: 28px; margin-left: -14px;">
+        <div class="timeline-marker bg-ute-accent text-white rounded-circle position-absolute start-0 top-0 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px; margin-left: -15px;">
             <i class="bi bi-truck small"></i>
         </div>
         <div class="timeline-content ms-3">
-            <h6 class="fw-bold mb-0 text-primary">Đang trên đường giao hàng</h6>
+            <h6 class="fw-bold mb-0 text-ute-accent">Đang trên đường giao hàng</h6>
             <p class="small text-muted mb-1">08:15 - 15/09/2026 | Bưu cục phát: Cần Thơ Delivery Hub</p>
         </div>
     </div>
 
-    <!-- Step 3: Nhập bưu cục -->
+    <!-- Step 3: Nhập bưu cục (Màu Deep Cobalt Blue) -->
     <div class="timeline-item position-relative">
-        <div class="timeline-marker bg-secondary text-white rounded-circle position-absolute start-0 top-0 d-flex align-items-center justify-content-center" style="width: 28px; height: 28px; margin-left: -14px;">
-            <i class="bi bi-box-seam small"></i>
+        <div class="timeline-marker bg-ute-primary text-white rounded-circle position-absolute start-0 top-0 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px; margin-left: -15px;">
+            <i class="bi bi-building small"></i>
         </div>
         <div class="timeline-content ms-3">
-            <h6 class="fw-semibold mb-0 text-dark">Kiện đã nhập bưu cục gốc</h6>
+            <h6 class="fw-semibold mb-0 text-ute-dark">Kiện đã nhập bưu cục gốc</h6>
             <p class="small text-muted mb-0">19:00 - 14/09/2026 | Bưu cục: Dĩ An Delivery Hub</p>
         </div>
     </div>
@@ -259,16 +341,16 @@ Sử dụng cấu trúc dòng thời gian chuẩn cho màn hình Tra cứu Publi
 ---
 
 ### 4.5. Cơ chế Che mờ Dữ liệu Nhạy cảm (Data Masking)
-Khi hiển thị thông tin người nhận trên Public Tracking hoặc danh sách "Đơn đang đến" mà người dùng chưa xác thực mã OTP/mã đầy đủ:
-* **Số điện thoại:** Chỉ hiện 3 số đầu và 3 số cuối -> `098****456`
-* **Địa chỉ chi tiết:** Ẩn số nhà/tên đường, chỉ giữ Phường/Xã, Quận/Huyện, Tỉnh/Thành -> `***, Phường Linh Trung, Thành phố Thủ Đức, TP. Hồ Chí Minh`
-* **Họ tên người gửi:** `Ng*** V** A**`
-* **Markup mẫu:**
+Bảo đảm tính riêng tư trên màn hình Public Tracking:
+* **Số điện thoại:** Chỉ hiển thị 3 số đầu và 3 số cuối: `098****456`.
+* **Địa chỉ:** Ẩn số nhà/tên đường cụ thể: `***, Phường Linh Trung, Thành phố Thủ Đức, TP. Hồ Chí Minh`.
+* **Họ tên:** Ẩn ký tự giữa: `Ng*** V** A**`.
+* **Markup chuẩn:**
 ```jsp
-<div class="alert alert-info py-2 d-flex align-items-center gap-2 mb-3">
+<div class="alert alert-warning border-0 bg-opacity-25 py-2 d-flex align-items-center gap-2 mb-3" style="background-color: #FFF0E8; color: #C2410C;">
     <i class="bi bi-shield-lock-fill fs-5"></i>
-    <span class="small">Thông tin cá nhân đã được che mờ tự động để bảo vệ quyền riêng tư. Nhập mã OTP để xem đầy đủ.</span>
+    <span class="small">Thông tin cá nhân được che mờ tự động để bảo vệ quyền riêng tư. Nhập mã OTP hoặc đăng nhập để xem đầy đủ.</span>
 </div>
-<p class="mb-1"><strong>SĐT Người nhận:</strong> <span class="font-monospace"><c:out value="${maskedReceiverPhone}" /></span></p>
-<p class="mb-0"><strong>Địa chỉ:</strong> <c:out value="${maskedReceiverAddress}" /></p>
+<p class="mb-1"><strong>SĐT Người nhận:</strong> <span class="font-monospace text-ute-primary fw-bold"><c:out value="${maskedReceiverPhone}" /></span></p>
+<p class="mb-0"><strong>Địa chỉ giao:</strong> <c:out value="${maskedReceiverAddress}" /></p>
 ```

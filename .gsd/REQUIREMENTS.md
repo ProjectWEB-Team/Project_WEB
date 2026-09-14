@@ -254,7 +254,7 @@ Tất cả mã nguồn do các thành viên và Agent sinh ra phải vượt qua
 [BẮT BUỘC] 6. BẢO MẬT: Mật khẩu băm bằng BCryptPasswordEncoder. Session cookie cấu hình HttpOnly = true, SameSite = Lax.
 [BẮT BUỘC] 7. DI CONSTRUCTOR: 100% dùng Constructor Injection, CẤM dùng Field Injection (@Autowired trên thuộc tính).
 [BẮT BUỘC] 8. NAMESPACE JAKARTA: Dùng jakarta.servlet.*, jakarta.persistence.*, jakarta.validation.*. CẤM dùng javax.* (ngoại trừ javax.sql.DataSource).
-[BẮT BUỘC] 9. UI/UX DESIGN SYSTEM: 100% các trang JSP sinh ra bắt buộc đối chiếu và tuân thủ `docs/UI_DESIGN_SYSTEM.md` (Bootstrap 5 native, bảng màu Express Blue, 13 Status Badges chuẩn, Form validation feedback, Stepper Timeline, Data Masking).
+[BẮT BUỘC] 9. UI/UX DESIGN SYSTEM: 100% các trang JSP sinh ra bắt buộc đối chiếu và tuân thủ `docs/UI_DESIGN_SYSTEM.md` (Bootstrap 5 native, bảng màu nhận diện HCMUTE Primary Cobalt Blue `#0F3D78`, Accent Safety Orange `#F26522`, Background Industrial Gray `#F1F5F9`, 13 Status Badges chuẩn tương phản cao, Form validation feedback, Stepper Timeline, Data Masking).
 ```
 
 ---

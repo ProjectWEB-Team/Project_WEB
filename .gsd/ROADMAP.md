@@ -72,7 +72,7 @@ Mọi thành viên và Subagent khi hoàn thành một đơn vị công việc *
   - Tạo cấu trúc thư mục `/WEB-INF/views/layout/`: `header.jsp`, `sidebar.jsp`, `footer.jsp`, `base.jsp`.
   - Nhúng CDN Bootstrap 5.3, Bootstrap Icons, FontAwesome, jQuery theo đúng `docs/UI_DESIGN_SYSTEM.md`.
   - Khai báo đúng chuẩn Taglib JSTL 3.0 Jakarta: `<%@ taglib prefix="c" uri="https://jakarta.ee/tags/jstl/core" %>`.
-  - Thiết lập cấu trúc thẻ bảng màu chuẩn UTEExpress: Primary Navy `#0a2540`, Express Blue `#0d6efd`, Neutral Light `#f8fafc`.
+  - Thiết lập cấu trúc thẻ bảng màu chuẩn Logistics UTEExpress: Primary Deep Cobalt Blue `#0F3D78`, Accent Safety Orange `#F26522`, Background Industrial Gray `#F1F5F9`.
   - `[UI-STANDARD]`: Kích hoạt skill `gsd-ui-phase` / `gsd-ui-review` để thẩm định và kiểm tra độ tương thích responsive trên 3 kích thước (Mobile, Tablet, Desktop) và 6 trụ cột thị giác.
   - `[EXECUTION-PIPELINE]`: Tuân thủ quy trình 4 nhịp: (1) Dựng cấu trúc layout base -> (2) Tích hợp fragments và menu điều hướng -> (3) Kích hoạt Skill UI/UX để áp chuẩn Bootstrap & `docs/UI_DESIGN_SYSTEM.md` -> (4) Kiểm thử và Atomic Commit.
   - Deliverable: Màn hình mẫu `index.jsp` sử dụng `<jsp:include>` render layout hoàn hảo không vỡ CSS, đạt audit giao diện.
