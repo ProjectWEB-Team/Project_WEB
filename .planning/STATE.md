@@ -4,20 +4,24 @@
 **Framework Quản phối:** GSD Core on Antigravity  
 **Phiên bản Schema:** 1.0 (25 Bảng Vật lý theo `docs/schema.sql`)  
 **Khởi tạo lúc:** 2026-09-15 01:25:00+07:00  
-**Giai đoạn hiện tại:** **PHASE 0: BASE SKELETON & DATABASE SETUP** (Sẵn sàng chạy `/gsd-plan-phase 0`)
+**Giai đoạn hiện tại:** **PHASE 1: VERTICAL CORE ENTITIES & UI LAYOUTS** (Sẵn sàng chạy `/gsd-plan-phase 1`)
 
 ---
 
 ## 1. TỔNG QUAN VỊ TRÍ ROADMAP HIỆN TẠI
 
 ```text
-[Phase 0: Base Skeleton & DB Setup] ◄── [VỊ TRÍ HIỆN TẠI - CHUẨN BỊ THỰC THI]
-  ├── Task-001: Maven Spring Boot 4.x & Java 22 Skeleton
-  ├── Task-002: Kết nối SQL Server ute_express
-  ├── Task-003: Khung Dual SecurityFilterChain & BCrypt
-  └── Task-004: Master Layout JSP Fragments Bootstrap 5
+[Phase 0: Base Skeleton & DB Setup] ──► [HOÀN THÀNH (COMPLETE)]
+  ├── Task-001: Maven Spring Boot & Java 22 Skeleton (Done - a28677e)
+  ├── Task-002: Kết nối SQL Server ute_express (Done - 733a929)
+  ├── Task-003: Khung Dual SecurityFilterChain & BCrypt (Done - 12792ba)
+  └── Task-004: Master Layout JSP Fragments Bootstrap 5 & CSS HCMUTE (Done - 5ad0c2b)
 
-[Phase 1: Vertical Core Entities & UI Layouts] (Pending)
+[Phase 1: Vertical Core Entities & UI Layouts] ◄── [VỊ TRÍ HIỆN TẠI - CHUẨN BỊ THỰC THI]
+  ├── TV1: 9 Entities & Repos (Hubs, Linehaul) + Hub/Driver JSP Views
+  ├── TV2: 7 Entities & Repos (Users, Shipments) + Customer/Shipper JSP Views
+  └── TV3: 9 Entities & Repos (Wallets, Pricing) + Admin/Manager JSP Views
+
 [Phase 2: Business Services & Controller Workflows] (Pending)
 [Phase 3: Advanced Integration, Realtime & Reconciliation] (Pending)
 [Phase 4: Cross-Testing, Seed Data 8 Scenarios & Final Packaging] (Pending)
@@ -29,9 +33,9 @@
 
 | Thành viên | Vai trò dự án | Phân hệ nghiệp vụ phụ trách | Danh mục 25 Thực thể JPA phụ trách | Trạng thái hiện tại |
 |---|---|---|---|---|
-| **Thành viên 1** | Team Lead / Lead Architect | Vận hành Bưu cục & Trung chuyển Liên Hub (Linehaul) | `hubs`, `employee_profiles`, `vehicles`, `transport_trips`, `parcel_containers`, `container_items`, `handovers`, `handover_containers`, `incidents` (9 entities) | Sẵn sàng khởi động Phase 0 |
+| **Thành viên 1** | Team Lead / Lead Architect | Vận hành Bưu cục & Trung chuyển Liên Hub (Linehaul) | `hubs`, `employee_profiles`, `vehicles`, `transport_trips`, `parcel_containers`, `container_items`, `handovers`, `handover_containers`, `incidents` (9 entities) | Hoàn thành Phase 0; Sẵn sàng Phase 1 |
 | **Thành viên 2** | Full-stack Developer | Cổng Khách hàng, Hiện trường Shipper & Realtime | `users`, `shipments`, `shipment_routes`, `shipment_events`, `shipment_assignments`, `pickup_attempts`, `delivery_attempts` (7 entities) | Sẵn sàng nhận Phase 1 |
-| **Thành viên 3** | Full-stack Developer | Quản trị Mạng lưới, Báo cáo & Tài chính Đối soát | `wallets`, `pricing_policies`, `payments`, `cod_transactions`, `shipper_reconciliations`, `shipper_reconciliation_items`, `withdrawal_requests`, `wallet_transactions`, `operation_reports` (9 entities) | Sẵn sàng nhận Phase 0 (Layout) & Phase 1 |
+| **Thành viên 3** | Full-stack Developer | Quản trị Mạng lưới, Báo cáo & Tài chính Đối soát | `wallets`, `pricing_policies`, `payments`, `cod_transactions`, `shipper_reconciliations`, `shipper_reconciliation_items`, `withdrawal_requests`, `wallet_transactions`, `operation_reports` (9 entities) | Hoàn thành Layout Phase 0; Sẵn sàng Phase 1 |
 
 ---
 
@@ -82,10 +86,10 @@ Mọi commit của cả 3 thành viên phải tuân thủ nghiêm ngặt:
 
 ## 5. HÀNH ĐỘNG TIẾP THEO (NEXT ACTION)
 
-Hệ thống quản phối đã sẵn sàng 100%. Bước tiếp theo là chạy lệnh:
+Phase 0 đã hoàn thành xuất sắc 100%. Bước tiếp theo là chạy lệnh:
 
 ```bash
-/gsd-plan-phase 0
+/gsd-plan-phase 1
 ```
 
-để Team Lead (Thành viên 1) lập kế hoạch chi tiết các bước triển khai của **Phase 0: Base Skeleton & Database Setup**.
+để lập kế hoạch chi tiết cho **Phase 1: Vertical Core Entities & UI Layouts** (Xây dựng 25 JPA Entities, mapping LAZY, Repositories và UI Skeletons cho cả 3 thành viên song song).

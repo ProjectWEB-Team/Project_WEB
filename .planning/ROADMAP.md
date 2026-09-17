@@ -51,31 +51,32 @@ Mọi thành viên và Subagent khi hoàn thành một đơn vị công việc *
 
 ## PHASE 0: BASE SKELETON & DATABASE SETUP
 * **Mục tiêu:** Thiết lập khung dự án Maven Spring Boot 4.x với Java 22 (JDK 22), kết nối SQL Server, cấu hình bảo mật kép Dual SecurityFilterChain, chuẩn bị master layout Bootstrap 5 và kiểm thử kết nối CSDL 25 bảng.
+* **Trạng thái:** `HOÀN THÀNH (COMPLETE)` (Đã thẩm định kiểm thử tự động đạt 100%)
 * **Người thực hiện chính:** `[TV1 - Team Lead]` (Hỗ trợ: `[TV2]`, `[TV3]` review)
 
 ### Danh sách Task Phase 0:
-* [ ] `TASK-001` `[TV1]` **Khởi tạo Maven Project Spring Boot 4.x & Java 22:**
-  - Thiết lập `pom.xml` với `spring-boot-starter-parent` 4.x, `<java.version>22</java.version>`, Spring Boot Starter Web, Spring Data JPA, Spring Security, Spring Mail, Spring WebSocket, Jakarta Servlet/JSP API, JSTL 3.0 Jakarta (`jakarta.servlet.jsp.jstl`), `mssql-jdbc`.
-  - Deliverable: Project build thành công bằng `mvn clean compile` trên JDK 22.
-* [ ] `TASK-002` `[TV1]` **Cấu hình Kết nối CSDL SQL Server:**
+* [x] `TASK-001` `[TV1]` **Khởi tạo Maven Project Spring Boot 4.x & Java 22:**
+  - Thiết lập `pom.xml` với `spring-boot-starter-parent`, `<java.version>22</java.version>`, loại bỏ Thymeleaf, tích hợp Tomcat Embed Jasper & JSTL 3.0 Jakarta (`jakarta.servlet.jsp.jstl`), `mssql-jdbc`.
+  - Deliverable: Project build thành công bằng `mvn clean compile` trên JDK 22. (Commit `a28677e`).
+* [x] `TASK-002` `[TV1]` **Cấu hình Kết nối CSDL SQL Server:**
   - Tạo `src/main/resources/application.properties` kết nối SQL Server cổng 1433, database `ute_express`.
   - Cấu hình `spring.jpa.hibernate.ddl-auto=none` (bảo toàn schema.sql vật lý, cấm tự ý drop/alter table).
   - Cấu hình JPA: `spring.jpa.show-sql=true`, `spring.jpa.properties.hibernate.format_sql=true`.
-  - Deliverable: Chạy ứng dụng kết nối SQL Server thành công không lỗi connection.
-* [ ] `TASK-003` `[TV1]` **Cấu hình Dual SecurityFilterChain Base:**
+  - Deliverable: Chạy ứng dụng kết nối SQL Server thành công không lỗi connection. (Commit `733a929`).
+* [x] `TASK-003` `[TV1]` **Cấu hình Dual SecurityFilterChain Base:**
   - Tạo `SecurityConfig.java` với 2 filter chain:
     - `@Order(1)` matcher `/api/**` với `SessionCreationPolicy.STATELESS` cho REST API.
     - `@Order(2)` matcher `/**` với Session Cookie, form login cho Web SSR JSP.
   - Cấu hình `BCryptPasswordEncoder` bean.
-  - Deliverable: Khung bảo mật khởi động đạt chuẩn, các URL public truy cập được.
-* [ ] `TASK-004` `[TV3]` **Thiết lập Master Layout JSP Fragments & Bootstrap 5:**
-  - Tạo cấu trúc thư mục `/WEB-INF/views/layout/`: `header.jsp`, `sidebar.jsp`, `footer.jsp`, `base.jsp`.
-  - Nhúng CDN Bootstrap 5.3, Bootstrap Icons, FontAwesome, jQuery theo đúng `docs/UI_DESIGN_SYSTEM.md`.
+  - Deliverable: Khung bảo mật khởi động đạt chuẩn, các URL public truy cập được. (Commit `12792ba`).
+* [x] `TASK-004` `[TV3]` **Thiết lập Master Layout JSP Fragments & Bootstrap 5:**
+  - Tạo cấu trúc thư mục `/WEB-INF/views/layout/`: `header.jsp`, `sidebar.jsp`, `footer.jsp`.
+  - Nhúng CDN Bootstrap 5.3, Bootstrap Icons, FontAwesome, Google Fonts theo đúng `docs/UI_DESIGN_SYSTEM.md`.
   - Khai báo đúng chuẩn Taglib JSTL 3.0 Jakarta: `<%@ taglib prefix="c" uri="https://jakarta.ee/tags/jstl/core" %>`.
   - Thiết lập cấu trúc thẻ bảng màu chuẩn Logistics UTEExpress: Primary Deep Cobalt Blue `#0F3D78`, Accent Safety Orange `#F26522`, Background Industrial Gray `#F1F5F9`.
   - `[UI-STANDARD]`: Kích hoạt skill `gsd-ui-phase` / `gsd-ui-review` để thẩm định và kiểm tra độ tương thích responsive trên 3 kích thước (Mobile, Tablet, Desktop) và 6 trụ cột thị giác.
   - `[EXECUTION-PIPELINE]`: Tuân thủ quy trình 4 nhịp: (1) Dựng cấu trúc layout base -> (2) Tích hợp fragments và menu điều hướng -> (3) Kích hoạt Skill UI/UX để áp chuẩn Bootstrap & `docs/UI_DESIGN_SYSTEM.md` -> (4) Kiểm thử và Atomic Commit.
-  - Deliverable: Màn hình mẫu `index.jsp` sử dụng `<jsp:include>` render layout hoàn hảo không vỡ CSS, đạt audit giao diện.
+  - Deliverable: Màn hình mẫu `index.jsp` sử dụng `<jsp:include>` render layout hoàn hảo không vỡ CSS, đạt audit giao diện. (Commit `5ad0c2b`).
 
 ---
 
