@@ -1,6 +1,8 @@
 # UTEExpress Entity-Relationship Diagrams (ERD)
 
-Do hệ thống có quy mô lớn với 24 bảng, việc dồn tất cả vào một sơ đồ duy nhất sẽ tạo ra một mạng nhện rất khó đọc. Vì vậy, tôi đã phân chia ERD thành **4 cụm chức năng (Modules)** chuẩn hóa theo tài liệu thiết kế mới nhất `UTEExpress_Workflow.md`.
+`ERD.md` mô tả entity relationships và cấu trúc logic. Phần **Database** trong `UTEExpress_Workflow.md` là nguồn field-level chi tiết hơn; các field rút gọn trong Mermaid không phải là toàn bộ column của table.
+
+Hệ thống được chia thành **4 cụm chức năng chính** để tránh dồn các entity vào một sơ đồ khó đọc. Các cụm này được chuẩn hóa theo `UTEExpress_Workflow.md`.
 
 ## 1. Core Module (Người dùng & Cơ sở hạ tầng)
 Quản lý thông tin người dùng, nhân viên, phân quyền, bảng ví điện tử độc lập và hệ thống phân cấp Hub.
@@ -56,10 +58,21 @@ erDiagram
         DECIMAL base_price
     }
 
+    hub_routing_rules {
+        BIGINT id PK
+        BIGINT current_hub_id FK
+        VARCHAR destination_region
+        VARCHAR destination_province
+        BIGINT next_hub_id FK
+        VARCHAR status
+    }
+
     users ||--o| wallets : "has"
     users ||--o{ employee_profiles : "acts as"
     hubs ||--o{ hubs : "parent of (tree)"
     hubs ||--o{ employee_profiles : "employs"
+    hubs ||--o{ hub_routing_rules : "current hub for"
+    hubs ||--o{ hub_routing_rules : "next hub for"
 ```
 
 ---
@@ -97,7 +110,7 @@ erDiagram
         BIGINT shipment_id FK
         BIGINT hub_id FK
         BIGINT actor_user_id FK
-        VARCHAR status
+        VARCHAR event_type
     }
 
     shipment_assignments {

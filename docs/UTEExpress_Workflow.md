@@ -1,11 +1,11 @@
 # Đề tài 9: Xây dựng website quản lý chuỗi giao nhận Logistic UTEExpress
 ## WORKFLOW TOÀN HỆ THỐNG 6 ROLE – Phiên bản đề xuất hoàn chỉnh để triển khai đồ án
 
-> **Đề tài:** 9. Xây dựng website quản lý chuỗi giao nhận Logistic UTEExpress bằng Spring boot + JSP/JSTL + Bootstrap + JPA + SQLServer/MySQL/ postgreSQL+JWT+Websocket
+> **Đề tài:** 9. Xây dựng website quản lý chuỗi giao nhận Logistic UTEExpress bằng Spring Boot + JSP/JSTL + Bootstrap + JPA + SQL Server + JWT + WebSocket
 >
 > **Kiến trúc đề xuất:** RBAC + Data Scoping + Hub Hierarchy + Task Assignment
 >
-> **Công nghệ:** Spring boot + JSP/JSTL + Bootstrap + JPA + SQLServer/MySQL/ postgreSQL + JWT + Websocket
+> **Công nghệ:** Spring Boot + JSP/JSTL + Bootstrap + JPA + SQL Server + JWT + WebSocket
 
 ---
 
@@ -379,7 +379,9 @@ Xác định Next Hub / SOC
       ↓
 Sorting
       ↓
-SORTED
+Ghi shipment_event: SORTING_COMPLETED
+      ↓
+Giữ shipments.current_status = AT_HUB
 ```
 
 ---
@@ -387,13 +389,13 @@ SORTED
 # 15. HUB_STAFF – OUTBOUND
 
 ```text
-SORTED
+AT_HUB (sau event SORTING_COMPLETED)
   ↓
 Gom kiện cùng tuyến
   ↓
-Tạo Bag / Container
+Tạo Bag / Container (event: BAG_CREATED)
   ↓
-READY_FOR_OUTBOUND
+Quét outbound (event: OUTBOUND_SCANNED)
   ↓
 Tạo Handover
   ↓
@@ -930,13 +932,15 @@ Màn hình hiển thị chỉ định:
       ↓
 Sorter đặt kiện vào đúng Bao chỉ định
       ↓
-Kiện đạt trạng thái: SORTED
+Kiện vẫn ở trạng thái: AT_HUB
+↓
+Ghi shipment_event: SORTING_COMPLETED
       ↓
 OUTBOUND STAFF (Đóng niêm phong Bag khi đủ kiện/hết giờ)
       ↓
-BAG / CONTAINER
+BAG / CONTAINER (event: BAG_CREATED)
       ↓
-READY_FOR_OUTBOUND
+Ghi shipment_event: OUTBOUND_SCANNED
 ```
 
 ---
@@ -1127,7 +1131,7 @@ Tiếp tục luồng giao bình thường      ↓
                                    └── Hoàn 100% shipping_fee (Nếu Sender đã thanh toán)
                                      ↓
                                    Tự động CREDIT vào Ví điện tử Sender:
-                                   users.e_wallet += declared_value + (shipping_fee nếu fee_payer = SENDER)
+                                   wallets.balance += declared_value + (shipping_fee nếu fee_payer = SENDER)
                                      ↓
                                    Ghi nhận: wallet_transactions (type = COMPENSATION)
                                      ↓
@@ -1549,7 +1553,7 @@ Kiện chưa PICKED_UP
       ↓
 REFUND 100%
       ↓
-CREDIT Sender.e_wallet
+CREDIT wallets.balance của Sender
       ↓
 Payment = REFUNDED
 ```
@@ -1569,7 +1573,7 @@ CANCELLED (reason = DROPOFF_TIMEOUT)
       ↓
 REFUND 100%
       ↓
-CREDIT e_wallet
+CREDIT wallets.balance của Sender
 ```
 
 ---
@@ -1591,7 +1595,7 @@ CANCELLED
 ↓
 Refund 100%
 ↓
-e_wallet
+wallets.balance của Sender
 ```
 
 ---
@@ -1775,7 +1779,7 @@ Return Fee Paid?
    ↓          ↓
 Sẵn sàng    Notify Sender
 bàn giao      │
-   │          ├── Sender thanh toán (VNPay / e_wallet / Cash tại Hub hoặc nộp cho Shipper)
+   │          ├── Sender thanh toán (VNPay / Wallet / Cash tại Hub hoặc nộp cho Shipper)
    │          │      ↓
    │          │   Return Fee = PAID
    │          │      ↓
@@ -1853,7 +1857,9 @@ Manager đối soát chi tiết từng đơn (Checklist từng mã vận đơn)
              ↓
           Tạo FINANCIAL INCIDENT (type = MONEY_SHORTAGE hoặc MONEY_OVERAGE)
              ↓
-          Ghi nhận công nợ cá nhân của Shipper (shipper_debt)
+          Ghi nhận trách nhiệm tài chính của Shipper qua
+          shipper_reconciliation_items + financial incident
+          (không có bảng shipper_debts riêng trong MVP)
              ↓
           Riêng đơn này: COD status = HOLD_DISPUTE
              ↓
@@ -1869,7 +1875,7 @@ READY_FOR_PAYOUT
       ↓
 System lấy cod_amount
       ↓
-CREDIT Sender.e_wallet
+CREDIT wallets.balance của Sender
       ↓
 COD = PAID_TO_SENDER
       ↓
@@ -1883,14 +1889,14 @@ cod_transactions.payout_at = CURRENT_TIMESTAMP
 ```text
 USER GỬI YÊU CẦU RÚT TIỀN (Nhập số tiền + Thông tin Ngân hàng thụ hưởng)
       ↓
-System kiểm tra số dư: amount <= available_balance?
+System kiểm tra số dư: amount <= wallets.balance?
    │                   │
   YES                  NO
    │                   │
    ↓                   ↓
 KHÓA SỐ DƯ TỨC THÌ:     BÁO LỖI: Không đủ số dư khả dụng
-available_balance -= amount
-locked_balance += amount
+wallets.balance -= amount
+wallets.locked_balance += amount
 Tạo withdrawal_request (status = PENDING)
 Ghi nhận: wallet_transactions (type = WITHDRAWAL_LOCK)
       ↓
@@ -1898,7 +1904,7 @@ ADMIN REVIEW
    │
    ├── ADMIN APPROVE (Chấp thuận rút tiền):
    │      ↓
-   │   locked_balance -= amount
+   │   wallets.locked_balance -= amount
    │      ↓
    │   status = COMPLETED
    │      ↓
@@ -1908,8 +1914,8 @@ ADMIN REVIEW
           ↓
        Nhập lý do từ chối (rejection_reason)
           ↓
-       locked_balance -= amount
-       available_balance += amount (HOÀN TIỀN LẠI VÍ KHẢ DỤNG)
+       wallets.locked_balance -= amount
+       wallets.balance += amount (HOÀN TIỀN LẠI VÍ KHẢ DỤNG)
           ↓
        status = REJECTED
           ↓
@@ -1925,17 +1931,17 @@ Bản demo không cần chuyển khoản ngân hàng thật qua Open Banking API
 Số dư ví được quản lý theo 2 trường:
 
 ```text
-users.e_wallet        → Số dư khả dụng (available_balance) dùng để tạo đơn, rút tiền
-users.locked_balance  → Số dư đang bị đóng băng chờ Admin duyệt rút tiền
+wallets.balance        → Số dư khả dụng dùng để tạo đơn, rút tiền
+wallets.locked_balance → Số dư đang bị đóng băng chờ Admin duyệt rút tiền
 ```
 
 Ví dùng cho các nghiệp vụ:
 
 ```text
-COD Payout (Cộng available_balance)
-Refund Shipping Fee / Bồi thường (Cộng available_balance)
-Pay Return Fee / Weight Surcharge (Trừ available_balance)
-Withdrawal (Khóa sang locked_balance → Trừ đứt khi duyệt / Hoàn lại khi từ chối)
+COD Payout (Cộng wallets.balance)
+Refund Shipping Fee / Bồi thường (Cộng wallets.balance)
+Pay Return Fee / Weight Surcharge (Trừ wallets.balance)
+Withdrawal (Khóa sang wallets.locked_balance → Trừ đứt khi duyệt / Hoàn lại khi từ chối)
 ```
 
 ---
@@ -2503,13 +2509,40 @@ shipment_id
 hub_id
 actor_user_id
 
-status
+event_type
 description
 
 created_at
 ```
 
 Dùng dựng Tracking Timeline.
+
+`event_type` mô tả operational event; không dùng cột này làm ShipmentStatus.
+
+---
+
+# 85.1 Database – hub_routing_rules
+
+Route Planner tra cứu theo quy tắc:
+
+```text
+(Current Hub, Destination Region/Province) → Next Hub
+```
+
+```text
+hub_routing_rules
+--------------------------------
+id
+current_hub_id
+destination_region
+destination_province NULL
+next_hub_id
+status
+created_at
+updated_at
+```
+
+`destination_province` dùng khi rule cần chi tiết theo tỉnh; khi `NULL`, rule áp dụng theo `destination_region` của vận đơn. Bảng này chỉ cấu hình next hop tĩnh theo workflow hiện tại, không định nghĩa thuật toán routing mới.
 
 ---
 
@@ -3113,7 +3146,7 @@ app.demo.fast-track-route-bypass=false
                        DESTINATION DELIVERY HUB
                                    │
                            ROLE_HUB_STAFF
-                          LAST-MILE SORTING
+                          LAST-MILE SORTING (operational event; trạng thái vẫn AT_HUB)
                                    │
                                    ↓
                             ROLE_SHIPPER
@@ -3362,7 +3395,7 @@ COD READY_FOR_PAYOUT
 ```text
 WebSocket notification
 ↓
-COD +500.000 vào e_wallet
+COD +500.000 vào wallets.balance
 ↓
 Request Withdrawal
 ```
@@ -3384,7 +3417,7 @@ Timeout Demo
 ↓
 CANCELLED (reason = DROPOFF_TIMEOUT)
 ↓
-Refund 100% e_wallet
+Refund 100% vào wallets.balance
 ```
 
 ## Case 2 – Pickup thất bại
@@ -3454,7 +3487,8 @@ Manager đối soát chi tiết từng đơn:
 ↓
 Tạo FINANCIAL INCIDENT gắn với Shipper
 ↓
-Ghi nhận công nợ Shipper (shipper_debt)
+Ghi nhận trách nhiệm tài chính Shipper qua reconciliation item + financial incident
+(không tạo bảng shipper_debts trong MVP)
 ↓
 Ca đối soát = COMPLETED_WITH_DISCREPANCY
 ```
@@ -3506,7 +3540,7 @@ CLOSED_EXCEPTION (closure_reason = LOST)
 Hệ thống tự động tính:
 Compensation = declared_value (500.000) + shipping_fee (35.000) = 535.000
 ↓
-CREDIT Ví điện tử Sender: users.e_wallet += 535.000
+CREDIT Ví điện tử Sender: wallets.balance += 535.000
 ↓
 Ghi nhận: wallet_transactions (type = COMPENSATION)
 ↓
