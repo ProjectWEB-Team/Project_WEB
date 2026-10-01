@@ -6,6 +6,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import vn.iotstar.config.JwtProperties;
 import vn.iotstar.dto.auth.ApiLoginRequest;
 import vn.iotstar.dto.auth.ApiLoginResponse;
 import vn.iotstar.entity.User;
@@ -18,20 +19,23 @@ public class AuthServiceImpl implements AuthService, UserDetailsService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final JwtProperties jwtProperties;
 
-    public AuthServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
+    public AuthServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService,
+                           JwtProperties jwtProperties) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.jwtProperties = jwtProperties;
     }
 
     @Override
     public ApiLoginResponse login(ApiLoginRequest request) {
-        User user = (User) loadUserByUsername(request.username());
-        if (!user.isEnabled() || !passwordEncoder.matches(request.password(), user.getPassword())) {
+        User user = userRepository.findByUsername(request.username()).orElse(null);
+        if (user == null || !user.isEnabled() || !passwordEncoder.matches(request.password(), user.getPassword())) {
             throw new BadCredentialsException("Invalid username or password");
         }
-        return new ApiLoginResponse(jwtService.issueToken(user), "Bearer", 1800);
+        return new ApiLoginResponse(jwtService.issueToken(user), "Bearer", jwtProperties.getExpirationSeconds());
     }
 
     @Override

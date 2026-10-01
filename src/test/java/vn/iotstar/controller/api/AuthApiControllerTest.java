@@ -44,10 +44,19 @@ class AuthApiControllerTest {
     }
 
     @Test
-    void invalidCredentialsReceiveGenericUnauthorizedResponse() throws Exception {
+    void wrongPasswordReceivesGenericUnauthorizedResponse() throws Exception {
         when(authService.login(any())).thenThrow(new BadCredentialsException("secret detail"));
         mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"api-user\",\"password\":\"wrong\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("Invalid credentials"));
+    }
+
+    @Test
+    void nonexistentUserReceivesTheSameGenericUnauthorizedResponse() throws Exception {
+        when(authService.login(any())).thenThrow(new BadCredentialsException("User not found"));
+        mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":\"missing-user\",\"password\":\"any-password\"}"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error").value("Invalid credentials"));
     }

@@ -3,6 +3,7 @@ package vn.iotstar.security;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Service;
 import vn.iotstar.config.JwtProperties;
@@ -27,5 +28,5 @@ public class JwtService {
         catch (JwtException | IllegalArgumentException exception) { return false; }
     }
     private Claims claims(String token) { return Jwts.parser().verifyWith(signingKey()).build().parseSignedClaims(token).getPayload(); }
-    private SecretKey signingKey() { return Keys.hmacShaKeyFor(properties.getSecret().getBytes(StandardCharsets.UTF_8)); }
+    private SecretKey signingKey() { return Keys.hmacShaKeyFor(Decoders.BASE64.decode(properties.getSecret())); }
 }
