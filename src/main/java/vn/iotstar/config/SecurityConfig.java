@@ -1,110 +1,97 @@
 package vn.iotstar.config;
 
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import vn.iotstar.security.JwtAuthenticationFilter;
 
-/**
- * Cấu hình Dual SecurityFilterChain cho UTEExpress Logistics:
- * 1. Chain @Order(1): Dành riêng cho REST API (/api/**) - Stateless, CSRF disabled.
- * 2. Chain @Order(2): Dành cho Web SSR JSP (/**) - Stateful Session Cookie, CSRF enabled, Form Login.
- * Tuân thủ nghiêm ngặt LECTURE_STANDARDS.md & Clean Architecture.
- */
+/** Preserves the canonical session/JSP and stateless JWT/API security split. */
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
+@EnableConfigurationProperties(JwtProperties.class)
 public class SecurityConfig {
-
-    /**
-     * Bean mã hóa mật khẩu một chiều BCrypt chuẩn bảo mật bắt buộc.
-     * Tuyệt đối cấm lưu Plaintext hoặc thuật toán yếu (MD5, SHA-1).
-     */
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
+
+    @Bean
+    public AuthenticationProvider authenticationProvider(UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder);
+        return provider;
     }
 
-    /**
-     * Filter Chain 1: REST API (/api/**)
-     * Kiến trúc: Stateless Token / Direct JSON API, không duy trì HTTP Session.
-     */
-    @Bean
-    @Order(1)
-    public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .securityMatcher("/api/**")
-            .csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                // Public API: Tra cứu vận đơn & Ước tính cước phí không cần đăng nhập
-                .requestMatchers("/api/tracking/**", "/api/calculator/**").permitAll()
-                .requestMatchers("/api/auth/**").permitAll()
-                // Các API tác nghiệp yêu cầu xác thực
-                .requestMatchers("/api/shipper/**").hasAnyRole("SHIPPER", "ADMIN")
-                .requestMatchers("/api/hub/**").hasAnyRole("HUB_STAFF", "ADMIN")
-                .anyRequest().authenticated()
-            )
-            .httpBasic(Customizer.withDefaults());
-
+    @Bean @Order(1)
+    public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter,
+                                                      AuthenticationProvider authenticationProvider) throws Exception {
+        http.securityMatcher("/api/**")
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authenticationProvider(authenticationProvider)
+                .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(apiAuthenticationEntryPoint())
+                        .accessDeniedHandler(apiAccessDeniedHandler()))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/tracking/**", "/api/calculator/**", "/api/auth/**").permitAll()
+                        .requestMatchers("/api/shipper/**").hasAnyRole("SHIPPER", "ADMIN")
+                        .requestMatchers("/api/driver/**").hasAnyRole("LINEHAUL_DRIVER", "ADMIN")
+                        .requestMatchers("/api/hub/**").hasAnyRole("HUB_STAFF", "ADMIN")
+                        .anyRequest().authenticated())
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
-    /**
-     * Filter Chain 2: Web SSR JSP (/**)
-     * Kiến trúc: Stateful Session Cookie, Form Login, bảo vệ CSRF chống giả mạo request.
-     */
-    @Bean
-    @Order(2)
-    public SecurityFilterChain webSecurityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
-            .csrf(Customizer.withDefaults())
-            .authorizeHttpRequests(auth -> auth
-                // Tài nguyên công khai (Static assets, layout, trang chủ, tra cứu, tính cước)
-                .requestMatchers(
-                    "/",
-                    "/home",
-                    "/tracking/**",
-                    "/calculator/**",
-                    "/auth/**",
-                    "/login",
-                    "/register",
-                    "/assets/**",
-                    "/webjars/**",
-                    "/ws/**",
-                    "/error"
-                ).permitAll()
-                // Phân quyền theo 6 Roles nghiệp vụ
-                .requestMatchers("/admin/**").hasRole("ADMIN")
-                .requestMatchers("/manager/**").hasAnyRole("ADMIN", "MANAGER")
-                .requestMatchers("/hub/**").hasAnyRole("ADMIN", "HUB_STAFF")
-                .requestMatchers("/driver/**").hasAnyRole("ADMIN", "DRIVER")
-                .requestMatchers("/shipper/**").hasAnyRole("ADMIN", "SHIPPER")
-                .requestMatchers("/user/**").authenticated()
-                .anyRequest().authenticated()
-            )
-            .formLogin(form -> form
-                .loginPage("/login")
-                .loginProcessingUrl("/login")
-                .defaultSuccessUrl("/", false)
-                .failureUrl("/login?error=true")
-                .permitAll()
-            )
-            .logout(logout -> logout
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/login?logout=true")
-                .deleteCookies("UTEEXPRESS_SESSION", "JSESSIONID")
-                .invalidateHttpSession(true)
-                .clearAuthentication(true)
-                .permitAll()
-            );
-
+    @Bean @Order(2)
+    public SecurityFilterChain webSecurityFilterChain(HttpSecurity http, AuthenticationProvider authenticationProvider)
+            throws Exception {
+        http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                .csrf(Customizer.withDefaults())
+                .authenticationProvider(authenticationProvider)
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/", "/home", "/tracking/**", "/calculator/**", "/auth/**", "/login",
+                                "/register", "/assets/**", "/webjars/**", "/ws/**", "/error").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/manager/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/hub/**").hasAnyRole("ADMIN", "HUB_STAFF")
+                        .requestMatchers("/driver/**").hasAnyRole("ADMIN", "LINEHAUL_DRIVER")
+                        .requestMatchers("/shipper/**").hasAnyRole("ADMIN", "SHIPPER")
+                        .requestMatchers("/user/**").authenticated().anyRequest().authenticated())
+                .formLogin(form -> form.loginPage("/login").loginProcessingUrl("/login")
+                        .defaultSuccessUrl("/", false).failureUrl("/login?error=true").permitAll())
+                .logout(logout -> logout.logoutUrl("/logout").logoutSuccessUrl("/login?logout=true")
+                        .deleteCookies("UTEEXPRESS_SESSION", "JSESSIONID").invalidateHttpSession(true)
+                        .clearAuthentication(true).permitAll());
         return http.build();
+    }
+
+    private AuthenticationEntryPoint apiAuthenticationEntryPoint() {
+        return (request, response, exception) -> writeApiError(response, HttpServletResponse.SC_UNAUTHORIZED, "Authentication required");
+    }
+    private AccessDeniedHandler apiAccessDeniedHandler() {
+        return (request, response, exception) -> writeApiError(response, HttpServletResponse.SC_FORBIDDEN, "Access denied");
+    }
+    private void writeApiError(HttpServletResponse response, int status, String message) throws java.io.IOException {
+        response.setStatus(status);
+        response.setContentType("application/json");
+        response.getWriter().write("{\"error\":\"" + message + "\"}");
     }
 }
