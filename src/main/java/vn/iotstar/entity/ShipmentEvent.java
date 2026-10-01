@@ -49,6 +49,7 @@ public class ShipmentEvent implements Serializable {
         event.actor = actor;
         event.eventType = "SHIPMENT_CREATED";
         event.description = "Shipment created";
+        event.createdAt = LocalDateTime.now();
         return event;
     }
 
