@@ -152,22 +152,26 @@
 
 **Consequences:** Service-layer authorization must use the applicable contextual checks.
 
-## OPEN-001 — Missing Project Spec Knowledge Base source
+## OPEN-001 — Historical Issue: Missing Project Spec Knowledge Base source
 
-**Status:** OPEN
+**Status:** RESOLVED
 
-**Conflict:** The authority chain requires `docs/PROJECT_SPEC_KNOWLEDGE_BASE.md`, but the file is absent from the workspace.
+**Issue:** `docs/PROJECT_SPEC_KNOWLEDGE_BASE.md` previously did not exist in the workspace, despite being required by the authority chain.
 
-**Evidence:** A complete repository file search found no file matching that name or its knowledge-base wording.
+**Resolution:** `docs/PROJECT_SPEC_KNOWLEDGE_BASE.md` has been restored and is the canonical Core Lecture Ground Truth.
 
-**Required resolution:** Provide or restore the source document before a full four-document audit or GSD planning that relies on it.
+**Resolved by:** Documentation baseline update.
+
+**Consequence:** GSD and Codex must read this file according to the current authority chain before planning or implementation.
 
 ## OPEN-002 — Legacy duplicate standards document
 
-**Status:** OPEN
+**Status:** RESOLVED (historical)
 
-**Conflict:** `docs/rule.md` is a legacy duplicate headed `LECTURE_STANDARDS.md` and still contains older authority and generic-domain wording.
+**Issue:** `docs/rule.md` was a legacy duplicate headed `LECTURE_STANDARDS.md` and contained older authority plus generic-domain wording.
 
-**Evidence:** It is separate from the renamed standards file and contains pre-normalization rules such as the older `ROLE_VENDOR` example.
+**Audit:** The legacy file was compared with `docs/ENGINEERING_STANDARDS.md`, `docs/PROJECT_SPEC_KNOWLEDGE_BASE.md`, and this ADR register. Its technical rules were already represented by the current Engineering Standards and/or preserved as Core Lecture Ground Truth source examples. Its additional material was illustrative detail, repeated guidance, or superseded generic-domain examples such as `ROLE_VENDOR`; it did not define a unique, still-applicable canonical UTEExpress rule.
 
-**Required resolution:** Confirm whether `docs/rule.md` should be removed, archived, or synchronized. No change is made here because its intended ownership is not defined.
+**Resolution:** Deleted `docs/rule.md`. No canonical rule was lost. `docs/ENGINEERING_STANDARDS.md` is the current engineering-rules source, and `docs/PROJECT_SPEC_KNOWLEDGE_BASE.md` is the current Core Lecture Ground Truth/source-example record.
+
+**Resolved by:** Documentation baseline audit and consolidation.
