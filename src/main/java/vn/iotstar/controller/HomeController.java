@@ -19,4 +19,10 @@ public class HomeController {
         model.addAttribute("activeMenu", "home");
         return "index";
     }
+
+    /** Renders the public form-login view; Spring Security owns POST /login authentication. */
+    @GetMapping("/login")
+    public String login() {
+        return "auth/login";
+    }
 }
