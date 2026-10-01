@@ -25,7 +25,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * docs/schema.sql and the Phase-01 event_type reconciliation script were applied.
  */
 @EnabledIf(value = "sqlServerVerificationConfigured", disabledReason = "REAL_SQLSERVER_VERIFICATION = BLOCKED_BY_ENVIRONMENT")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
+// Keep the normal servlet/MVC infrastructure so the production SecurityConfig
+// can initialize its MVC request matchers; no real HTTP server is started.
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles("sqlserver-verification")
 class ShipmentSqlServerIntegrationTest {
     @Autowired private ShipmentService shipmentService;
