@@ -10,6 +10,16 @@ JSP → Controller → DTO → Service → Repository → JPA → SQL Server
 
 Each slice includes applicable security, RBAC/data scope, WebSocket integration, exception handling, and tests.
 
+## Named team assignment
+
+| Person | Member | Project responsibility | Primary vertical slice |
+|---|---|---|---|
+| Person A | Hoàng Phúc Khang | User-facing intake and JSP/UI ownership | User & Shipment Intake (Phase 02) |
+| Person B | Ngô Bá Vạn (leader) | Architecture stewardship, canonical-decision guard, and integration coordination | Hub & Linehaul Operations (Phase 03) |
+| Person C | Huỳnh Tấn Anh Phát | Last-mile and financial-integrity ownership | Last-mile & Finance (Phase 04) |
+
+Ngô Bá Vạn remains Person B rather than becoming a horizontal "backend lead": leadership coordinates canonical decisions and cross-slice contracts while each member still owns a complete vertical path.
+
 ## Phase 01 — Shared Walking Skeleton
 
 All three members jointly build the architecture foundation:
