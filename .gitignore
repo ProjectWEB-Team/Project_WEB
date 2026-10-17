@@ -1,0 +1,36 @@
+# Dependencies & local tools
+node_modules/
+.agents/
+.planning/
+.gsd/
+.codex/
+.local-backups/
+
+# Environment & local secrets
+.env
+.env.local
+src/main/resources/application-local.properties
+application-local.properties
+*.log
+*.zip
+*.tar
+*.tar.gz
+
+# Maven & Build artifacts
+target/
+*.class
+
+# Eclipse
+.classpath
+.project
+.settings/
+.factorypath
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+
+# OS files
+Thumbs.db
+.DS_Store
