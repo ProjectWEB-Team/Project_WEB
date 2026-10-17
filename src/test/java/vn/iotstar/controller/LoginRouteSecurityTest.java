@@ -1,5 +1,6 @@
 package vn.iotstar.controller;
 
+import jakarta.servlet.DispatcherType;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -57,6 +58,16 @@ class LoginRouteSecurityTest {
     }
 
     @Test
+    void internalLoginJspForwardIsPermittedByTheRealSecurityFilterChain() throws Exception {
+        mockMvc.perform(get("/WEB-INF/views/auth/login.jsp").with(request -> {
+                    request.setDispatcherType(DispatcherType.FORWARD);
+                    return request;
+                }))
+                // MockMvc has no JSP servlet, so 404 proves security allowed the forward instead of redirecting to /login.
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void unauthenticatedShipmentRouteRedirectsToLogin() throws Exception {
         mockMvc.perform(get("/user/shipments/create"))
                 .andExpect(status().is3xxRedirection())
@@ -72,7 +83,7 @@ class LoginRouteSecurityTest {
                         .param("username", "phase01-user")
                         .param("password", "local-uat-password"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/"))
+                .andExpect(redirectedUrl("/user/shipments/create"))
                 .andReturn();
 
         MockHttpSession session = (MockHttpSession) login.getRequest().getSession(false);

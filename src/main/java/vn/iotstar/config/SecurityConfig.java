@@ -1,5 +1,6 @@
 package vn.iotstar.config;
 
+import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -67,6 +68,7 @@ public class SecurityConfig {
                 .csrf(Customizer.withDefaults())
                 .authenticationProvider(authenticationProvider)
                 .authorizeHttpRequests(auth -> auth
+                        .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
                         .requestMatchers("/", "/home", "/tracking/**", "/calculator/**", "/auth/**", "/login",
                                 "/register", "/assets/**", "/webjars/**", "/error").permitAll()
                         .requestMatchers("/ws", "/ws/**").authenticated()
@@ -77,7 +79,7 @@ public class SecurityConfig {
                         .requestMatchers("/shipper/**").hasAnyRole("ADMIN", "SHIPPER")
                         .requestMatchers("/user/**").authenticated().anyRequest().authenticated())
                 .formLogin(form -> form.loginPage("/login").loginProcessingUrl("/login")
-                        .defaultSuccessUrl("/", false).failureUrl("/login?error=true").permitAll())
+                        .defaultSuccessUrl("/user/shipments/create", true).failureUrl("/login?error=true").permitAll())
                 .logout(logout -> logout.logoutUrl("/logout").logoutSuccessUrl("/login?logout=true")
                         .deleteCookies("UTEEXPRESS_SESSION", "JSESSIONID").invalidateHttpSession(true)
                         .clearAuthentication(true).permitAll());

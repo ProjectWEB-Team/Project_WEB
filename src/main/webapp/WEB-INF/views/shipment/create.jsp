@@ -13,7 +13,7 @@
 <main class="container py-5" style="max-width: 860px">
     <h1 class="h3 mb-2">Create a shipment</h1>
     <p class="text-muted mb-4">Phase-01 tracer: sender and receiver snapshot only.</p>
-    <form:form method="post" modelAttribute="createShipmentRequest" class="card shadow-sm">
+    <form:form method="post" action="${pageContext.request.contextPath}/user/shipments" modelAttribute="createShipmentRequest" class="card shadow-sm">
         <div class="card-body">
             <h2 class="h5">Sender</h2>
             <div class="row g-3 mb-4">
