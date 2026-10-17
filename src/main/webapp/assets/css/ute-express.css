@@ -1,0 +1,195 @@
+/* ===================================================================
+   UTEEXPRESS — UI/UX DESIGN SYSTEM STYLESHEET
+   Authentic HCMUTE Logistics Enterprise Palette
+   Primary: #0F3D78 (Deep Cobalt Blue)
+   Accent:  #F26522 (Express Safety Orange)
+   Canvas:  #F1F5F9 (Industrial Gray)
+   =================================================================== */
+
+:root {
+    /* Brand Colors */
+    --ute-primary: #0F3D78;
+    --ute-primary-dark: #0A2852;
+    --ute-primary-light: #EBF2FA;
+    --ute-accent: #F26522;
+    --ute-accent-hover: #D85213;
+    --ute-accent-light: #FFF0E8;
+
+    /* Backgrounds & Canvas */
+    --ute-canvas: #F1F5F9;
+    --ute-surface: #FFFFFF;
+
+    /* Typography & Contrast */
+    --ute-text-main: #1E293B;
+    --ute-text-muted: #64748B;
+    --ute-border: #CBD5E1;
+
+    /* 13 Status Badge High-Contrast Colors */
+    --status-created: #64748B;
+    --status-waiting-payment: #D97706;
+    --status-waiting-handover: #0284C7;
+    --status-picked-up: #4F46E5;
+    --status-at-hub: #0F3D78;
+    --status-in-transit: #7C3AED;
+    --status-out-delivery: #F26522;
+    --status-failed: #DC2626;
+    --status-delivered: #16A34A;
+    --status-return: #C2410C;
+    --status-returned: #475569;
+    --status-cancelled: #991B1B;
+    --status-closed-exception: #0F172A;
+}
+
+body {
+    background-color: var(--ute-canvas);
+    color: var(--ute-text-main);
+    font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* -------------------------------------------------------------------
+   1. Brand Utility Classes
+   ------------------------------------------------------------------- */
+.bg-ute-primary { background-color: var(--ute-primary) !important; color: #FFFFFF !important; }
+.text-ute-primary { color: var(--ute-primary) !important; }
+.border-ute-primary { border-color: var(--ute-primary) !important; }
+
+.bg-ute-accent { background-color: var(--ute-accent) !important; color: #FFFFFF !important; }
+.text-ute-accent { color: var(--ute-accent) !important; }
+
+.bg-ute-canvas { background-color: var(--ute-canvas) !important; }
+.text-ute-dark { color: var(--ute-text-main) !important; }
+.text-ute-muted { color: var(--ute-text-muted) !important; }
+.border-ute { border-color: var(--ute-border) !important; }
+
+/* Primary CTA Button (Express Safety Orange) */
+.btn-ute-accent {
+    background-color: var(--ute-accent) !important;
+    border-color: var(--ute-accent) !important;
+    color: #FFFFFF !important;
+    font-weight: 600;
+    transition: all 0.2s ease-in-out;
+}
+.btn-ute-accent:hover, .btn-ute-accent:focus {
+    background-color: var(--ute-accent-hover) !important;
+    border-color: var(--ute-accent-hover) !important;
+    color: #FFFFFF !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(242, 101, 34, 0.35);
+}
+
+/* Secondary Action Button (Deep Cobalt Blue) */
+.btn-ute-primary {
+    background-color: var(--ute-primary) !important;
+    border-color: var(--ute-primary) !important;
+    color: #FFFFFF !important;
+    font-weight: 600;
+    transition: all 0.2s ease-in-out;
+}
+.btn-ute-primary:hover, .btn-ute-primary:focus {
+    background-color: var(--ute-primary-dark) !important;
+    border-color: var(--ute-primary-dark) !important;
+    color: #FFFFFF !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(15, 61, 120, 0.35);
+}
+
+/* Outline CTA */
+.btn-outline-ute-accent {
+    color: var(--ute-accent) !important;
+    border-color: var(--ute-accent) !important;
+    background-color: transparent !important;
+    font-weight: 600;
+}
+.btn-outline-ute-accent:hover {
+    background-color: var(--ute-accent) !important;
+    color: #FFFFFF !important;
+}
+
+/* -------------------------------------------------------------------
+   2. 13 Status Badges High-Contrast Classes (Kho & Shipper Ergonomics)
+   ------------------------------------------------------------------- */
+.badge-created { background-color: var(--status-created) !important; color: #FFFFFF !important; font-weight: 600; }
+.badge-waiting-payment { background-color: var(--status-waiting-payment) !important; color: #FFFFFF !important; font-weight: 700; }
+.badge-waiting-handover { background-color: var(--status-waiting-handover) !important; color: #FFFFFF !important; font-weight: 600; }
+.badge-picked-up { background-color: var(--status-picked-up) !important; color: #FFFFFF !important; font-weight: 600; }
+.badge-at-hub { background-color: var(--status-at-hub) !important; color: #FFFFFF !important; font-weight: 700; }
+.badge-in-transit { background-color: var(--status-in-transit) !important; color: #FFFFFF !important; font-weight: 700; }
+.badge-out-delivery { background-color: var(--status-out-delivery) !important; color: #FFFFFF !important; font-weight: 700; text-transform: uppercase; }
+.badge-failed { background-color: var(--status-failed) !important; color: #FFFFFF !important; font-weight: 700; }
+.badge-delivered { background-color: var(--status-delivered) !important; color: #FFFFFF !important; font-weight: 700; }
+.badge-return { background-color: var(--status-return) !important; color: #FFFFFF !important; font-weight: 700; }
+.badge-returned { background-color: var(--status-returned) !important; color: #FFFFFF !important; font-weight: 600; }
+.badge-cancelled { background-color: var(--status-cancelled) !important; color: #FFFFFF !important; font-weight: 600; }
+.badge-closed-exception { background-color: var(--status-closed-exception) !important; color: #FFFFFF !important; font-weight: 700; }
+
+/* -------------------------------------------------------------------
+   3. Card & Table Components
+   ------------------------------------------------------------------- */
+.card-ute {
+    background-color: var(--ute-surface);
+    border: 1px solid var(--ute-border);
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease-in-out;
+}
+.card-ute:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.table-ute th {
+    background-color: #F8FAFC;
+    color: var(--ute-text-muted);
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-bottom: 2px solid var(--ute-border);
+}
+
+/* -------------------------------------------------------------------
+   4. Vertical Stepper Timeline (Tra cứu hành trình vận đơn)
+   ------------------------------------------------------------------- */
+.tracking-timeline {
+    position: relative;
+    border-left: 2px solid #E2E8F0;
+    padding-left: 1.5rem;
+    margin-left: 1rem;
+}
+.timeline-item {
+    position: relative;
+    padding-bottom: 1.75rem;
+}
+.timeline-item:last-child {
+    padding-bottom: 0;
+}
+.timeline-marker {
+    position: absolute;
+    left: -2.35rem;
+    top: 0;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+}
+
+/* -------------------------------------------------------------------
+   5. Form Ergonomics & Dual Validation
+   ------------------------------------------------------------------- */
+.form-control:focus, .form-select:focus {
+    border-color: var(--ute-primary);
+    box-shadow: 0 0 0 0.25rem rgba(15, 61, 120, 0.2);
+}
+.is-invalid {
+    border-color: var(--status-failed) !important;
+}
+.invalid-feedback {
+    color: var(--status-failed);
+    font-weight: 500;
+    font-size: 0.85rem;
+}
