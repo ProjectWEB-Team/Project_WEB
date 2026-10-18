@@ -1,0 +1,59 @@
+package vn.iotstar.controller;
+
+import jakarta.validation.Valid;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import vn.iotstar.dto.hub.CreateContainerCommand;
+import vn.iotstar.dto.hub.CreateHandoverCommand;
+import vn.iotstar.dto.hub.CorrectHandoverCommand;
+import vn.iotstar.dto.hub.LoadContainerCommand;
+import vn.iotstar.service.ContainerHandoverService;
+
+import java.util.List;
+
+/** JSP adapter only: the custody service owns all scope and transition decisions. */
+@Controller
+@RequestMapping("/hub/outbound")
+public class OutboundOperationsController {
+    private final ContainerHandoverService containerHandoverService;
+    public OutboundOperationsController(ContainerHandoverService containerHandoverService) { this.containerHandoverService = containerHandoverService; }
+
+    @GetMapping
+    public String queue(Model model) {
+        if (!model.containsAttribute("createContainerCommand")) model.addAttribute("createContainerCommand", new CreateContainerCommand(null, null));
+        if (!model.containsAttribute("loadContainerCommand")) model.addAttribute("loadContainerCommand", new LoadContainerCommand(null, null));
+        if (!model.containsAttribute("createHandoverCommand")) model.addAttribute("createHandoverCommand", new CreateHandoverCommand(null, null, List.of()));
+        if (!model.containsAttribute("correctHandoverCommand")) model.addAttribute("correctHandoverCommand", new CorrectHandoverCommand(null, List.of()));
+        return "hub/outbound-queue";
+    }
+
+    @PostMapping("/containers")
+    public String createContainer(@Valid @ModelAttribute CreateContainerCommand command, BindingResult errors, RedirectAttributes redirect) {
+        if (errors.hasErrors()) return invalid(redirect);
+        containerHandoverService.createContainer(command); redirect.addFlashAttribute("operationMessage", "Container created."); return "redirect:/hub/outbound";
+    }
+    @PostMapping("/load")
+    public String load(@Valid @ModelAttribute LoadContainerCommand command, BindingResult errors, RedirectAttributes redirect) {
+        if (errors.hasErrors()) return invalid(redirect);
+        containerHandoverService.loadShipment(command); redirect.addFlashAttribute("operationMessage", "Shipment loaded for outbound custody."); return "redirect:/hub/outbound";
+    }
+    @PostMapping("/handovers")
+    public String createHandover(@Valid @ModelAttribute CreateHandoverCommand command, BindingResult errors, RedirectAttributes redirect) {
+        if (errors.hasErrors()) return invalid(redirect);
+        containerHandoverService.createHandover(command); redirect.addFlashAttribute("operationMessage", "Handover prepared for assigned driver."); return "redirect:/hub/outbound";
+    }
+    @PostMapping("/handovers/correct")
+    public String correct(@Valid @ModelAttribute CorrectHandoverCommand command, BindingResult errors, RedirectAttributes redirect) {
+        if (errors.hasErrors()) return invalid(redirect);
+        containerHandoverService.correctByCancellationAndRecreation(command);
+        redirect.addFlashAttribute("operationMessage", "Custody correction recorded as a replacement handover.");
+        return "redirect:/hub/outbound";
+    }
+    private String invalid(RedirectAttributes redirect) { redirect.addFlashAttribute("operationMessage", "Enter valid operational identifiers."); return "redirect:/hub/outbound"; }
+}

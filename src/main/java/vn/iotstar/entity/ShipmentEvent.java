@@ -65,6 +65,14 @@ public class ShipmentEvent implements Serializable {
         return operational(shipment, actor, hub, "SORTING_COMPLETED", "Static next-hop routing completed");
     }
 
+    public static ShipmentEvent bagCreated(Shipment shipment, User actor, Hub hub) {
+        return operational(shipment, actor, hub, "BAG_CREATED", "Shipment added to an outbound container");
+    }
+
+    public static ShipmentEvent outboundScanned(Shipment shipment, User actor, Hub hub) {
+        return operational(shipment, actor, hub, "OUTBOUND_SCANNED", "Shipment scanned for outbound custody");
+    }
+
     private static ShipmentEvent operational(Shipment shipment, User actor, Hub hub, String eventType, String description) {
         ShipmentEvent event = new ShipmentEvent();
         event.shipment = shipment;
