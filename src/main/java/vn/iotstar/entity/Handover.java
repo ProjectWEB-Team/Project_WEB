@@ -48,6 +48,7 @@ public class Handover {
     }
     public void cancelForCorrection() { if (!isActive()) throw new IllegalStateException("Only active custody can be cancelled"); status = "CANCELLED"; cancelledAt = LocalDateTime.now(); }
     public void linkReplacement(Handover replacement) { this.replacementHandover = replacement; }
+    public void linkTransportTrip(TransportTrip trip) { this.transportTrip = trip; }
     public Long getId() { return id; }
     public Hub getFromHub() { return fromHub; }
     public Hub getToHub() { return toHub; }
@@ -58,4 +59,5 @@ public class Handover {
     public LocalDateTime getAcceptedAt() { return acceptedAt; }
     public Handover getReplacesHandover() { return replacesHandover; }
     public Handover getReplacementHandover() { return replacementHandover; }
+    public TransportTrip getTransportTrip() { return transportTrip; }
 }

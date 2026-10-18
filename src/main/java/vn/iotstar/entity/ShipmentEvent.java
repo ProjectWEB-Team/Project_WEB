@@ -73,6 +73,18 @@ public class ShipmentEvent implements Serializable {
         return operational(shipment, actor, hub, "OUTBOUND_SCANNED", "Shipment scanned for outbound custody");
     }
 
+    public static ShipmentEvent linehaulHandoverAccepted(Shipment shipment, User actor, Hub hub) {
+        return operational(shipment, actor, hub, "LINEHAUL_HANDOVER_ACCEPTED", "Assigned linehaul driver accepted custody");
+    }
+
+    public static ShipmentEvent linehaulTripStarted(Shipment shipment, User actor, Hub hub) {
+        return operational(shipment, actor, hub, "LINEHAUL_TRIP_STARTED", "Assigned linehaul trip started");
+    }
+
+    public static ShipmentEvent linehaulArrived(Shipment shipment, User actor, Hub hub) {
+        return operational(shipment, actor, hub, "LINEHAUL_ARRIVED", "Linehaul arrived; destination receipt is still required");
+    }
+
     private static ShipmentEvent operational(Shipment shipment, User actor, Hub hub, String eventType, String description) {
         ShipmentEvent event = new ShipmentEvent();
         event.shipment = shipment;
