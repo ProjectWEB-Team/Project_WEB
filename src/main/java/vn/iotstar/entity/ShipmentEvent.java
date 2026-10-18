@@ -31,6 +31,10 @@ public class ShipmentEvent implements Serializable {
     @JoinColumn(name = "actor_user_id", nullable = false)
     private User actor;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hub_id")
+    private Hub hub;
+
     @Column(name = "event_type", nullable = false, length = 50, columnDefinition = "NVARCHAR(50)")
     private String eventType;
 
@@ -53,6 +57,25 @@ public class ShipmentEvent implements Serializable {
         return event;
     }
 
+    public static ShipmentEvent arrivedAtHub(Shipment shipment, User actor, Hub hub) {
+        return operational(shipment, actor, hub, "ARRIVED_AT_HUB", "Shipment received at hub");
+    }
+
+    public static ShipmentEvent sortingCompleted(Shipment shipment, User actor, Hub hub) {
+        return operational(shipment, actor, hub, "SORTING_COMPLETED", "Static next-hop routing completed");
+    }
+
+    private static ShipmentEvent operational(Shipment shipment, User actor, Hub hub, String eventType, String description) {
+        ShipmentEvent event = new ShipmentEvent();
+        event.shipment = shipment;
+        event.actor = actor;
+        event.hub = hub;
+        event.eventType = eventType;
+        event.description = description;
+        event.createdAt = LocalDateTime.now();
+        return event;
+    }
+
     @PrePersist
     void assignCreatedAt() {
         if (createdAt == null) {
@@ -63,6 +86,7 @@ public class ShipmentEvent implements Serializable {
     public Long getId() { return id; }
     public Shipment getShipment() { return shipment; }
     public User getActor() { return actor; }
+    public Hub getHub() { return hub; }
     public String getEventType() { return eventType; }
     public String getDescription() { return description; }
     public LocalDateTime getCreatedAt() { return createdAt; }

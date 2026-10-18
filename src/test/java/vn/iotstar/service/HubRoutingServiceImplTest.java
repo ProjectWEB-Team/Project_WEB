@@ -1,0 +1,196 @@
+package vn.iotstar.service;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.util.ReflectionTestUtils;
+import vn.iotstar.dto.hub.InboundShipmentCommand;
+import vn.iotstar.dto.hub.SortShipmentCommand;
+import vn.iotstar.dto.hub.SortingDecisionResponse;
+import vn.iotstar.dto.hub.RouteDiagnosticResponse;
+import vn.iotstar.dto.realtime.OperationalActionNotification;
+import vn.iotstar.entity.EmployeeProfile;
+import vn.iotstar.entity.Hub;
+import vn.iotstar.entity.HubRoutingRule;
+import vn.iotstar.entity.Shipment;
+import vn.iotstar.entity.ShipmentEvent;
+import vn.iotstar.entity.ShipmentStatus;
+import vn.iotstar.entity.User;
+import vn.iotstar.entity.UserRole;
+import vn.iotstar.exception.HubOperationAccessDeniedException;
+import vn.iotstar.exception.RouteConfigurationException;
+import vn.iotstar.repository.HubOperationsRepository;
+import vn.iotstar.repository.ShipmentEventRepository;
+import vn.iotstar.repository.UserRepository;
+import vn.iotstar.service.impl.HubOperationsServiceImpl;
+
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class HubRoutingServiceImplTest {
+    @Mock private HubOperationsRepository hubOperationsRepository;
+    @Mock private ShipmentEventRepository shipmentEventRepository;
+    @Mock private UserRepository userRepository;
+    @Mock private ApplicationEventPublisher applicationEventPublisher;
+    @InjectMocks private HubOperationsServiceImpl service;
+
+    @AfterEach
+    void clearSecurityContext() { SecurityContextHolder.clearContext(); }
+
+    @Test
+    void inboundAtOwnHubSetsAtHubAndRecordsArrivalEvent() {
+        Fixture fixture = fixture();
+        authenticate(fixture.staff());
+        when(hubOperationsRepository.findActiveProfileByUserId(7L)).thenReturn(Optional.of(fixture.inboundProfile()));
+        when(hubOperationsRepository.findShipmentByIdForUpdate(101L)).thenReturn(Optional.of(fixture.shipment()));
+        when(userRepository.getReferenceById(7L)).thenReturn(fixture.staff());
+
+        service.receiveAtHub(new InboundShipmentCommand(101L));
+
+        assertThat(fixture.shipment().getCurrentStatus()).isEqualTo(ShipmentStatus.AT_HUB);
+        assertThat(fixture.shipment().getCurrentHub()).isEqualTo(fixture.currentHub());
+        ArgumentCaptor<ShipmentEvent> event = ArgumentCaptor.forClass(ShipmentEvent.class);
+        verify(shipmentEventRepository).save(event.capture());
+        assertThat(event.getValue().getEventType()).isEqualTo("ARRIVED_AT_HUB");
+        assertThat(event.getValue().getHub()).isEqualTo(fixture.currentHub());
+    }
+
+    @Test
+    void sorterDerivesOneStaticNextHopAndRepeatReturnsExistingDecision() {
+        Fixture fixture = fixture();
+        ReflectionTestUtils.setField(fixture.shipment(), "currentStatus", ShipmentStatus.AT_HUB);
+        ReflectionTestUtils.setField(fixture.shipment(), "currentHub", fixture.currentHub());
+        authenticate(fixture.staff());
+        when(hubOperationsRepository.findActiveProfileByUserId(7L)).thenReturn(Optional.of(fixture.sorterProfile()));
+        when(hubOperationsRepository.findShipmentByIdForUpdate(101L)).thenReturn(Optional.of(fixture.shipment()));
+        when(hubOperationsRepository.findRouteByDecisionKey("shipment:101:hub:11"))
+                .thenReturn(Optional.empty(), Optional.of(fixture.route()));
+        when(hubOperationsRepository.findActiveRules(11L, "SOUTH", "Can Tho")).thenReturn(List.of(fixture.rule()));
+        when(userRepository.getReferenceById(7L)).thenReturn(fixture.staff());
+        when(hubOperationsRepository.saveRoute(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        SortingDecisionResponse first = service.sortAtHub(new SortShipmentCommand(101L));
+        SortingDecisionResponse repeated = service.sortAtHub(new SortShipmentCommand(101L));
+
+        assertThat(first.nextHubCode()).isEqualTo("SOC-LA");
+        assertThat(first.reused()).isFalse();
+        assertThat(repeated.reused()).isTrue();
+        verify(hubOperationsRepository, times(1)).saveRoute(any());
+        verify(shipmentEventRepository, times(1)).save(any());
+    }
+
+    @Test
+    void unmatchedStaticRuleLeavesNoOperationalWriteAndDoesNotExposeConfigurationToStaff() {
+        Fixture fixture = fixture();
+        ReflectionTestUtils.setField(fixture.shipment(), "currentStatus", ShipmentStatus.AT_HUB);
+        ReflectionTestUtils.setField(fixture.shipment(), "currentHub", fixture.currentHub());
+        authenticate(fixture.staff());
+        when(hubOperationsRepository.findActiveProfileByUserId(7L)).thenReturn(Optional.of(fixture.sorterProfile()));
+        when(hubOperationsRepository.findShipmentByIdForUpdate(101L)).thenReturn(Optional.of(fixture.shipment()));
+        when(hubOperationsRepository.findRouteByDecisionKey("shipment:101:hub:11")).thenReturn(Optional.empty());
+        when(hubOperationsRepository.findActiveRules(11L, "SOUTH", "Can Tho")).thenReturn(List.of());
+
+        assertThatThrownBy(() -> service.sortAtHub(new SortShipmentCommand(101L)))
+                .isInstanceOf(RouteConfigurationException.class)
+                .hasMessage("Sorting is temporarily unavailable");
+
+        verify(hubOperationsRepository, never()).saveRoute(any());
+        verifyNoInteractions(shipmentEventRepository);
+        ArgumentCaptor<OperationalActionNotification> notification = ArgumentCaptor.forClass(OperationalActionNotification.class);
+        verify(applicationEventPublisher).publishEvent(notification.capture());
+        assertThat(notification.getValue().type()).isEqualTo("BLOCKED_ROUTE");
+        assertThat(notification.getValue().currentHubId()).isEqualTo(11L);
+        assertThat(notification.getValue().diagnosticReference()).isEqualTo("ROUTE_LOOKUP_BLOCKED");
+    }
+
+    @Test
+    void sorterCannotOperateShipmentOutsideTheirCurrentHub() {
+        Fixture fixture = fixture();
+        Hub differentHub = Hub.active("HUB-OTHER", "Other Hub", 1, "DELIVERY_HUB", "SOUTH", "Can Tho");
+        ReflectionTestUtils.setField(fixture.shipment(), "currentStatus", ShipmentStatus.AT_HUB);
+        ReflectionTestUtils.setField(fixture.shipment(), "currentHub", differentHub);
+        authenticate(fixture.staff());
+        when(hubOperationsRepository.findActiveProfileByUserId(7L)).thenReturn(Optional.of(fixture.sorterProfile()));
+        when(hubOperationsRepository.findShipmentByIdForUpdate(101L)).thenReturn(Optional.of(fixture.shipment()));
+
+        assertThatThrownBy(() -> service.sortAtHub(new SortShipmentCommand(101L)))
+                .isInstanceOf(HubOperationAccessDeniedException.class);
+        verify(hubOperationsRepository, never()).findActiveRules(anyLong(), anyString(), anyString());
+    }
+
+    @Test
+    void scopedManagerCanReadConfigurationDiagnosisButHubStaffCannot() {
+        Fixture fixture = fixture();
+        ReflectionTestUtils.setField(fixture.shipment(), "currentHub", fixture.currentHub());
+        when(hubOperationsRepository.findShipmentByIdWithHub(101L)).thenReturn(Optional.of(fixture.shipment()));
+        when(hubOperationsRepository.findActiveRules(11L, "SOUTH", "Can Tho")).thenReturn(List.of());
+        User manager = new User(9L, "manager", "hash", UserRole.ROLE_MANAGER, "ACTIVE");
+        EmployeeProfile managerProfile = EmployeeProfile.active(manager, fixture.currentHub(), null);
+        authenticate(manager);
+        when(hubOperationsRepository.findActiveProfileByUserId(9L)).thenReturn(Optional.of(managerProfile));
+        when(hubOperationsRepository.isHubWithinSubtree(11L, 11L)).thenReturn(1);
+
+        RouteDiagnosticResponse diagnostic = service.getRouteDiagnostic(101L);
+        assertThat(diagnostic.diagnosticCode()).isEqualTo("NO_ACTIVE_STATIC_RULE");
+
+        authenticate(fixture.staff());
+        assertThatThrownBy(() -> service.getRouteDiagnostic(101L))
+                .isInstanceOf(HubOperationAccessDeniedException.class);
+    }
+
+    @Test
+    void managerOutsideTheCurrentHubSubtreeCannotReadConfigurationDiagnosis() {
+        Fixture fixture = fixture();
+        ReflectionTestUtils.setField(fixture.shipment(), "currentHub", fixture.currentHub());
+        User manager = new User(9L, "manager", "hash", UserRole.ROLE_MANAGER, "ACTIVE");
+        Hub otherHub = Hub.active("HUB-OTHER", "Other Hub", 1, "DELIVERY_HUB", "NORTH", "Ha Noi");
+        ReflectionTestUtils.setField(otherHub, "id", 19L);
+        EmployeeProfile managerProfile = EmployeeProfile.active(manager, otherHub, null);
+        authenticate(manager);
+        when(hubOperationsRepository.findShipmentByIdWithHub(101L)).thenReturn(Optional.of(fixture.shipment()));
+        when(hubOperationsRepository.findActiveProfileByUserId(9L)).thenReturn(Optional.of(managerProfile));
+        when(hubOperationsRepository.isHubWithinSubtree(19L, 11L)).thenReturn(0);
+
+        assertThatThrownBy(() -> service.getRouteDiagnostic(101L))
+                .isInstanceOf(HubOperationAccessDeniedException.class);
+        verify(hubOperationsRepository, never()).findActiveRules(anyLong(), anyString(), anyString());
+    }
+
+    private void authenticate(User user) {
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities()));
+    }
+
+    private Fixture fixture() {
+        User staff = new User(7L, "sorter", "hash", UserRole.ROLE_HUB_STAFF, "ACTIVE");
+        User sender = new User(8L, "sender", "hash", UserRole.ROLE_USER, "ACTIVE");
+        Hub current = Hub.active("HUB-A", "Hub A", 1, "DELIVERY_HUB", "SOUTH", "Binh Duong");
+        ReflectionTestUtils.setField(current, "id", 11L);
+        Hub next = Hub.active("SOC-LA", "Long An SOC", 3, "SOC", "SOUTH", "Long An");
+        ReflectionTestUtils.setField(next, "id", 12L);
+        Shipment shipment = Shipment.create("UTX-001", sender, "Sender", "0900000001", "Address", "Receiver", "0900000002", "Can Tho");
+        ReflectionTestUtils.setField(shipment, "id", 101L);
+        ReflectionTestUtils.setField(shipment, "currentStatus", ShipmentStatus.WAITING_FOR_HANDOVER);
+        shipment.setDestinationGrouping("SOUTH", "Can Tho");
+        EmployeeProfile inbound = EmployeeProfile.active(staff, current, "INBOUND");
+        EmployeeProfile sorter = EmployeeProfile.active(staff, current, "SORTER");
+        HubRoutingRule rule = HubRoutingRule.active(current, "SOUTH", "Can Tho", next);
+        return new Fixture(staff, current, shipment, inbound, sorter, rule,
+                vn.iotstar.entity.ShipmentRoute.decided(shipment, current, next, "shipment:101:hub:11"));
+    }
+
+    private record Fixture(User staff, Hub currentHub, Shipment shipment, EmployeeProfile inboundProfile,
+                           EmployeeProfile sorterProfile, HubRoutingRule rule, vn.iotstar.entity.ShipmentRoute route) { }
+}

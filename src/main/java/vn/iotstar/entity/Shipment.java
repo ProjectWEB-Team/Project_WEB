@@ -12,6 +12,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -68,6 +69,20 @@ public class Shipment implements Serializable {
     @Column(name = "current_status", nullable = false, length = 50, columnDefinition = "NVARCHAR(50)")
     private ShipmentStatus currentStatus;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "current_hub_id")
+    private Hub currentHub;
+
+    @Column(name = "destination_region", length = 100, columnDefinition = "NVARCHAR(100)")
+    private String destinationRegion;
+
+    @Column(name = "destination_province", length = 100, columnDefinition = "NVARCHAR(100)")
+    private String destinationProvince;
+
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
+
     @Column(name = "created_at", nullable = false, columnDefinition = "DATETIME2(0)")
     private LocalDateTime createdAt;
 
@@ -112,4 +127,15 @@ public class Shipment implements Serializable {
     public String getReceiverAddress() { return receiverAddress; }
     public ShipmentStatus getCurrentStatus() { return currentStatus; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public Hub getCurrentHub() { return currentHub; }
+    public String getDestinationRegion() { return destinationRegion; }
+    public String getDestinationProvince() { return destinationProvince; }
+    public void setDestinationGrouping(String destinationRegion, String destinationProvince) {
+        this.destinationRegion = destinationRegion;
+        this.destinationProvince = destinationProvince;
+    }
+    public void receiveAt(Hub hub) {
+        this.currentHub = hub;
+        this.currentStatus = ShipmentStatus.AT_HUB;
+    }
 }
