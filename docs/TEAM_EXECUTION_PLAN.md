@@ -43,6 +43,51 @@ Phase 01 — Shared Walking Skeleton (complete)
 
 Phases 02–04 may be developed in parallel after Phase 01. Each person develops and tests their slice independently against the Phase-01 contracts; Phase 05 is the only phase that joins normal and exception flows end-to-end.
 
+## Detailed implementation checklist
+
+The following checklist is the team's public execution guide. A person completes each item through the full vertical path and commits source code together with focused tests. An item may not be moved to another member merely by splitting its user interface, business rules, or database work.
+
+### Person A — Hoàng Phúc Khang: Phase 02, User & Shipment Intake
+
+1. Implement account registration, activation and one-time verification flow while preserving the canonical six roles.
+2. Link a receiver account to eligible existing shipments both before and after account creation, with server-side ownership checks.
+3. Build shipment intake data, quotation and payment-initiation rules: sender, receiver, parcel, address, service, declared value, COD, fee and payer.
+4. Deliver the browser shipment-creation wizard on top of the intake service; browser code must not duplicate business calculations.
+5. Implement `HOME_PICKUP` and `SELF_DROPOFF`, including same-hub assignment, scoped shipper work and auditable handover states.
+6. Implement first-mile cancellation, the canonical 48-hour deadlines and verified pickup-service failure without adding shipment statuses.
+7. Deliver public tracking and recipient tracking with typed DTOs, required data masking and no sensitive-detail disclosure.
+8. Implement recipient detail unlock and safe private realtime updates; do not expose address, contacts, OTP, payment or staff information in broad broadcasts.
+9. Persist the paid-cancellation refund obligation for the finance slice. It remains pending until the wallet credit is applied; this work must not implement the wallet itself.
+
+### Person B — Ngô Bá Vạn: Phase 03, Hub & Linehaul Operations
+
+1. Implement hub hierarchy and `hub_routing_rules`, then deliver scoped inbound scanning and static next-hop routing.
+2. Implement outbound container handling, custody events and authorized handover between responsible staff and linehaul transport.
+3. Deliver the assigned-driver trip path: accept handover, start trip, arrive at destination hub and record only permitted trip-delay incidents.
+4. Implement destination-hub receipt, unbagging, missing-parcel evidence and discrepancy escalation without deciding financial compensation.
+5. Deliver the manager operations dashboard and authorized custody-audit timeline, with hub scope and least-privilege DTOs.
+
+### Person C — Huỳnh Tấn Anh Phát: Phase 04, Last-mile & Finance
+
+1. Deliver the assigned-shipper delivery tracer: hub scan, collection of required COD or receiver-paid fee, then valid `DELIVERED` transition.
+2. Implement failed-delivery evidence, retry rules, return-to-hub custody, rescheduling and fast-fail return reasons according to the Workflow.
+3. Complete both sender-return paths: origin-hub self-pickup and assigned return delivery to the sender.
+4. Implement reconciliation of COD and receiver-paid cash fees, item-level discrepancy handling, financial incidents and sender payout eligibility.
+5. Verify reconciliation data and transaction invariants on real SQL Server whenever the configured environment is available.
+6. Implement wallet withdrawal locking, then the Administrator-only approval/rejection outcome. Preserve `balance`, `locked_balance` and ledger integrity; do not call a real bank provider.
+7. Implement reference-safe refund and compensation adjustments through wallet ledger records.
+8. Deliver scoped shipper, manager and Administrator browser workspaces, then private after-commit realtime notifications and final UAT evidence.
+
+## Coordination points before merge
+
+| When | Required participants | Decision to verify |
+|---|---|---|
+| Before a shared schema or DTO change | Vạn, owner of the affected slice | The change follows canonical authority and has no incompatible cross-slice impact. |
+| Before Phase 02 merges its refund obligation | Khang and Phát | The record stays pending until the Phase-04 wallet credit and payment refund are committed together. |
+| Before Phase 03 exposes an operations handoff | Vạn and Phát | Last-mile receives only assignment, custody and location information it is authorized to use. |
+| Before Phase 04 merges finance behavior | Phát and Vạn | Finance records preserve the fixed shipment-state model, event history and separate wallet model. |
+| Before any slice merges | Assigned cross-reviewer | Controller, service, authorization, SQL Server evidence and tests meet the Definition of Done. |
+
 ## Work boundaries
 
 ### Person A — Khang: Phase 02
