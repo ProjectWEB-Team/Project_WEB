@@ -49,9 +49,17 @@ public class ShipmentRoute {
         route.createdAt = LocalDateTime.now();
         return route;
     }
+    /** Marks the current-hop decision as consumed only after its shipment is loaded into matching custody. */
+    public void markOutboundLoaded() {
+        if (!"PENDING".equals(status)) {
+            throw new IllegalStateException("Route decision is no longer available for outbound loading");
+        }
+        status = "LOADED";
+    }
     public Long getId() { return id; }
     public Shipment getShipment() { return shipment; }
     public Hub getHub() { return hub; }
     public Hub getCurrentHub() { return currentHub; }
     public String getRouteDecisionKey() { return routeDecisionKey; }
+    public String getStatus() { return status; }
 }

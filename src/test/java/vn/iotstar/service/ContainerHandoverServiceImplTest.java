@@ -69,7 +69,7 @@ class ContainerHandoverServiceImplTest {
         when(hubOperationsRepository.findActiveProfileByUserId(7L)).thenReturn(Optional.of(EmployeeProfile.active(staff, origin, "OUTBOUND")));
         when(custodyRepository.findContainerForUpdate(201L)).thenReturn(Optional.of(container));
         when(custodyRepository.findShipmentForUpdate(101L)).thenReturn(Optional.of(shipment));
-        when(custodyRepository.findCurrentRouteForShipment(101L)).thenReturn(Optional.of(ShipmentRoute.decided(shipment, origin, destination, "shipment:101:hub:11")));
+        when(custodyRepository.findPendingRouteForShipmentAtHub(101L, 11L)).thenReturn(Optional.of(ShipmentRoute.decided(shipment, origin, destination, "shipment:101:hub:11")));
         when(custodyRepository.containerAlreadyContains(201L, 101L)).thenReturn(false);
         when(userRepository.getReferenceById(7L)).thenReturn(staff);
 
@@ -79,6 +79,34 @@ class ContainerHandoverServiceImplTest {
         ArgumentCaptor<ShipmentEvent> events = ArgumentCaptor.forClass(ShipmentEvent.class);
         verify(shipmentEventRepository, times(2)).save(events.capture());
         assertThat(events.getAllValues()).extracting(ShipmentEvent::getEventType).containsExactly("BAG_CREATED", "OUTBOUND_SCANNED");
+    }
+
+    @Test
+    void outboundLoadingUsesOnlyThePendingRouteForTheShipmentCurrentHubOnSecondHop() {
+        User staff = user(7L, "outbound", UserRole.ROLE_HUB_STAFF);
+        User sender = user(8L, "sender", UserRole.ROLE_USER);
+        Hub hubA = hub(11L, "HUB-A"); Hub hubB = hub(12L, "HUB-B"); Hub hubC = hub(13L, "HUB-C");
+        Shipment shipment = Shipment.create("UTE-TWO-HOP", sender, "S", "1", "A", "R", "2", "B");
+        ReflectionTestUtils.setField(shipment, "id", 101L);
+        shipment.receiveAt(hubB);
+        ParcelContainer container = ParcelContainer.open("BAG-B-C", hubB, hubC, staff);
+        ReflectionTestUtils.setField(container, "id", 201L);
+        ShipmentRoute oldHop = ShipmentRoute.decided(shipment, hubA, hubB, "shipment:101:hub:11");
+        ShipmentRoute currentHop = ShipmentRoute.decided(shipment, hubB, hubC, "shipment:101:hub:12");
+        authenticate(staff);
+        when(hubOperationsRepository.findActiveProfileByUserId(7L)).thenReturn(Optional.of(EmployeeProfile.active(staff, hubB, "OUTBOUND")));
+        when(custodyRepository.findContainerForUpdate(201L)).thenReturn(Optional.of(container));
+        when(custodyRepository.findShipmentForUpdate(101L)).thenReturn(Optional.of(shipment));
+        when(custodyRepository.findPendingRouteForShipmentAtHub(101L, 12L)).thenReturn(Optional.of(currentHop));
+        when(custodyRepository.containerAlreadyContains(201L, 101L)).thenReturn(false);
+        when(userRepository.getReferenceById(7L)).thenReturn(staff);
+
+        service.loadShipment(new LoadContainerCommand(201L, 101L));
+
+        verify(custodyRepository).findPendingRouteForShipmentAtHub(101L, 12L);
+        verify(custodyRepository, never()).findPendingRouteForShipmentAtHub(101L, 11L);
+        assertThat(currentHop.getStatus()).isEqualTo("LOADED");
+        assertThat(oldHop.getStatus()).isEqualTo("PENDING");
     }
 
     @Test

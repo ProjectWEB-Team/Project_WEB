@@ -68,9 +68,10 @@ public class ManagerOperationsRepository {
                 .setParameter("hubIds", hubIds).getSingleResult();
     }
 
-    /** D-02 evidence is appended as an event, so blocked KPI has no new workflow table or status. */
+    /** Counts unresolved durable routing exceptions, never transient or historical events. */
     public long countBlockedRoutes(Collection<Long> hubIds) {
-        return entityManager.createQuery("select count(e) from ShipmentEvent e where e.hub.id in :hubIds and e.eventType = 'ROUTE_LOOKUP_BLOCKED'", Long.class)
+        return entityManager.createQuery("select count(e) from RoutingExceptionRecord e where e.hub.id in :hubIds " +
+                        "and e.exceptionType = 'ROUTE_LOOKUP_BLOCKED' and e.status = 'OPEN'", Long.class)
                 .setParameter("hubIds", hubIds).getSingleResult();
     }
 

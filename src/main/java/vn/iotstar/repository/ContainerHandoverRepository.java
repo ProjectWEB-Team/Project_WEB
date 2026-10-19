@@ -30,8 +30,11 @@ public class ContainerHandoverRepository {
         return entityManager.createQuery("select s from Shipment s join fetch s.currentHub where s.id = :id", Shipment.class)
                 .setParameter("id", id).setLockMode(LockModeType.PESSIMISTIC_WRITE).getResultStream().findFirst();
     }
-    public Optional<ShipmentRoute> findCurrentRouteForShipment(Long shipmentId) {
-        return entityManager.createQuery("select r from ShipmentRoute r join fetch r.hub where r.shipment.id = :id", ShipmentRoute.class).setParameter("id", shipmentId).getResultStream().findFirst();
+    public Optional<ShipmentRoute> findPendingRouteForShipmentAtHub(Long shipmentId, Long currentHubId) {
+        return entityManager.createQuery("select r from ShipmentRoute r join fetch r.hub where r.shipment.id = :shipmentId " +
+                        "and r.currentHub.id = :currentHubId and r.status = 'PENDING' order by r.id desc", ShipmentRoute.class)
+                .setParameter("shipmentId", shipmentId).setParameter("currentHubId", currentHubId)
+                .setMaxResults(1).getResultStream().findFirst();
     }
     public Optional<Hub> findHubById(Long id) { return Optional.ofNullable(entityManager.find(Hub.class, id)); }
     public Optional<Handover> findHandoverForUpdate(Long id) {

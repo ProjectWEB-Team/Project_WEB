@@ -49,4 +49,13 @@ public class OperationsAuditRepository {
                         "left join hc.handover h left join h.transportTrip t left join h.receiverDriver d where ci.shipment.id = :shipmentId", AuditCustodyReference.class)
                 .setParameter("shipmentId", shipmentId).getResultList();
     }
+
+    /** A driver is authorized only while their accepted handover remains the shipment's active custody. */
+    public List<AuditCustodyReference> findActiveCustodyReferencesForDriver(Long shipmentId, Long driverUserId) {
+        return entityManager.createQuery("select new vn.iotstar.dto.operations.AuditCustodyReference(c.id, h.id, t.id, d.id) " +
+                        "from ContainerItem ci join ci.container c join HandoverContainer hc on hc.container = c " +
+                        "join hc.handover h left join h.transportTrip t join h.receiverDriver d " +
+                        "where ci.shipment.id = :shipmentId and d.id = :driverUserId and h.status = 'ACCEPTED'", AuditCustodyReference.class)
+                .setParameter("shipmentId", shipmentId).setParameter("driverUserId", driverUserId).getResultList();
+    }
 }

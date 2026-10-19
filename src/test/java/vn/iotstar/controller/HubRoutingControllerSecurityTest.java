@@ -10,6 +10,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import vn.iotstar.config.SecurityConfig;
 import vn.iotstar.dto.hub.SortingDecisionResponse;
+import vn.iotstar.exception.RouteConfigurationException;
 import vn.iotstar.security.JwtAuthenticationFilter;
 import vn.iotstar.security.JwtService;
 import vn.iotstar.service.HubOperationsService;
@@ -67,6 +68,18 @@ class HubRoutingControllerSecurityTest {
         mockMvc.perform(post("/hub/sorter").with(csrf()).param("shipmentId", "101"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/hub/sorter"));
+        verify(hubOperationsService).sortAtHub(any());
+    }
+
+    @Test
+    @WithMockUser(roles = "HUB_STAFF")
+    void blockedRouteKeepsTheStaffResponseGenericAndUsesPrg() throws Exception {
+        when(hubOperationsService.sortAtHub(any())).thenThrow(new RouteConfigurationException());
+
+        mockMvc.perform(post("/hub/sorter").with(csrf()).param("shipmentId", "101"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/hub/sorter"));
+
         verify(hubOperationsService).sortAtHub(any());
     }
 }

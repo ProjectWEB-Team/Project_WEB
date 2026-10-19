@@ -36,7 +36,7 @@ public class OperationsAuditServiceImpl implements OperationsAuditService {
         }
         Shipment shipment = operationsAuditRepository.findShipmentWithCurrentHub(shipmentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Shipment"));
-        List<AuditCustodyReference> references = operationsAuditRepository.findCustodyReferences(shipmentId);
+        List<AuditCustodyReference> references = custodyReferencesFor(actor, shipmentId);
         if (!mayReadShipment(actor, shipment.getCurrentHub(), references)) {
             // Safe not-found behavior avoids turning this read surface into a shipment/custody oracle.
             throw new ResourceNotFoundException("Shipment");
@@ -47,11 +47,18 @@ public class OperationsAuditServiceImpl implements OperationsAuditService {
         return new OperationsAuditTimelineResponse(shipment.getId(), entries);
     }
 
+    private List<AuditCustodyReference> custodyReferencesFor(AuthenticatedActor actor, Long shipmentId) {
+        if (actor.hasRole(UserRole.ROLE_LINEHAUL_DRIVER)) {
+            return operationsAuditRepository.findActiveCustodyReferencesForDriver(shipmentId, actor.userId());
+        }
+        return operationsAuditRepository.findCustodyReferences(shipmentId);
+    }
+
     private boolean mayReadShipment(AuthenticatedActor actor, Hub currentHub, List<AuditCustodyReference> references) {
         if (actor.hasRole(UserRole.ROLE_ADMIN)) return true;
         if (currentHub == null) return false;
         if (actor.hasRole(UserRole.ROLE_LINEHAUL_DRIVER)) {
-            return references.stream().anyMatch(reference -> actor.userId().equals(reference.assignedDriverUserId()));
+            return !references.isEmpty();
         }
         EmployeeProfile profile = operationsAuditRepository.findActiveProfileByUserId(actor.userId()).orElse(null);
         if (profile == null) return false;

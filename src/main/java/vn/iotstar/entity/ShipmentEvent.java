@@ -65,6 +65,10 @@ public class ShipmentEvent implements Serializable {
         return operational(shipment, actor, hub, "SORTING_COMPLETED", "Static next-hop routing completed");
     }
 
+    public static ShipmentEvent routeLookupBlocked(Shipment shipment, User actor, Hub hub) {
+        return operational(shipment, actor, hub, "ROUTE_LOOKUP_BLOCKED", "Static next-hop routing requires manager correction");
+    }
+
     public static ShipmentEvent bagCreated(Shipment shipment, User actor, Hub hub) {
         return operational(shipment, actor, hub, "BAG_CREATED", "Shipment added to an outbound container");
     }

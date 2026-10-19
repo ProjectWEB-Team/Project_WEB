@@ -13,6 +13,7 @@ import vn.iotstar.entity.Hub;
 import vn.iotstar.entity.HubRoutingRule;
 import vn.iotstar.entity.Shipment;
 import vn.iotstar.entity.ShipmentEvent;
+import vn.iotstar.entity.RoutingExceptionRecord;
 import vn.iotstar.entity.ShipmentRoute;
 import vn.iotstar.entity.ShipmentStatus;
 import vn.iotstar.entity.User;
@@ -22,6 +23,7 @@ import vn.iotstar.exception.ResourceNotFoundException;
 import vn.iotstar.exception.RouteConfigurationException;
 import vn.iotstar.repository.HubOperationsRepository;
 import vn.iotstar.repository.ShipmentEventRepository;
+import vn.iotstar.repository.RoutingExceptionRepository;
 import vn.iotstar.repository.UserRepository;
 import vn.iotstar.security.AuthenticatedActor;
 import vn.iotstar.service.HubOperationsService;
@@ -34,15 +36,18 @@ import java.util.Objects;
 public class HubOperationsServiceImpl implements HubOperationsService {
     private final HubOperationsRepository hubOperationsRepository;
     private final ShipmentEventRepository shipmentEventRepository;
+    private final RoutingExceptionRepository routingExceptionRepository;
     private final UserRepository userRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
 
     public HubOperationsServiceImpl(HubOperationsRepository hubOperationsRepository,
                                     ShipmentEventRepository shipmentEventRepository,
+                                    RoutingExceptionRepository routingExceptionRepository,
                                     UserRepository userRepository,
                                     ApplicationEventPublisher applicationEventPublisher) {
         this.hubOperationsRepository = hubOperationsRepository;
         this.shipmentEventRepository = shipmentEventRepository;
+        this.routingExceptionRepository = routingExceptionRepository;
         this.userRepository = userRepository;
         this.applicationEventPublisher = applicationEventPublisher;
     }
@@ -53,7 +58,7 @@ public class HubOperationsServiceImpl implements HubOperationsService {
         AuthenticatedActor actor = AuthenticatedActor.requireCurrent();
         EmployeeProfile profile = requireActiveOperatorProfile(actor, "INBOUND");
         Shipment shipment = requireLockedShipment(command.shipmentId());
-        if (!isInboundEligible(shipment.getCurrentStatus())) {
+        if (!hasExpectedInboundRelationship(shipment, profile.getHub())) {
             throw new HubOperationAccessDeniedException();
         }
         User user = userRepository.getReferenceById(actor.userId());
@@ -62,7 +67,7 @@ public class HubOperationsServiceImpl implements HubOperationsService {
     }
 
     @Override
-    @Transactional
+    @Transactional(noRollbackFor = RouteConfigurationException.class)
     public SortingDecisionResponse sortAtHub(SortShipmentCommand command) {
         AuthenticatedActor actor = AuthenticatedActor.requireCurrent();
         EmployeeProfile profile = requireActiveOperatorProfile(actor, "SORTER");
@@ -101,13 +106,15 @@ public class HubOperationsServiceImpl implements HubOperationsService {
         ShipmentRoute saved = hubOperationsRepository.saveRoute(
                 ShipmentRoute.decided(shipment, currentHub, rule.getNextHub(), decisionKey));
         User user = userRepository.getReferenceById(actor.userId());
+        routingExceptionRepository.findOpenRouteLookupBlockedForUpdate(shipment.getId(), currentHub.getId())
+                .ifPresent(exception -> exception.resolve(user));
         shipmentEventRepository.save(ShipmentEvent.sortingCompleted(shipment, user, profile.getHub()));
         return response(saved, false);
     }
 
     private HubRoutingRule resolveSingleStaticRule(Shipment shipment, Hub currentHub) {
         if (blank(shipment.getDestinationRegion()) || blank(shipment.getDestinationProvince())) {
-            return blocked(currentHub);
+            return blocked(shipment, currentHub);
         }
         List<HubRoutingRule> matches = hubOperationsRepository.findActiveRules(currentHub.getId(),
                 shipment.getDestinationRegion(), shipment.getDestinationProvince());
@@ -117,14 +124,20 @@ public class HubOperationsServiceImpl implements HubOperationsService {
                 ? matches.stream().filter(rule -> rule.getDestinationProvince() == null).toList()
                 : exact;
         if (selected.size() != 1) {
-            return blocked(currentHub);
+            return blocked(shipment, currentHub);
         }
         return selected.getFirst();
     }
 
-    private HubRoutingRule blocked(Hub currentHub) {
-        applicationEventPublisher.publishEvent(new OperationalActionNotification(
-                "BLOCKED_ROUTE", currentHub.getId(), "ROUTE_LOOKUP_BLOCKED"));
+    private HubRoutingRule blocked(Shipment shipment, Hub currentHub) {
+        if (routingExceptionRepository.findOpenRouteLookupBlockedForUpdate(shipment.getId(), currentHub.getId()).isEmpty()) {
+            User actor = userRepository.getReferenceById(AuthenticatedActor.requireCurrent().userId());
+            RoutingExceptionRecord exception = routingExceptionRepository.save(
+                    RoutingExceptionRecord.openRouteLookupBlocked(shipment, currentHub, actor));
+            shipmentEventRepository.save(ShipmentEvent.routeLookupBlocked(shipment, actor, currentHub));
+            applicationEventPublisher.publishEvent(new OperationalActionNotification(
+                    "BLOCKED_ROUTE", currentHub.getId(), "routing-exception:" + exception.getId()));
+        }
         throw new RouteConfigurationException();
     }
 
@@ -145,9 +158,13 @@ public class HubOperationsServiceImpl implements HubOperationsService {
                 .orElseThrow(() -> new ResourceNotFoundException("Shipment"));
     }
 
-    private boolean isInboundEligible(ShipmentStatus status) {
-        return status == ShipmentStatus.WAITING_FOR_HANDOVER || status == ShipmentStatus.PICKED_UP
-                || status == ShipmentStatus.IN_TRANSIT;
+    private boolean hasExpectedInboundRelationship(Shipment shipment, Hub inboundHub) {
+        // Container-custody arrivals, including discrepancy/missing outcomes, are settled only by
+        // DestinationReceiptService with handover, container and item-level physical evidence.
+        // This generic shipment-id endpoint remains exclusively for the non-container initial intake path.
+        return (shipment.getCurrentStatus() == ShipmentStatus.WAITING_FOR_HANDOVER
+                || shipment.getCurrentStatus() == ShipmentStatus.PICKED_UP)
+                && sameHub(shipment.getCurrentHub(), inboundHub);
     }
 
     private boolean mayReadHubDiagnostic(AuthenticatedActor actor, Hub currentHub) {
@@ -169,4 +186,7 @@ public class HubOperationsServiceImpl implements HubOperationsService {
     }
 
     private boolean blank(String value) { return value == null || value.isBlank(); }
+    private boolean sameHub(Hub first, Hub second) {
+        return first != null && second != null && Objects.equals(first.getId(), second.getId());
+    }
 }

@@ -152,6 +152,16 @@
 
 **Consequences:** Service-layer authorization must use the applicable contextual checks.
 
+## ADR-016 — Durable static-routing exceptions
+
+**Status:** ACCEPTED
+
+**Decision:** When static routing lookup has no single active rule, the system keeps the shipment's status and location unchanged and creates or reuses one deduplicated `routing_exceptions` record with `exception_type = ROUTE_LOOKUP_BLOCKED` and `status = OPEN`. A minimal `shipment_events.event_type = ROUTE_LOOKUP_BLOCKED` is appended only when the exception is newly opened. The same successful transaction emits an after-commit, Manager/Admin-scoped operational alert. No route, container assignment, handover, or manual next-hop selection is created by this exception path. When a later sorter retry succeeds after a routing-rule correction, the open exception is marked `RESOLVED`.
+
+**Reason:** Operational routing failures require durable, queryable accountability and actionable supervision without becoming a fourteenth shipment state or bypassing the static routing matrix.
+
+**Consequences:** Manager blocked-route KPIs count open `routing_exceptions`, not transient errors or all historical event rows. Retry remains static-rule-driven and idempotent; it does not authorize a user-selected next hop.
+
 ## OPEN-001 — Historical Issue: Missing Project Spec Knowledge Base source
 
 **Status:** RESOLVED

@@ -80,10 +80,11 @@ public class ContainerHandoverServiceImpl implements ContainerHandoverService {
                 || custodyRepository.containerAlreadyContains(container.getId(), shipment.getId())) {
             throw new HubOperationAccessDeniedException();
         }
-        ShipmentRoute route = custodyRepository.findCurrentRouteForShipment(shipment.getId())
+        ShipmentRoute route = custodyRepository.findPendingRouteForShipmentAtHub(shipment.getId(), profile.getHub().getId())
                 .orElseThrow(HubOperationAccessDeniedException::new);
         if (!sameHub(route.getHub(), container.getDestinationHub())) throw new HubOperationAccessDeniedException();
         custodyRepository.persist(ContainerItem.scanned(container, shipment));
+        route.markOutboundLoaded();
         User user = userRepository.getReferenceById(actor.userId());
         shipmentEventRepository.save(ShipmentEvent.bagCreated(shipment, user, profile.getHub()));
         shipmentEventRepository.save(ShipmentEvent.outboundScanned(shipment, user, profile.getHub()));

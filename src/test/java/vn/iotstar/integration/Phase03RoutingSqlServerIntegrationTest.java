@@ -16,6 +16,7 @@ import vn.iotstar.dto.hub.SortingDecisionResponse;
 import vn.iotstar.entity.User;
 import vn.iotstar.entity.UserRole;
 import vn.iotstar.exception.RouteConfigurationException;
+import vn.iotstar.repository.ManagerOperationsRepository;
 import vn.iotstar.service.HubOperationsService;
 
 import javax.sql.DataSource;
@@ -25,6 +26,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -37,6 +39,7 @@ class Phase03RoutingSqlServerIntegrationTest {
     @Autowired private DataSource dataSource;
     @Autowired private JdbcTemplate jdbcTemplate;
     @Autowired private HubOperationsService hubOperationsService;
+    @Autowired private ManagerOperationsRepository managerOperationsRepository;
     private String suffix;
     private Long actorId;
     private Long hubAId;
@@ -69,6 +72,7 @@ class Phase03RoutingSqlServerIntegrationTest {
     void cleanup() {
         SecurityContextHolder.clearContext();
         if (suffix == null) return;
+        jdbcTemplate.update("DELETE FROM dbo.routing_exceptions WHERE shipment_id IN (?, ?, ?)", shipmentId, unmatchedShipmentId, concurrentShipmentId);
         jdbcTemplate.update("DELETE FROM dbo.shipment_events WHERE shipment_id IN (?, ?, ?)", shipmentId, unmatchedShipmentId, concurrentShipmentId);
         jdbcTemplate.update("DELETE FROM dbo.shipment_routes WHERE shipment_id IN (?, ?, ?)", shipmentId, unmatchedShipmentId, concurrentShipmentId);
         jdbcTemplate.update("DELETE FROM dbo.shipments WHERE id IN (?, ?, ?)", shipmentId, unmatchedShipmentId, concurrentShipmentId);
@@ -80,7 +84,7 @@ class Phase03RoutingSqlServerIntegrationTest {
     }
 
     @Test
-    void persistsExactlyOneCurrentStaticHopAndRollsBackUnmatchedRoute() {
+    void persistsExactlyOneCurrentStaticHopAndDurablyRecordsThenResolvesBlockedRoute() {
         SortingDecisionResponse first = hubOperationsService.sortAtHub(new SortShipmentCommand(shipmentId));
         SortingDecisionResponse repeat = hubOperationsService.sortAtHub(new SortShipmentCommand(shipmentId));
 
@@ -100,7 +104,19 @@ class Phase03RoutingSqlServerIntegrationTest {
         assertThatThrownBy(() -> hubOperationsService.sortAtHub(new SortShipmentCommand(unmatchedShipmentId)))
                 .isInstanceOf(RouteConfigurationException.class);
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM dbo.shipment_routes WHERE shipment_id = ?", Integer.class, unmatchedShipmentId)).isZero();
-        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM dbo.shipment_events WHERE shipment_id = ?", Integer.class, unmatchedShipmentId)).isZero();
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM dbo.routing_exceptions WHERE shipment_id = ? AND status = 'OPEN'", Integer.class, unmatchedShipmentId)).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM dbo.shipment_events WHERE shipment_id = ? AND event_type = 'ROUTE_LOOKUP_BLOCKED'", Integer.class, unmatchedShipmentId)).isEqualTo(1);
+        assertThat(managerOperationsRepository.countBlockedRoutes(List.of(hubAId))).isEqualTo(1);
+        assertThatThrownBy(() -> hubOperationsService.sortAtHub(new SortShipmentCommand(unmatchedShipmentId)))
+                .isInstanceOf(RouteConfigurationException.class);
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM dbo.routing_exceptions WHERE shipment_id = ? AND status = 'OPEN'", Integer.class, unmatchedShipmentId)).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM dbo.shipment_events WHERE shipment_id = ? AND event_type = 'ROUTE_LOOKUP_BLOCKED'", Integer.class, unmatchedShipmentId)).isEqualTo(1);
+
+        jdbcTemplate.update("INSERT INTO dbo.hub_routing_rules (current_hub_id, destination_region, destination_province, next_hub_id, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, SYSDATETIME(), SYSDATETIME())",
+                hubAId, "NORTH", "Ha Noi", hubBId, "ACTIVE");
+        assertThat(hubOperationsService.sortAtHub(new SortShipmentCommand(unmatchedShipmentId)).reused()).isFalse();
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM dbo.routing_exceptions WHERE shipment_id = ? AND status = 'RESOLVED'", Integer.class, unmatchedShipmentId)).isEqualTo(1);
+        assertThat(managerOperationsRepository.countBlockedRoutes(List.of(hubAId))).isZero();
     }
 
     @Test

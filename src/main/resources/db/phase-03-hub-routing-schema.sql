@@ -129,3 +129,33 @@ IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_shipment_routes_
 IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_shipment_routes_current_hub')
     ALTER TABLE dbo.shipment_routes ADD CONSTRAINT FK_shipment_routes_current_hub FOREIGN KEY (current_hub_id) REFERENCES dbo.hubs(id);
 GO
+/* ADR-016: durable route diagnostics are distinct from the fixed shipment-status model. */
+IF OBJECT_ID(N'dbo.routing_exceptions', N'U') IS NULL
+CREATE TABLE dbo.routing_exceptions (
+    id BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    shipment_id BIGINT NOT NULL,
+    hub_id BIGINT NOT NULL,
+    exception_type NVARCHAR(50) NOT NULL,
+    status NVARCHAR(20) NOT NULL,
+    opened_by_user_id BIGINT NOT NULL,
+    opened_at DATETIME2(0) NOT NULL,
+    resolved_by_user_id BIGINT NULL,
+    resolved_at DATETIME2(0) NULL,
+    version BIGINT NOT NULL CONSTRAINT DF_routing_exceptions_version DEFAULT 0,
+    CONSTRAINT CK_routing_exceptions_type CHECK (exception_type = N'ROUTE_LOOKUP_BLOCKED'),
+    CONSTRAINT CK_routing_exceptions_status CHECK (status IN (N'OPEN', N'RESOLVED'))
+);
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_routing_exceptions_shipment')
+    ALTER TABLE dbo.routing_exceptions ADD CONSTRAINT FK_routing_exceptions_shipment FOREIGN KEY (shipment_id) REFERENCES dbo.shipments(id);
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_routing_exceptions_hub')
+    ALTER TABLE dbo.routing_exceptions ADD CONSTRAINT FK_routing_exceptions_hub FOREIGN KEY (hub_id) REFERENCES dbo.hubs(id);
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_routing_exceptions_opened_by')
+    ALTER TABLE dbo.routing_exceptions ADD CONSTRAINT FK_routing_exceptions_opened_by FOREIGN KEY (opened_by_user_id) REFERENCES dbo.users(id);
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_routing_exceptions_resolved_by')
+    ALTER TABLE dbo.routing_exceptions ADD CONSTRAINT FK_routing_exceptions_resolved_by FOREIGN KEY (resolved_by_user_id) REFERENCES dbo.users(id);
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_routing_exceptions_open' AND object_id = OBJECT_ID(N'dbo.routing_exceptions'))
+    CREATE UNIQUE INDEX UX_routing_exceptions_open ON dbo.routing_exceptions(shipment_id, hub_id, exception_type) WHERE status = N'OPEN';
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_routing_exceptions_open_hub' AND object_id = OBJECT_ID(N'dbo.routing_exceptions'))
+    CREATE INDEX IX_routing_exceptions_open_hub ON dbo.routing_exceptions(hub_id, status, exception_type);
+GO

@@ -77,9 +77,22 @@ class OperationalAuditServiceImplTest {
     @Test void assignedDriverCanReadOnlyOwnCustodyTimeline() {
         User driver = user(40L, UserRole.ROLE_LINEHAUL_DRIVER); Shipment shipment = shipment(504L, hub(4L, "DEST")); authenticate(driver);
         when(operationsAuditRepository.findShipmentWithCurrentHub(504L)).thenReturn(Optional.of(shipment));
-        when(operationsAuditRepository.findCustodyReferences(504L)).thenReturn(List.of(new AuditCustodyReference(7L, 8L, 9L, 40L)));
+        when(operationsAuditRepository.findActiveCustodyReferencesForDriver(504L, 40L)).thenReturn(List.of(new AuditCustodyReference(7L, 8L, 9L, 40L)));
         when(operationsAuditRepository.findEventsForShipment(504L)).thenReturn(List.of());
         assertThat(service.getTimeline(504L).entries()).isEmpty();
+    }
+
+    @Test void historicalDriverCannotReadTimelineAfterASecondDriverOwnsTheCurrentCustody() {
+        User historicalDriver = user(40L, UserRole.ROLE_LINEHAUL_DRIVER);
+        Shipment shipment = shipment(505L, hub(5L, "SECOND-LEG-HUB"));
+        authenticate(historicalDriver);
+        when(operationsAuditRepository.findShipmentWithCurrentHub(505L)).thenReturn(Optional.of(shipment));
+        when(operationsAuditRepository.findActiveCustodyReferencesForDriver(505L, 40L)).thenReturn(List.of());
+
+        assertThatThrownBy(() -> service.getTimeline(505L)).isInstanceOf(ResourceNotFoundException.class);
+
+        verify(operationsAuditRepository, never()).findEventsForShipment(505L);
+        verify(operationsAuditRepository, never()).findCustodyReferences(505L);
     }
 
     private static Shipment shipment(Long id, Hub hub) { User sender = user(99L, UserRole.ROLE_USER); Shipment shipment = Shipment.create("TRK-" + id, sender, "Sender", "0900", "A", "Receiver", "0901", "B"); shipment.receiveAt(hub); ReflectionTestUtils.setField(shipment, "id", id); return shipment; }
