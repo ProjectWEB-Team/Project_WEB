@@ -31,6 +31,13 @@ public class Incident {
         incident.incidentType = "TRIP_DELAY"; incident.note = note; incident.evidenceReference = evidenceReference;
         incident.createdAt = LocalDateTime.now(); return incident;
     }
+    /** Receipt-derived exception evidence; never available through a driver route. */
+    public static Incident missingParcel(TransportTrip trip, User actor, String receiptReference) {
+        Incident incident = new Incident();
+        incident.trip = trip; incident.hub = trip.getDestinationHub(); incident.actor = actor;
+        incident.incidentType = "MISSING_PARCEL"; incident.note = "Destination receipt discrepancy";
+        incident.evidenceReference = receiptReference; incident.createdAt = LocalDateTime.now(); return incident;
+    }
     public Long getId() { return id; }
     public TransportTrip getTrip() { return trip; }
     public String getIncidentType() { return incidentType; }

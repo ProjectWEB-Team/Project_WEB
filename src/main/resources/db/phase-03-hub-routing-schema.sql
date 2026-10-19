@@ -19,7 +19,16 @@ BEGIN
     THROW 51000, 'Cannot enforce shipment_events.event_type: legacy rows have no event type.', 1;
 END;
 GO
-ALTER TABLE dbo.shipment_events ALTER COLUMN event_type NVARCHAR(50) NOT NULL;
+IF EXISTS (
+    SELECT 1
+    FROM sys.columns
+    WHERE object_id = OBJECT_ID(N'dbo.shipment_events')
+      AND name = N'event_type'
+      AND is_nullable = 1
+)
+BEGIN
+    ALTER TABLE dbo.shipment_events ALTER COLUMN event_type NVARCHAR(50) NOT NULL;
+END;
 GO
 
 IF OBJECT_ID(N'dbo.hubs', N'U') IS NULL

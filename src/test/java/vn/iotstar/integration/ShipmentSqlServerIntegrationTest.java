@@ -1,6 +1,7 @@
 package vn.iotstar.integration;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,8 @@ import vn.iotstar.entity.User;
 import vn.iotstar.entity.UserRole;
 import vn.iotstar.service.ShipmentService;
 
+import javax.sql.DataSource;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -32,8 +35,16 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class ShipmentSqlServerIntegrationTest {
     @Autowired private ShipmentService shipmentService;
     @Autowired private JdbcTemplate jdbcTemplate;
+    @Autowired private DataSource dataSource;
     private Long testUserId;
     private Long testShipmentId;
+
+    @BeforeEach
+    void applyCurrentForwardMigrations() throws Exception {
+        SqlServerMigrationSupport.apply(dataSource,
+                "db/phase-01-shipment-events-event-type.sql",
+                "db/phase-03-hub-routing-schema.sql");
+    }
 
     @AfterEach
     void removeVerificationData() {

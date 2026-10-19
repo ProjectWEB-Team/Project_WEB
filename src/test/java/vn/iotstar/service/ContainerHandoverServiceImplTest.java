@@ -53,7 +53,7 @@ class ContainerHandoverServiceImplTest {
     @Test
     void openContainerStartsWithCanonicalCustodyStatus() {
         Hub origin = hub(11L, "HUB-A");
-        ParcelContainer container = ParcelContainer.open("BAG-001", origin, hub(12L, "SOC-B"));
+        ParcelContainer container = ParcelContainer.open("BAG-001", origin, hub(12L, "SOC-B"), user(7L, "outbound", UserRole.ROLE_HUB_STAFF));
         assertThat(container.getStatus()).isEqualTo("OPEN");
     }
 
@@ -64,7 +64,7 @@ class ContainerHandoverServiceImplTest {
         Hub origin = hub(11L, "HUB-A"); Hub destination = hub(12L, "SOC-B");
         Shipment shipment = Shipment.create("UTE-1", sender, "S", "1", "A", "R", "2", "B");
         ReflectionTestUtils.setField(shipment, "id", 101L); ReflectionTestUtils.setField(shipment, "currentStatus", ShipmentStatus.AT_HUB); ReflectionTestUtils.setField(shipment, "currentHub", origin);
-        ParcelContainer container = ParcelContainer.open("BAG-001", origin, destination); ReflectionTestUtils.setField(container, "id", 201L);
+        ParcelContainer container = ParcelContainer.open("BAG-001", origin, destination, staff); ReflectionTestUtils.setField(container, "id", 201L);
         authenticate(staff);
         when(hubOperationsRepository.findActiveProfileByUserId(7L)).thenReturn(Optional.of(EmployeeProfile.active(staff, origin, "OUTBOUND")));
         when(custodyRepository.findContainerForUpdate(201L)).thenReturn(Optional.of(container));
@@ -88,7 +88,7 @@ class ContainerHandoverServiceImplTest {
         Hub origin = hub(11L, "HUB-A"); Hub destination = hub(12L, "SOC-B");
         Handover handover = Handover.pending(origin, destination, EmployeeProfile.active(staff, origin, "OUTBOUND"), driver, 1, null);
         ReflectionTestUtils.setField(handover, "id", 301L);
-        ParcelContainer container = ParcelContainer.open("BAG-001", origin, destination); ReflectionTestUtils.setField(container, "id", 201L);
+        ParcelContainer container = ParcelContainer.open("BAG-001", origin, destination, staff); ReflectionTestUtils.setField(container, "id", 201L);
         HandoverContainer expected = HandoverContainer.expected(handover, container);
         authenticate(driver);
         when(custodyRepository.findHandoverForUpdate(301L)).thenReturn(Optional.of(handover));
@@ -110,7 +110,7 @@ class ContainerHandoverServiceImplTest {
         EmployeeProfile profile = EmployeeProfile.active(staff, origin, "OUTBOUND");
         Handover original = Handover.pending(origin, destination, profile, driver, 1, null);
         ReflectionTestUtils.setField(original, "id", 301L); original.recordContainerScan();
-        ParcelContainer replacementContainer = ParcelContainer.open("BAG-NEW", origin, destination);
+        ParcelContainer replacementContainer = ParcelContainer.open("BAG-NEW", origin, destination, staff);
         ReflectionTestUtils.setField(replacementContainer, "id", 202L);
         authenticate(staff);
         when(hubOperationsRepository.findActiveProfileByUserId(7L)).thenReturn(Optional.of(profile));

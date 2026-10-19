@@ -47,6 +47,11 @@ public class Handover {
         if (acceptedContainers == expectedContainers) { status = "ACCEPTED"; acceptedAt = LocalDateTime.now(); }
     }
     public void cancelForCorrection() { if (!isActive()) throw new IllegalStateException("Only active custody can be cancelled"); status = "CANCELLED"; cancelledAt = LocalDateTime.now(); }
+    /** Destination physical reconciliation, never driver arrival, settles the custody outcome. */
+    public void completeDestinationReceipt(boolean discrepancy) {
+        if (!"ACCEPTED".equals(status)) throw new IllegalStateException("Only accepted custody can be received at destination");
+        status = discrepancy ? "DISCREPANCY" : "COMPLETED";
+    }
     public void linkReplacement(Handover replacement) { this.replacementHandover = replacement; }
     public void linkTransportTrip(TransportTrip trip) { this.transportTrip = trip; }
     public Long getId() { return id; }

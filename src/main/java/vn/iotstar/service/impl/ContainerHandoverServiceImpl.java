@@ -58,10 +58,12 @@ public class ContainerHandoverServiceImpl implements ContainerHandoverService {
 
     @Override @Transactional
     public Long createContainer(CreateContainerCommand command) {
-        EmployeeProfile profile = requireOutboundProfile(AuthenticatedActor.requireCurrent());
+        AuthenticatedActor actor = AuthenticatedActor.requireCurrent();
+        EmployeeProfile profile = requireOutboundProfile(actor);
         Hub destination = custodyRepository.findHubById(command.destinationHubId())
                 .orElseThrow(() -> new ResourceNotFoundException("Destination hub"));
-        ParcelContainer container = ParcelContainer.open(command.containerCode().trim(), profile.getHub(), destination);
+        User creator = userRepository.getReferenceById(actor.userId());
+        ParcelContainer container = ParcelContainer.open(command.containerCode().trim(), profile.getHub(), destination, creator);
         custodyRepository.persist(container);
         return container.getId();
     }

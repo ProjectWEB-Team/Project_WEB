@@ -74,7 +74,7 @@ public class HubOperationsServiceImpl implements HubOperationsService {
         }
 
         String decisionKey = "shipment:" + shipment.getId() + ":hub:" + currentHub.getId();
-        return hubOperationsRepository.findRouteByDecisionKey(decisionKey)
+        return hubOperationsRepository.findByRouteDecisionKey(decisionKey)
                 .map(route -> response(route, true))
                 .orElseGet(() -> createDecision(actor, profile, shipment, currentHub, decisionKey));
     }

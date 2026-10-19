@@ -84,6 +84,9 @@ public class ShipmentEvent implements Serializable {
     public static ShipmentEvent linehaulArrived(Shipment shipment, User actor, Hub hub) {
         return operational(shipment, actor, hub, "LINEHAUL_ARRIVED", "Linehaul arrived; destination receipt is still required");
     }
+    public static ShipmentEvent missingParcel(Shipment shipment, User actor, Hub hub) {
+        return operational(shipment, actor, hub, "MISSING_PARCEL", "Destination receipt recorded a missing container item");
+    }
 
     private static ShipmentEvent operational(Shipment shipment, User actor, Hub hub, String eventType, String description) {
         ShipmentEvent event = new ShipmentEvent();

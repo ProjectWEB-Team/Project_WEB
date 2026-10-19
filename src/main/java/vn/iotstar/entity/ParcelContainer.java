@@ -26,6 +26,8 @@ public class ParcelContainer {
     private Hub originHub;
     @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "destination_hub_id", nullable = false)
     private Hub destinationHub;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "created_by", nullable = false)
+    private User createdBy;
     @Column(nullable = false, length = 30, columnDefinition = "NVARCHAR(30)")
     private String status;
     @Column(name = "created_at", nullable = false, columnDefinition = "DATETIME2(0)")
@@ -35,11 +37,12 @@ public class ParcelContainer {
 
     protected ParcelContainer() { }
 
-    public static ParcelContainer open(String code, Hub originHub, Hub destinationHub) {
+    public static ParcelContainer open(String code, Hub originHub, Hub destinationHub, User createdBy) {
         ParcelContainer container = new ParcelContainer();
         container.containerCode = code;
         container.originHub = originHub;
         container.destinationHub = destinationHub;
+        container.createdBy = createdBy;
         container.status = "OPEN";
         container.createdAt = LocalDateTime.now();
         return container;
@@ -53,5 +56,6 @@ public class ParcelContainer {
     public String getContainerCode() { return containerCode; }
     public Hub getOriginHub() { return originHub; }
     public Hub getDestinationHub() { return destinationHub; }
+    public User getCreatedBy() { return createdBy; }
     public String getStatus() { return status; }
 }

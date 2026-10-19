@@ -28,6 +28,9 @@ class WebSocketConfigTest {
 
         assertThatThrownBy(() -> interceptor.preSend(message(StompCommand.SUBSCRIBE, "/user/queue/other"), null))
                 .isInstanceOf(AccessDeniedException.class);
+
+        Message<?> operations = message(StompCommand.SUBSCRIBE, WebSocketConfig.USER_OPERATION_DESTINATION);
+        assertThat(interceptor.preSend(operations, null)).isSameAs(operations);
     }
 
     @Test

@@ -22,6 +22,8 @@ public class ContainerItem {
     private Shipment shipment;
     @Column(nullable = false, length = 30, columnDefinition = "NVARCHAR(30)") private String status;
     @Column(name = "scanned_at", nullable = false, columnDefinition = "DATETIME2(0)") private LocalDateTime scannedAt;
+    @Column(name = "received_at", columnDefinition = "DATETIME2(0)") private LocalDateTime receivedAt;
+    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "received_by_user_id") private User receivedBy;
     protected ContainerItem() { }
     public static ContainerItem scanned(ParcelContainer container, Shipment shipment) {
         ContainerItem item = new ContainerItem(); item.container = container; item.shipment = shipment;
@@ -30,4 +32,16 @@ public class ContainerItem {
     public ParcelContainer getContainer() { return container; }
     public Shipment getShipment() { return shipment; }
     public String getStatus() { return status; }
+    public boolean isReceived() { return "RECEIVED".equals(status); }
+    public boolean isMissing() { return "MISSING".equals(status); }
+    public void receive(User actor) {
+        if (isReceived()) return;
+        if (isMissing()) throw new IllegalStateException("A missing item cannot be received without corrective custody evidence");
+        status = "RECEIVED"; receivedAt = LocalDateTime.now(); receivedBy = actor;
+    }
+    public void markMissing(User actor) {
+        if (isMissing()) return;
+        if (isReceived()) throw new IllegalStateException("A received item cannot be marked missing");
+        status = "MISSING"; receivedAt = LocalDateTime.now(); receivedBy = actor;
+    }
 }

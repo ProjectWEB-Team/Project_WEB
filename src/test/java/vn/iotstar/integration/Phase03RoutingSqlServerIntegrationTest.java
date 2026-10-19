@@ -6,15 +6,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.support.EncodedResource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.jdbc.datasource.init.ScriptUtils;
 import vn.iotstar.dto.hub.SortShipmentCommand;
 import vn.iotstar.dto.hub.SortingDecisionResponse;
 import vn.iotstar.entity.User;
@@ -23,7 +19,6 @@ import vn.iotstar.exception.RouteConfigurationException;
 import vn.iotstar.service.HubOperationsService;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
@@ -52,17 +47,9 @@ class Phase03RoutingSqlServerIntegrationTest {
 
     @BeforeEach
     void applyMigrationAndSeed() throws Exception {
-        Connection connection = DataSourceUtils.getConnection(dataSource);
-        try {
-            ScriptUtils.executeSqlScript(connection, new EncodedResource(new ClassPathResource("db/phase-01-shipment-events-event-type.sql")),
-                    false, false, ScriptUtils.DEFAULT_COMMENT_PREFIX, "GO", ScriptUtils.DEFAULT_BLOCK_COMMENT_START_DELIMITER,
-                    ScriptUtils.DEFAULT_BLOCK_COMMENT_END_DELIMITER);
-            ScriptUtils.executeSqlScript(connection, new EncodedResource(new ClassPathResource("db/phase-03-hub-routing-schema.sql")),
-                    false, false, ScriptUtils.DEFAULT_COMMENT_PREFIX, "GO", ScriptUtils.DEFAULT_BLOCK_COMMENT_START_DELIMITER,
-                    ScriptUtils.DEFAULT_BLOCK_COMMENT_END_DELIMITER);
-        } finally {
-            DataSourceUtils.releaseConnection(connection, dataSource);
-        }
+        SqlServerMigrationSupport.apply(dataSource,
+                "db/phase-01-shipment-events-event-type.sql",
+                "db/phase-03-hub-routing-schema.sql");
         suffix = String.valueOf(System.nanoTime());
         actorId = insertUser("phase03-staff-" + suffix, "ROLE_HUB_STAFF");
         hubAId = insertHub("P3-A-" + suffix, "Phase 03 Hub A", "Binh Duong");
@@ -150,8 +137,12 @@ class Phase03RoutingSqlServerIntegrationTest {
 
     private Long insertUser(String username, String role) {
         jdbcTemplate.update("INSERT INTO dbo.users (username, password, full_name, phone, email, role, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                username, "test-hash", "Phase Three Staff", "0900000000", username + "@example.test", role, "ACTIVE");
+                username, "test-hash", "Phase Three Staff", uniquePhone(username), username + "@example.test", role, "ACTIVE");
         return jdbcTemplate.queryForObject("SELECT id FROM dbo.users WHERE username = ?", Long.class, username);
+    }
+
+    private String uniquePhone(String username) {
+        return String.format("09%08d", Math.floorMod(username.hashCode(), 100_000_000));
     }
 
     private Long insertHub(String code, String name, String province) {

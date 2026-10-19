@@ -4,15 +4,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.support.EncodedResource;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.DataSourceUtils;
-import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.ActiveProfiles;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -24,9 +19,11 @@ class Phase03TripSqlServerIntegrationTest {
     @Autowired private DataSource dataSource;
     @Autowired private JdbcTemplate jdbcTemplate;
     @Test void realSqlServerAppliesLinehaulTripAndIncidentSchema() throws Exception {
-        Connection connection = DataSourceUtils.getConnection(dataSource);
-        try { ScriptUtils.executeSqlScript(connection, new EncodedResource(new ClassPathResource("db/phase-03-linehaul-trip-schema.sql")), false, false, ScriptUtils.DEFAULT_COMMENT_PREFIX, "GO", ScriptUtils.DEFAULT_BLOCK_COMMENT_START_DELIMITER, ScriptUtils.DEFAULT_BLOCK_COMMENT_END_DELIMITER); }
-        finally { DataSourceUtils.releaseConnection(connection, dataSource); }
+        SqlServerMigrationSupport.apply(dataSource,
+                "db/phase-01-shipment-events-event-type.sql",
+                "db/phase-03-hub-routing-schema.sql",
+                "db/phase-03-container-handover-schema.sql",
+                "db/phase-03-linehaul-trip-schema.sql");
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM sys.tables WHERE name IN ('transport_trips', 'incidents')", Integer.class)).isEqualTo(2);
     }
     static boolean sqlServerVerificationConfigured() { return has("UTEEXPRESS_SQLSERVER_URL") && has("UTEEXPRESS_SQLSERVER_USERNAME") && has("UTEEXPRESS_SQLSERVER_PASSWORD") && has("UTEEXPRESS_JWT_SECRET"); }

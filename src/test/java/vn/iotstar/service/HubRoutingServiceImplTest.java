@@ -76,7 +76,7 @@ class HubRoutingServiceImplTest {
         authenticate(fixture.staff());
         when(hubOperationsRepository.findActiveProfileByUserId(7L)).thenReturn(Optional.of(fixture.sorterProfile()));
         when(hubOperationsRepository.findShipmentByIdForUpdate(101L)).thenReturn(Optional.of(fixture.shipment()));
-        when(hubOperationsRepository.findRouteByDecisionKey("shipment:101:hub:11"))
+        when(hubOperationsRepository.findByRouteDecisionKey("shipment:101:hub:11"))
                 .thenReturn(Optional.empty(), Optional.of(fixture.route()));
         when(hubOperationsRepository.findActiveRules(11L, "SOUTH", "Can Tho")).thenReturn(List.of(fixture.rule()));
         when(userRepository.getReferenceById(7L)).thenReturn(fixture.staff());
@@ -100,7 +100,7 @@ class HubRoutingServiceImplTest {
         authenticate(fixture.staff());
         when(hubOperationsRepository.findActiveProfileByUserId(7L)).thenReturn(Optional.of(fixture.sorterProfile()));
         when(hubOperationsRepository.findShipmentByIdForUpdate(101L)).thenReturn(Optional.of(fixture.shipment()));
-        when(hubOperationsRepository.findRouteByDecisionKey("shipment:101:hub:11")).thenReturn(Optional.empty());
+        when(hubOperationsRepository.findByRouteDecisionKey("shipment:101:hub:11")).thenReturn(Optional.empty());
         when(hubOperationsRepository.findActiveRules(11L, "SOUTH", "Can Tho")).thenReturn(List.of());
 
         assertThatThrownBy(() -> service.sortAtHub(new SortShipmentCommand(101L)))
