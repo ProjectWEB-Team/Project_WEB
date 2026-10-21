@@ -53,6 +53,16 @@ public class ShipmentEvent implements Serializable {
         return event;
     }
 
+    public static ShipmentEvent create(Shipment shipment, User actor, String eventType, String description) {
+        ShipmentEvent event = new ShipmentEvent();
+        event.shipment = shipment;
+        event.actor = actor;
+        event.eventType = eventType;
+        event.description = description;
+        event.createdAt = LocalDateTime.now();
+        return event;
+    }
+
     @PrePersist
     void assignCreatedAt() {
         if (createdAt == null) {
