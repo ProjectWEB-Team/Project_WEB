@@ -44,6 +44,7 @@
                     <ul class="nav flex-column small">
                         <li class="nav-item"><a class="nav-link py-1 text-ute-dark" href="${pageContext.request.contextPath}/user/shipments/create"><i class="bi bi-plus-circle me-2 text-ute-accent"></i>Tạo vận đơn gửi</a></li>
                         <li class="nav-item"><a class="nav-link py-1 text-ute-dark" href="${pageContext.request.contextPath}/user/shipments"><i class="bi bi-boxes me-2 text-ute-accent"></i>Quản lý đơn hàng</a></li>
+                        <li class="nav-item"><a class="nav-link py-1 text-ute-dark" href="${pageContext.request.contextPath}/user/wallet"><i class="bi bi-wallet2 me-2 text-ute-accent"></i>Ví điện tử</a></li>
                         <li class="nav-item"><a class="nav-link py-1 text-ute-dark" href="${pageContext.request.contextPath}/shipper/tasks"><i class="bi bi-bicycle me-2 text-ute-accent"></i>Ca Shipper Lấy/Giao</a></li>
                     </ul>
                 </div>

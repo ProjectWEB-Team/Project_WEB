@@ -193,3 +193,16 @@ body {
     font-weight: 500;
     font-size: 0.85rem;
 }
+
+/* -------------------------------------------------------------------
+   6. Page Width Utilities (no inline CSS in the views)
+   ------------------------------------------------------------------- */
+.ute-page-narrow {
+    max-width: 720px;
+    margin-inline: auto;
+}
+
+.ute-page-medium {
+    max-width: 960px;
+    margin-inline: auto;
+}

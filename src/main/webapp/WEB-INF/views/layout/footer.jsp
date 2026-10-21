@@ -48,10 +48,10 @@
             <hr class="border-secondary my-3 opacity-25">
 
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-center small text-light opacity-75">
-                <p class="mb-1 mb-md-0">&copy; 2026 UTEExpress. Phát triển trên nền tảng Spring Boot & Java 22. Đồ án Lập trình Web - ThS. Nguyễn Hữu Trung.</p>
+                <p class="mb-1 mb-md-0">&copy; 2026 UTEExpress. Phát triển trên nền tảng Spring Boot & Java 21. Đồ án Lập trình Web - ThS. Nguyễn Hữu Trung.</p>
                 <div>
-                    <span class="badge bg-secondary me-1">Spring Boot 3.4 / 4.x</span>
-                    <span class="badge bg-secondary me-1">Java 22 (JDK 22)</span>
+                    <span class="badge bg-secondary me-1">Spring Boot 3.3</span>
+                    <span class="badge bg-secondary me-1">Java 21 (JDK 21)</span>
                     <span class="badge bg-secondary">Bootstrap 5.3</span>
                 </div>
             </div>
