@@ -1,0 +1,151 @@
+package vn.iotstar.service.impl;
+
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import vn.iotstar.dto.realtime.NotificationEventResponse;
+import vn.iotstar.dto.wallet.WithdrawalRequestDto;
+import vn.iotstar.dto.wallet.WithdrawalReviewDto;
+import vn.iotstar.entity.UserRole;
+import vn.iotstar.entity.WithdrawalRequest;
+import vn.iotstar.exception.ResourceNotFoundException;
+import vn.iotstar.realtime.NotificationEventPublisher;
+import vn.iotstar.repository.WithdrawalRequestRepository;
+import vn.iotstar.security.AuthenticatedActor;
+import vn.iotstar.service.WalletLedgerService;
+import vn.iotstar.service.WithdrawalService;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+@Transactional
+public class WithdrawalServiceImpl implements WithdrawalService {
+
+    private final WithdrawalRequestRepository withdrawalRepository;
+    private final WalletLedgerService walletLedgerService;
+    private final NotificationEventPublisher notificationEventPublisher;
+
+    public WithdrawalServiceImpl(WithdrawalRequestRepository withdrawalRepository,
+                                 WalletLedgerService walletLedgerService,
+                                 NotificationEventPublisher notificationEventPublisher) {
+        this.withdrawalRepository = withdrawalRepository;
+        this.walletLedgerService = walletLedgerService;
+        this.notificationEventPublisher = notificationEventPublisher;
+    }
+
+    @Override
+    public WithdrawalRequest requestWithdrawal(WithdrawalRequestDto dto) {
+        AuthenticatedActor actor = AuthenticatedActor.requireCurrent();
+        Long userId = actor.userId();
+
+        // Idempotency check with request_key
+        if (dto.getRequestKey() != null && !dto.getRequestKey().isBlank()) {
+            Optional<WithdrawalRequest> existing = withdrawalRepository.findByUserIdAndRequestKey(userId, dto.getRequestKey());
+            if (existing.isPresent()) {
+                WithdrawalRequest req = existing.get();
+                // If matching request payload, return existing
+                if (req.getAmount().compareTo(dto.getAmount()) == 0
+                        && req.getAccountNumber().equals(dto.getAccountNumber())) {
+                    return req;
+                }
+                throw new IllegalStateException("Conflicting withdrawal request with the same key");
+            }
+        }
+
+        // Create request
+        WithdrawalRequest request = WithdrawalRequest.create(
+                userId, dto.getAmount(), dto.getBankName(),
+                dto.getAccountNumber(), dto.getAccountHolderName(), dto.getRequestKey());
+        request = withdrawalRepository.save(request);
+
+        // Lock funds in wallet and record WITHDRAWAL_LOCK ledger entry
+        walletLedgerService.recordWithdrawalLock(userId, dto.getAmount(), request.getId());
+
+        return request;
+    }
+
+    @Override
+    public WithdrawalRequest approveWithdrawal(WithdrawalReviewDto dto) {
+        AuthenticatedActor actor = AuthenticatedActor.requireCurrent();
+        if (!actor.hasRole(UserRole.ROLE_ADMIN)) {
+            throw new AccessDeniedException("ROLE_ADMIN required to approve withdrawals");
+        }
+
+        WithdrawalRequest request = withdrawalRepository.findByIdForUpdate(dto.getRequestId())
+                .orElseThrow(() -> new ResourceNotFoundException("Withdrawal request not found: " + dto.getRequestId()));
+
+        if (!"PENDING".equals(request.getStatus())) {
+            if ("COMPLETED".equals(request.getStatus())) {
+                return request; // Idempotent repeat
+            }
+            throw new IllegalStateException("Only PENDING withdrawals can be approved. Current: " + request.getStatus());
+        }
+
+        // Deduct locked balance and record WITHDRAWAL_DEDUCT ledger entry
+        walletLedgerService.recordWithdrawalDeduct(request.getUserId(), request.getAmount(), request.getId());
+
+        request.setStatus("COMPLETED");
+        request.setApprovedAt(LocalDateTime.now());
+        request.setCompletedAt(LocalDateTime.now());
+        WithdrawalRequest approved = withdrawalRepository.save(request);
+
+        notificationEventPublisher.publishAfterCommit(actor, new NotificationEventResponse(
+                "WITHDRAWAL_APPROVED", null, "COMPLETED", request.getAmount().toPlainString(),
+                "WITHDRAWAL#" + request.getId(),
+                "Your withdrawal was approved", LocalDateTime.now()));
+
+        return approved;
+    }
+
+    @Override
+    public WithdrawalRequest rejectWithdrawal(WithdrawalReviewDto dto) {
+        AuthenticatedActor actor = AuthenticatedActor.requireCurrent();
+        if (!actor.hasRole(UserRole.ROLE_ADMIN)) {
+            throw new AccessDeniedException("ROLE_ADMIN required to reject withdrawals");
+        }
+
+        if (dto.getRejectionReason() == null || dto.getRejectionReason().isBlank()) {
+            throw new IllegalArgumentException("Rejection reason is required");
+        }
+
+        WithdrawalRequest request = withdrawalRepository.findByIdForUpdate(dto.getRequestId())
+                .orElseThrow(() -> new ResourceNotFoundException("Withdrawal request not found: " + dto.getRequestId()));
+
+        if (!"PENDING".equals(request.getStatus())) {
+            if ("REJECTED".equals(request.getStatus())) {
+                return request; // Idempotent repeat
+            }
+            throw new IllegalStateException("Only PENDING withdrawals can be rejected. Current: " + request.getStatus());
+        }
+
+        // Refund locked balance back to available balance and record WITHDRAWAL_REFUND
+        walletLedgerService.recordWithdrawalRefund(request.getUserId(), request.getAmount(), request.getId());
+
+        request.setStatus("REJECTED");
+        request.setRejectionReason(dto.getRejectionReason());
+        request.setRejectedAt(LocalDateTime.now());
+        WithdrawalRequest rejected = withdrawalRepository.save(request);
+
+        notificationEventPublisher.publishAfterCommit(actor, new NotificationEventResponse(
+                "WITHDRAWAL_REJECTED", null, "REJECTED", request.getAmount().toPlainString(),
+                "WITHDRAWAL#" + request.getId(),
+                "Your withdrawal was rejected: " + dto.getRejectionReason(), LocalDateTime.now()));
+
+        return rejected;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<WithdrawalRequest> getUserWithdrawals(Long userId) {
+        return withdrawalRepository.findByUserIdOrderByRequestedAtDesc(userId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<WithdrawalRequest> getPendingWithdrawals() {
+        return withdrawalRepository.findByStatusOrderByRequestedAtAsc("PENDING");
+    }
+}
+
