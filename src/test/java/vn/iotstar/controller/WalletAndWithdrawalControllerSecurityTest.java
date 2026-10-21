@@ -15,7 +15,6 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import vn.iotstar.config.SecurityConfig;
 import vn.iotstar.entity.User;
 import vn.iotstar.entity.UserRole;
-import vn.iotstar.repository.UserRepository;
 import vn.iotstar.security.JwtAuthenticationFilter;
 import vn.iotstar.security.JwtService;
 import vn.iotstar.service.WalletLedgerService;
@@ -40,9 +39,6 @@ class WalletAndWithdrawalControllerSecurityTest {
 
     @MockBean
     private WithdrawalService withdrawalService;
-
-    @MockBean
-    private UserRepository userRepository;
 
     @MockBean
     private JwtService jwtService;

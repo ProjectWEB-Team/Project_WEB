@@ -6,10 +6,13 @@ import org.springframework.transaction.annotation.Transactional;
 import vn.iotstar.dto.realtime.NotificationEventResponse;
 import vn.iotstar.dto.wallet.WithdrawalRequestDto;
 import vn.iotstar.dto.wallet.WithdrawalReviewDto;
+import vn.iotstar.dto.wallet.WithdrawalSummaryResponse;
+import vn.iotstar.entity.User;
 import vn.iotstar.entity.UserRole;
 import vn.iotstar.entity.WithdrawalRequest;
 import vn.iotstar.exception.ResourceNotFoundException;
 import vn.iotstar.realtime.NotificationEventPublisher;
+import vn.iotstar.repository.UserRepository;
 import vn.iotstar.repository.WithdrawalRequestRepository;
 import vn.iotstar.security.AuthenticatedActor;
 import vn.iotstar.service.WalletLedgerService;
@@ -26,13 +29,16 @@ public class WithdrawalServiceImpl implements WithdrawalService {
     private final WithdrawalRequestRepository withdrawalRepository;
     private final WalletLedgerService walletLedgerService;
     private final NotificationEventPublisher notificationEventPublisher;
+    private final UserRepository userRepository;
 
     public WithdrawalServiceImpl(WithdrawalRequestRepository withdrawalRepository,
                                  WalletLedgerService walletLedgerService,
-                                 NotificationEventPublisher notificationEventPublisher) {
+                                 NotificationEventPublisher notificationEventPublisher,
+                                 UserRepository userRepository) {
         this.withdrawalRepository = withdrawalRepository;
         this.walletLedgerService = walletLedgerService;
         this.notificationEventPublisher = notificationEventPublisher;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -146,6 +152,22 @@ public class WithdrawalServiceImpl implements WithdrawalService {
     @Transactional(readOnly = true)
     public List<WithdrawalRequest> getPendingWithdrawals() {
         return withdrawalRepository.findByStatusOrderByRequestedAtAsc("PENDING");
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<WithdrawalSummaryResponse> getPendingWithdrawalSummaries() {
+        return getPendingWithdrawals().stream()
+                .map(request -> {
+                    String username = userRepository.findById(request.getUserId())
+                            .map(User::getUsername)
+                            .orElse("user#" + request.getUserId());
+                    return new WithdrawalSummaryResponse(
+                            request.getId(), request.getUserId(), username, request.getAmount(), request.getBankName(),
+                            request.getAccountNumber(), request.getAccountHolderName(), request.getStatus(),
+                            request.getRejectionReason(), request.getRequestedAt());
+                })
+                .toList();
     }
 }
 

@@ -7,7 +7,7 @@
             <div class="row g-4 mb-3">
                 <div class="col-lg-4 col-md-6">
                     <div class="d-flex align-items-center gap-2 mb-2">
-                        <div class="bg-ute-accent text-white rounded-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                        <div class="bg-ute-accent text-white rounded-2 d-flex align-items-center justify-content-center ute-brand-mark-sm">
                             <i class="bi bi-box-seam-fill fs-6"></i>
                         </div>
                         <h6 class="mb-0 fw-bold tracking-wide">UTE<span class="text-ute-accent">EXPRESS</span> LOGISTICS</h6>

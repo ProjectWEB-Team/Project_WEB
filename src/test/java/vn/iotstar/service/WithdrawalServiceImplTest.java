@@ -16,6 +16,7 @@ import vn.iotstar.entity.User;
 import vn.iotstar.entity.UserRole;
 import vn.iotstar.entity.WithdrawalRequest;
 import vn.iotstar.realtime.NotificationEventPublisher;
+import vn.iotstar.repository.UserRepository;
 import vn.iotstar.repository.WithdrawalRequestRepository;
 import vn.iotstar.service.impl.WithdrawalServiceImpl;
 
@@ -36,6 +37,8 @@ class WithdrawalServiceImplTest {
     private WalletLedgerService walletLedgerService;
     @Mock
     private NotificationEventPublisher notificationEventPublisher;
+    @Mock
+    private UserRepository userRepository;
 
     private WithdrawalServiceImpl withdrawalService;
 
@@ -45,7 +48,7 @@ class WithdrawalServiceImplTest {
     @BeforeEach
     void setUp() {
         withdrawalService = new WithdrawalServiceImpl(
-                withdrawalRepository, walletLedgerService, notificationEventPublisher);
+                withdrawalRepository, walletLedgerService, notificationEventPublisher, userRepository);
 
         admin = new User(100L, "admin_test", "hash", UserRole.ROLE_ADMIN, "ACTIVE");
         regularUser = new User(2L, "user_test", "hash", UserRole.ROLE_USER, "ACTIVE");

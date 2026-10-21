@@ -11,9 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import vn.iotstar.dto.wallet.WithdrawalReviewDto;
 import vn.iotstar.dto.wallet.WithdrawalSummaryResponse;
-import vn.iotstar.entity.User;
 import vn.iotstar.entity.WithdrawalRequest;
-import vn.iotstar.repository.UserRepository;
 import vn.iotstar.service.WithdrawalService;
 
 import java.util.List;
@@ -27,18 +25,14 @@ import java.util.List;
 public class AdminWithdrawalController {
 
     private final WithdrawalService withdrawalService;
-    private final UserRepository userRepository;
 
-    public AdminWithdrawalController(WithdrawalService withdrawalService, UserRepository userRepository) {
+    public AdminWithdrawalController(WithdrawalService withdrawalService) {
         this.withdrawalService = withdrawalService;
-        this.userRepository = userRepository;
     }
 
     @GetMapping("/admin/withdrawals")
     public String listWithdrawals(Model model) {
-        List<WithdrawalSummaryResponse> pending = withdrawalService.getPendingWithdrawals().stream()
-                .map(this::toSummary)
-                .toList();
+        List<WithdrawalSummaryResponse> pending = withdrawalService.getPendingWithdrawalSummaries();
         model.addAttribute("pendingWithdrawals", pending);
         return "admin/withdrawals";
     }
@@ -73,15 +67,5 @@ public class AdminWithdrawalController {
             redirectAttributes.addFlashAttribute("errorMessage", exception.getMessage());
         }
         return "redirect:/admin/withdrawals";
-    }
-
-    private WithdrawalSummaryResponse toSummary(WithdrawalRequest request) {
-        String username = userRepository.findById(request.getUserId())
-                .map(User::getUsername)
-                .orElse("user#" + request.getUserId());
-        return new WithdrawalSummaryResponse(
-                request.getId(), request.getUserId(), username, request.getAmount(), request.getBankName(),
-                request.getAccountNumber(), request.getAccountHolderName(), request.getStatus(),
-                request.getRejectionReason(), request.getRequestedAt());
     }
 }
