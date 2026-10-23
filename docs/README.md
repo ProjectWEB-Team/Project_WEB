@@ -401,3 +401,13 @@ Team context stability
 ```
 
 Mọi thành viên đều phải hiểu project như một hệ thống thống nhất, không chỉ phần code mà mình trực tiếp phụ trách.
+
+## 9. Hướng dẫn thực hiện Phase 02 — Person A
+
+- [Cấu hình và kiểm thử phần account](PHASE_02_ACCOUNT_SETUP.md): OTP điện thoại mô phỏng bằng `otp-local`, Google OAuth2/OIDC qua profile `google`, biến môi trường, migration và các bước chưa làm. Đăng nhập Google không cần SMTP.
+- [Phạm vi Phase 02 bằng tiếng Việt](PHASE_02_SCOPE_VI.md): chín gói việc, phần đã có, trách nhiệm database, ranh giới với Phase 03/04 và các quyết định cần thống nhất.
+- [Checklist thực hiện theo ngày](PHASE_02_DIRECTOR_CHECKLIST.md): tiến độ thực tế, điều kiện hoàn thành và nhật ký từng phiên.
+
+Các tài liệu thực hiện này tuân theo authority order ở trên; không thay thế ADR, Workflow hoặc phê duyệt của người phụ trách nhóm.
+
+Ngày 22/10/2026, người dùng yêu cầu triển khai account với hai lựa chọn **OTP điện thoại hoặc Google**, cấu hình provider sau; [ADR-016](ARCHITECTURE_DECISIONS.md#adr-016--customer-phone-otp-and-google-oidc-sign-in) ghi đúng nguồn quyết định này. Cập nhật 23/10 sau wizard: **171 test đạt, gồm 11 SQL Server tests, không có test bị bỏ qua**; WAR build thành công. Đã có wizard 4 bước, báo giá gắn với phiên và kiểm tra giá trước khi ghi đơn, mốc chờ bàn giao lưu trong DB; 10 kiểm tra tương tác Chrome đạt trên fixture Jasper. Account/linking/payment đã có bằng chứng SQL/rollback/concurrency. Bước tiếp theo là nhận bảng giá của nhóm và UAT qua Eclipse/trình duyệt; tiếp tục hợp đồng hub/lifecycle rồi first-mile, tracking, refund. Provider thật và các gói nghiệp vụ còn lại vẫn mở; **chưa hoàn thành toàn Phase 02.**

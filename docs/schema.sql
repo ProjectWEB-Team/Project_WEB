@@ -139,6 +139,7 @@ CREATE TABLE dbo.shipments (
     cancel_reason NVARCHAR(255), -- SENDER_REQUEST, PAYMENT_TIMEOUT, PICKUP_TIMEOUT, WEIGHT_DISCREPANCY
     closure_reason NVARCHAR(50), -- LOST, DISPOSED
     payment_deadline DATETIME2(0) NULL,
+    waiting_for_handover_at DATETIME2(0) NULL, -- Actual entry into WAITING_FOR_HANDOVER; legacy rows stay unknown
     created_at DATETIME2(0) NOT NULL DEFAULT SYSDATETIME(),
     picked_up_at DATETIME2(0) NULL,
     delivered_at DATETIME2(0) NULL,
