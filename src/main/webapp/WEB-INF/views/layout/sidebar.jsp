@@ -1,5 +1,4 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ taglib prefix="c" uri="https://jakarta.ee/tags/jstl/core" %>
 
 <!-- Sidebar Navigation for Internal Operations (6 Roles) -->
 <div class="card-ute p-3 mb-4">
@@ -44,6 +43,8 @@
                     <ul class="nav flex-column small">
                         <li class="nav-item"><a class="nav-link py-1 text-ute-dark" href="${pageContext.request.contextPath}/user/shipments/create"><i class="bi bi-plus-circle me-2 text-ute-accent"></i>Tạo vận đơn gửi</a></li>
                         <li class="nav-item"><a class="nav-link py-1 text-ute-dark" href="${pageContext.request.contextPath}/user/shipments"><i class="bi bi-boxes me-2 text-ute-accent"></i>Quản lý đơn hàng</a></li>
+                        <li class="nav-item"><a class="nav-link py-1 text-ute-dark" href="${pageContext.request.contextPath}/user/incoming"><i class="bi bi-inbox me-2 text-ute-accent"></i>Đơn đang đến</a></li>
+                        <li class="nav-item"><a class="nav-link py-1 text-ute-dark" href="${pageContext.request.contextPath}/hub/pickups"><i class="bi bi-person-check me-2 text-ute-accent"></i>Phân công lấy hàng</a></li>
                         <li class="nav-item"><a class="nav-link py-1 text-ute-dark" href="${pageContext.request.contextPath}/shipper/tasks"><i class="bi bi-bicycle me-2 text-ute-accent"></i>Ca Shipper Lấy/Giao</a></li>
                     </ul>
                 </div>

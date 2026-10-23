@@ -21,6 +21,7 @@ target/
 *.class
 
 # Eclipse
+.metadata/
 .classpath
 .project
 .settings/

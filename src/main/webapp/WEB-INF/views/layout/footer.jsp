@@ -1,5 +1,4 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ taglib prefix="c" uri="https://jakarta.ee/tags/jstl/core" %>
 
     <!-- Footer -->
     <footer class="bg-ute-primary text-white mt-auto pt-4 pb-3 border-top border-secondary">

@@ -2,6 +2,7 @@ package vn.iotstar.dto.shipment;
 
 import vn.iotstar.entity.ShipmentStatus;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -9,7 +10,9 @@ import java.util.List;
 public record ShipmentDetailResponse(Long id, String trackingNumber, ShipmentStatus currentStatus,
                                      String senderName, String senderPhone, String senderAddress,
                                      String receiverName, String receiverPhone, String receiverAddress,
-                                     LocalDateTime createdAt, List<ShipmentEventResponse> events) {
+                                     LocalDateTime createdAt, List<ShipmentEventResponse> events,
+                                     BigDecimal shippingFee, String paymentStatus, String paymentMethod,
+                                     String pickupMethod, String feePayer, LocalDateTime waitingForHandoverAt) {
     public Long getId() { return id; }
     public String getTrackingNumber() { return trackingNumber; }
     public ShipmentStatus getCurrentStatus() { return currentStatus; }
@@ -21,4 +24,10 @@ public record ShipmentDetailResponse(Long id, String trackingNumber, ShipmentSta
     public String getReceiverAddress() { return receiverAddress; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public List<ShipmentEventResponse> getEvents() { return events; }
+    public BigDecimal getShippingFee() { return shippingFee; }
+    public String getPaymentStatus() { return paymentStatus; }
+    public String getPaymentMethod() { return paymentMethod; }
+    public String getPickupMethod() { return pickupMethod; }
+    public String getFeePayer() { return feePayer; }
+    public LocalDateTime getWaitingForHandoverAt() { return waitingForHandoverAt; }
 }
