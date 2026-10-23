@@ -82,7 +82,7 @@ Chỉ thực hiện sau khi database/schema đã sẵn sàng. Mở PowerShell �
 
 ```powershell
 Set-Location E:\Project_WEB
-. .\.codex\local-env.ps1
+. .\.local\local-env.ps1
 $env:UTEEXPRESS_SQLSERVER_URL = Read-Host 'JDBC URL của database đã chọn'
 $env:UTEEXPRESS_SQLSERVER_USERNAME = Read-Host 'SQL username'
 $env:UTEEXPRESS_SQLSERVER_PASSWORD = [System.Net.NetworkCredential]::new('', (Read-Host 'SQL password' -AsSecureString)).Password
@@ -92,7 +92,7 @@ mvn spring-boot:run
 
 Nếu dùng máy khác không có helper local, cấu hình JDK 22/Maven và `UTEEXPRESS_JWT_SECRET` trước. Không bật `otp-local` trên môi trường dùng chung hoặc công khai: ai đọc được inbox local có thể lấy mã mô phỏng.
 
-Mở [trang đăng ký local](http://localhost:8080/register), nhập thông tin và gửi form. Mã phát triển được ghi tại `.codex/otp-inbox/<challenge-UUID>.txt` tính từ thư mục chạy ứng dụng. File chứa mã, hạn UTC và ba số cuối điện thoại; `.codex/` được `.gitignore` loại trừ. Không có SMS hay tin Zalo nào được gửi. Nhà phát triển đọc file tương ứng rồi nhập mã ở trang xác minh; đây là kiểm thử logic, không chứng minh sở hữu điện thoại ngoài đời.
+Mở [trang đăng ký local](http://localhost:8080/register), nhập thông tin và gửi form. Mã phát triển được ghi tại `.local/otp-inbox/<challenge-UUID>.txt` tính từ thư mục chạy ứng dụng. File chứa mã, hạn UTC và ba số cuối điện thoại; `.local/` được `.gitignore` loại trừ. Không có SMS hay tin Zalo nào được gửi. Nhà phát triển đọc file tương ứng rồi nhập mã ở trang xác minh; đây là kiểm thử logic, không chứng minh sở hữu điện thoại ngoài đời.
 
 - Sau kích hoạt, ứng dụng về trang đăng nhập. Có thể dùng mật khẩu hoặc yêu cầu OTP login mới.
 - Mã có 6 chữ số, hết hạn sau 5 phút; tối đa 5 lần thử sai cho mỗi mã. Chỉ mã mới nhất có hiệu lực, dùng đúng một lần và đúng purpose.

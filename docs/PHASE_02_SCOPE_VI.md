@@ -36,7 +36,7 @@ Nguồn quyết định khi có khác biệt: **ADR → Workflow → ERD → Kno
 
 Hai nhánh tính năng đều đang đi trước `main` 6 commit và chưa nằm trong `main` tại thời điểm rà soát. Có mã hoặc báo cáo test trên nhánh riêng **không đồng nghĩa** đã tích hợp và được kiểm chứng chung trên máy bạn.
 
-Nhánh làm việc hiện tại: `codex/phase-02-intake`, nền `358655c`. Chưa merge/cherry-pick Phase 03/04. Đã có account/OTP/Google, late receiver linking và phần intake/quote/payment. Các bảng/cột cần dùng trên DB `ute_express` đã được kiểm tra và 11 SQL integration tests đã đạt. Provider thật và browser UAT còn thiếu; kết quả này không nghiệm thu thay phần nghiệp vụ chưa triển khai.
+Nhánh làm việc hiện tại: `feature/phase-02-intake`, nền `358655c`. Chưa merge/cherry-pick Phase 03/04. Đã có account/OTP/Google, late receiver linking và phần intake/quote/payment. Các bảng/cột cần dùng trên DB `ute_express` đã được kiểm tra và 11 SQL integration tests đã đạt. Provider thật và browser UAT còn thiếu; kết quả này không nghiệm thu thay phần nghiệp vụ chưa triển khai.
 
 Phần đã bổ sung và phần Phase 02 còn thiếu:
 

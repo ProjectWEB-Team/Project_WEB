@@ -1,9 +1,6 @@
 # Dependencies & local tools
 node_modules/
-.agents/
-.planning/
-.gsd/
-.codex/
+.local/
 .local-backups/
 
 # Environment & local secrets

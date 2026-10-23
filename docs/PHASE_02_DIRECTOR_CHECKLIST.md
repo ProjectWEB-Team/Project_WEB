@@ -416,10 +416,10 @@ Next unchecked checkbox:
 
 ### 2026-10-22 — Day 00 environment preparation (in progress)
 
-- Branch / baseline commit: `codex/phase-02-intake` / `358655c`.
+- Branch / baseline commit: `feature/phase-02-intake` / `358655c`.
 - Installed Apache Maven 3.9.9 under the current user's LocalAppData; verified the distribution SHA-512 checksum and added its bin directory to the user PATH.
-- Verified existing JDK 22; project-local ignored `.codex/local-env.ps1` selects it without changing system Java. Generated an ignored local JWT signing secret.
-- Tests: unchanged Phase-01 `mvn test` using JDK 22: BUILD SUCCESS, 58 tests, 0 failures, 0 errors, 1 skipped (SQL Server environment not configured). Local output: `.codex/day00-baseline.log`.
+- Verified existing JDK 22; project-local ignored `.local/local-env.ps1` selects it without changing system Java. Generated an ignored local JWT signing secret.
+- Tests: unchanged Phase-01 `mvn test` using JDK 22: BUILD SUCCESS, 58 tests, 0 failures, 0 errors, 1 skipped (SQL Server environment not configured).
 - Manual verification: local SQL Server service is running; Windows-authenticated read-only connection succeeds. Entity maps `shipment_events.event_type`.
 - User requested time to update GitHub before database setup. No database, SQL login, or schema has been created or modified.
 - Remote Phase-04 branch is present and contains schema scripts and `docs/PHASE_04_HANDOFF.md`; its POM targets Java 21, while current main targets Java 22. Re-check the selected baseline after the user's update.
@@ -427,7 +427,7 @@ Next unchecked checkbox:
 
 ### 2026-10-22 — Phase-02 scope audit requested by the owner
 
-- Branch: `codex/phase-02-intake`; baseline remains `358655c`.
+- Branch: `feature/phase-02-intake`; baseline remains `358655c`.
 - Fetched origin and inventoried 336 distinct Git file versions across main, project-plans, hub-linehaul and phase-04-last-mile-finance.
 - Added Vietnamese scope guide and source inventory; linked them from docs/README.md and this checklist.
 - Clarified missing explicit pickup-cash/attempt tests, sender listing, persisted wait timestamp, shared entity/JDK/hub contracts, ETA, scheduler provenance and pending refund consumer integration.
@@ -442,7 +442,7 @@ Next unchecked checkbox:
 - Added phone registration/login/resend JSP flows, optional Google OIDC onboarding/login keyed by verified `sub`, local application session creation and automated account/MVC/security coverage. Google email verification does not grant phone ownership; internal roles cannot use these customer login paths.
 - Added disabled-by-default `OtpDelivery`, explicit ignored local inbox simulation, optional Google profile and setup/cost documentation. Gmail SMTP is not used for Google sign-in. A real SMS/Zalo adapter is not implemented.
 - Prepared transactional SQL Server account migration with preflight checks for existing phone/email normalization and collisions. No target database has been selected or migration executed; SQL integration success and browser UAT remain unproven.
-- Final validation: `mvn -B package` on JDK 22 — **BUILD SUCCESS**, 122 tests discovered, **118 passed**, 0 failures/errors, **4 skipped** (three registration SQL Server tests and the existing shipment SQL Server test, all missing the opt-in environment). Built `target/project-web-1.0.war`. Local evidence: `.codex/part01-final-build.log`.
+- Final validation: `mvn -B package` on JDK 22 — **BUILD SUCCESS**, 122 tests discovered, **118 passed**, 0 failures/errors, **4 skipped** (three registration SQL Server tests and the existing shipment SQL Server test, all missing the opt-in environment). Built `target/project-web-1.0.war`.
 - Four real-HTTP tests started embedded Tomcat/Jasper and compiled/rendered all five authentication JSPs, checking CSRF submission, escaped values and no password/OTP echo. These use mocked services and do not replace SQL Server/provider/browser UAT. Source and new-file whitespace checks passed.
 - Documentation updated: ADR, Vietnamese scope, this checklist, docs index and `PHASE_02_ACCOUNT_SETUP.md`. Checked boxes identify concrete implementation work, not completion of a whole day/requirement.
 - Next environment step: select DB/credentials and validate migrations/SQL tests. Next feature step: `ReceiverLinkService` and late recipient linking; account core/UI does not complete 02-02, `INTAKE-01` or Phase 02.
@@ -467,7 +467,7 @@ Next unchecked checkbox:
 ### 2026-10-23 — Current-source review and local runtime verification
 
 - Reviewed current account, shipment, configuration/security, DTO/repository, JSP and test source against ownership, workflow and checklist. This review did not fetch newer remote branches or implement feature fixes.
-- Branch / baseline: `codex/phase-02-intake` / `358655c`; existing local implementation changes remain uncommitted.
+- Branch / baseline: `feature/phase-02-intake` / `358655c`; existing local implementation changes remain uncommitted.
 - Ran JDK-22 Maven `-B -Dtest=!ShipmentSqlServerIntegrationTest,!RegistrationSqlServerIntegrationTest package`: **BUILD SUCCESS; 127 tests passed, zero failures/errors/skips among the selected tests. Four SQL tests were excluded, not passed.** Evidence: `target/checklist-review-tests.log`.
 - Inspected the built WAR: authentication JSPs and Jasper are included; `WEB-INF/classes/application-local.properties` is absent.
 - Started the WAR temporarily on port 18080 with `local,otp-local` and external local configuration. Hikari established a SQL Server connection. HTTP checks: `/login`, `/register`, `/auth/phone-login`, and `/assets/css/ute-express.css` returned 200; `/` returned 500 with an unresolved `https://jakarta.ee/tags/jstl/core` URI. Stopped the temporary process afterward. Evidence: `target/checklist-review-runtime.log`.

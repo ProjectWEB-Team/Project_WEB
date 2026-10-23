@@ -17,7 +17,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-/** Minimal Phase-01 shipment record; later operational and financial fields remain untouched. */
+/** Shipment record; columns owned by later phases stay unmapped. */
 @Entity
 @Table(name = "shipments")
 public class Shipment implements Serializable {

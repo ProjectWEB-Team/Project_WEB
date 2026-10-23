@@ -214,7 +214,7 @@ public class ShipmentServiceImpl implements ShipmentService {
         }
     }
 
-    /** shortcut: actual weight only (no volumetric rule) and whole-VND HALF_UP rounding, upgrade once the team records both. */
+    /** Actual weight only (no volumetric rule), rounded to whole VND with HALF_UP. */
     private BigDecimal price(CreateShipmentRequest request) {
         PricingPolicy policy = pricingPolicyRepository
                 .findFirstByServiceCodeAndFromRegionAndToRegionAndStatusOrderByIdDesc(

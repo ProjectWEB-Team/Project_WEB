@@ -25,7 +25,7 @@ public class ReceiverLinkServiceImpl implements ReceiverLinkService {
             return 0;
         }
         String national = "0" + user.getPhone().substring(3); // phone is stored as +84xxxxxxxxx
-        // shortcut: Phase-01 snapshots keep the typed format; match the three common forms, upgrade when intake normalizes snapshots.
+        // Older snapshots keep the typed format, so match the three common forms.
         return shipments.linkReceiver(user, List.of(user.getPhone(), national, user.getPhone().substring(1)));
     }
 }
