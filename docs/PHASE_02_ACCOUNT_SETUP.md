@@ -1,6 +1,6 @@
 # Phase 02 — Cấu hình account: OTP điện thoại và Google
 
-Cập nhật trạng thái ngày **23/10/2026** theo [ADR-016](ARCHITECTURE_DECISIONS.md#adr-016--customer-phone-otp-and-google-oidc-sign-in). Database local là `ute_express`, SQL login `uteexpress_app`, cấu hình riêng trong `application-local.properties`. **Build WAR mới nhất: 171 test đạt, gồm 11 test SQL Server thật, không có test bị bỏ qua.** Luồng account/OTP local đã qua HTTP thật; form tạo đơn đã có wizard 4 bước, báo giá gắn với session và mốc chờ bàn giao lưu trong DB. SQL tests kiểm tra linking, snapshot, rollback và cập nhật đồng thời. Bảng giá của nhóm, Google/provider OTP thật, browser UAT và phần nghiệp vụ còn lại vẫn mở; chưa hoàn thành Phase 02.
+Cập nhật trạng thái ngày **23/10/2026** theo [ADR-016](ARCHITECTURE_DECISIONS.md#adr-016--customer-phone-otp-and-google-oidc-sign-in). Database local là `ute_express`, SQL login `uteexpress_app`, cấu hình riêng trong `application-local.properties`. **Ngày 24/10: `mvn test` chạy 197 test, 0 lỗi, 9 SQL Server tests bỏ qua khi không bật biến môi trường.** Luồng account/OTP local đã qua HTTP thật; form tạo đơn đã có wizard 4 bước, báo giá gắn với session và mốc chờ bàn giao lưu trong DB. SQL tests kiểm tra linking, snapshot, rollback và cập nhật đồng thời. Bảng giá demo đã nạp (bước 9). Google/provider OTP thật, browser UAT theo vai trò và bằng chứng SQL cho first-mile/refund vẫn mở; chưa hoàn thành Phase 02.
 
 ## 1. Hai lựa chọn đăng nhập đã triển khai
 
@@ -156,4 +156,4 @@ Lần rà soát đầu ngày 23/10/2026: **127 test không dùng SQL Server đ�
 
 Kết quả sau đợt sửa lỗi ngày 23/10/2026: **151 test đạt, 0 failures/errors/skips**, gồm 6 test SQL account/linking và 5 test SQL shipment/payment; WAR build thành công. HTTP trên WAR đã qua đăng ký, OTP local, kích hoạt, đăng nhập và thông báo an toàn khi chưa có bảng giá. Bằng chứng: `target/phase02-fix-final-build.log`, `target/phase02-fix-http.json`.
 
-Kết quả mới nhất sau wizard: **171 test đạt, 0 failures/errors/skips**, gồm 11 test SQL; WAR build thành công. Thêm 7 test render JSP shipment và 10 kiểm tra tương tác Chrome trên trang Jasper dùng dữ liệu giả lập riêng. Migration chờ bàn giao đã áp dụng, dữ liệu test đã dọn; tài khoản người dùng sẵn có còn nguyên. Log `target/phase02-wizard-final-build.log`. Đây chưa thay thế UAT với bảng giá nhóm hoặc Google/provider thật. Xem [nhật ký checklist](PHASE_02_DIRECTOR_CHECKLIST.md).
+Kết quả mới nhất ngày 24/10: **197 test chạy, 0 lỗi, 9 SQL Server tests bỏ qua** khi không bật biến môi trường. Lần chạy SQL đạt gần nhất (171 test, 11 SQL, 23/10) là trước khi thêm first-mile/tracking/refund. Đây chưa thay thế UAT theo vai trò hoặc Google/provider thật. Xem [nhật ký checklist](PHASE_02_DIRECTOR_CHECKLIST.md).

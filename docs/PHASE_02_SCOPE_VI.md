@@ -4,7 +4,7 @@
 > Đối chiếu GitHub ngày **22/10/2026**, sau `git fetch origin`.
 > Đã cập nhật phần account theo yêu cầu người dùng ngày **22/10/2026**: OTP điện thoại hoặc đăng nhập Google, cấu hình nhà cung cấp sau. Quyết định được ghi ở [ADR-016](ARCHITECTURE_DECISIONS.md#adr-016--customer-phone-otp-and-google-oidc-sign-in); không ghi nhận thay phê duyệt của trưởng nhóm.
 > Mã account, giao diện và liên kết người nhận cũ đã có bằng chứng SQL; cấu hình provider thật và browser UAT vẫn còn. Hướng dẫn chạy: [PHASE_02_ACCOUNT_SETUP.md](PHASE_02_ACCOUNT_SETUP.md).
-> **Cập nhật local ngày 23/10/2026 sau wizard:** 171 test đạt, gồm 11 SQL Server tests, không test nào bị bỏ qua; WAR build thành công. Wizard 4 bước, báo giá gắn với phiên và thời điểm chờ bàn giao đã có. 10 kiểm tra Chrome trên trang Jasper với dữ liệu kiểm thử đạt. Đang chờ bảng giá nhóm để UAT báo giá/tạo đơn thật. Xem mục 9 và [checklist](PHASE_02_DIRECTOR_CHECKLIST.md). Các commit remote dưới đây vẫn là snapshot ngày 22/10, không phải lần fetch mới.
+> **Cập nhật 24/10:** trên nhánh `feature/phase-02-intake`, `mvn test` chạy **197 test, 0 lỗi**; 9 SQL Server tests bị bỏ qua khi không bật biến môi trường. Lần chạy SQL gần nhất (23/10, 11 test đạt) là trước khi thêm first-mile/hủy/timeout/outbox, nên phần mới chưa có bằng chứng SQL Server. Đã có code first-mile, hủy đơn, timeout 48 giờ, outbox hoàn tiền, tracking công khai và mở khóa cho người nhận. Bảng giá demo đã nạp bằng `phase-02-pricing-seed.sql` (chờ nhóm xác nhận). Đăng ký → OTP local → đăng nhập và báo giá đã thử trên trình duyệt. Còn mở: bảng `refund_settlement_outbox` chưa áp dụng trên DB local, dữ liệu hub/nhân sự để UAT first-mile, UAT theo vai trò, test SQL cho phần mới, lưu mã dịch vụ và optimistic version, ETA, provider thật, review chéo; **chưa hoàn thành toàn Phase 02.**
 
 > **Cập nhật 23/10/2026 (tối):** đã code 02-05, 02-06, 02-07, 02-09 và phần realtime/unlock của 02-08: phân công lấy hàng cùng hub, shipper ghi lần liên hệ và quét mã hoàn tất (thu tiền mặt người gửi một lần), hủy đơn của người gửi, job timeout 48 giờ, outbox hoàn tiền `PENDING_WALLET_CREDIT`, tra cứu công khai `/tracking` và `/api/tracking/{mã}`, danh sách đơn đã gửi, “Đơn đang đến” có che và mở khóa bằng mã vận đơn đầy đủ. 193 test chạy, 0 lỗi, 9 test SQL bị bỏ qua vì môi trường build không có SQL Server. Ô ✔ chỉ ghi nhận mã đã có; SQL evidence, UAT và review vẫn còn. Chi tiết và các mặc định đã chọn: nhật ký cuối [checklist](PHASE_02_DIRECTOR_CHECKLIST.md).
 
@@ -36,7 +36,7 @@ Nguồn quyết định khi có khác biệt: **ADR → Workflow → ERD → Kno
 
 Hai nhánh tính năng đều đang đi trước `main` 6 commit và chưa nằm trong `main` tại thời điểm rà soát. Có mã hoặc báo cáo test trên nhánh riêng **không đồng nghĩa** đã tích hợp và được kiểm chứng chung trên máy bạn.
 
-Nhánh làm việc hiện tại: `feature/phase-02-intake`, nền `358655c`. Chưa merge/cherry-pick Phase 03/04. Đã có account/OTP/Google, late receiver linking và phần intake/quote/payment. Các bảng/cột cần dùng trên DB `ute_express` đã được kiểm tra và 11 SQL integration tests đã đạt. Provider thật và browser UAT còn thiếu; kết quả này không nghiệm thu thay phần nghiệp vụ chưa triển khai.
+Nhánh làm việc hiện tại: `feature/phase-02-intake`, nền `358655c`, đã push lên GitHub. Chưa merge/cherry-pick Phase 03/04. Đã có code cho cả chín gói ở mức triển khai; xem từng ô ở mục 3. SQL Server evidence hiện chỉ có cho account/linking/intake/payment; provider thật, browser UAT theo vai trò và review chéo còn thiếu.
 
 Phần đã bổ sung và phần Phase 02 còn thiếu:
 
@@ -83,15 +83,15 @@ Phần đã bổ sung và phần Phase 02 còn thiếu:
 ### 02-03 — Intake đầy đủ, tính cước và payment records
 
 - [x] Sender identity lấy từ `AuthenticatedActor`, không nhận sender ID làm bằng chứng quyền từ request.
-- [ ] Nhận và kiểm tra dữ liệu sender/receiver; lưu snapshot không thay đổi theo profile.
-- [ ] Auto-link receiver đã có account khi tạo đơn theo quy tắc phone chuẩn hóa được chấp thuận.
-- [ ] Lưu địa chỉ nhận, tỉnh/quận, cân nặng, dài/rộng/cao, khai giá, COD, chính sách đồng kiểm, lựa chọn dịch vụ, người trả phí và phương thức first-mile.
-- [ ] Map đầy đủ các field intake trong `Shipment`, deadline/lifecycle timestamp cần thiết và optimistic version.
-- [ ] Tra `pricing_policies` đang `ACTIVE`; tính cước ở server bằng `BigDecimal`: giá cơ bản, bậc cân vượt, bảo hiểm và phí COD theo policy đã chốt.
-- [ ] Tính lại/kiểm tra báo giá khi xác nhận; browser không quyết định tổng phí hoặc trạng thái.
-- [ ] Persist shipment, event và payment theo đúng transaction và nhánh thanh toán.
-- [ ] Thanh toán online demo dùng method chuẩn như `VNPAY`; không tự thêm method `DEMO` và không gọi provider thật.
-- [ ] Xác nhận demo chỉ cho sender sở hữu đơn đủ điều kiện; idempotent, không tạo thanh toán lần hai.
+- [x] Nhận và kiểm tra dữ liệu sender/receiver; lưu snapshot không thay đổi theo profile.
+- [x] Auto-link receiver đã có account khi tạo đơn theo quy tắc phone chuẩn hóa được chấp thuận (chỉ `ROLE_USER` đã xác thực phone).
+- [ ] Lưu địa chỉ nhận, tỉnh/quận, cân nặng, dài/rộng/cao, khai giá, COD, chính sách đồng kiểm, lựa chọn dịch vụ, người trả phí và phương thức first-mile. Còn thiếu: mã dịch vụ chưa được lưu vào `shipments`.
+- [ ] Map đầy đủ các field intake trong `Shipment`, deadline/lifecycle timestamp cần thiết và optimistic version. Còn thiếu: `@Version` và hạn thanh toán.
+- [x] Tra `pricing_policies` đang `ACTIVE`; tính cước ở server bằng `BigDecimal`: giá cơ bản, bậc cân vượt, bảo hiểm và phí COD theo policy đã chốt.
+- [x] Tính lại/kiểm tra báo giá khi xác nhận; browser không quyết định tổng phí hoặc trạng thái.
+- [x] Persist shipment, event và payment theo đúng transaction và nhánh thanh toán.
+- [x] Thanh toán online demo dùng method chuẩn như `VNPAY`; không tự thêm method `DEMO` và không gọi provider thật.
+- [x] Xác nhận demo chỉ cho sender sở hữu đơn đủ điều kiện; idempotent, không tạo thanh toán lần hai.
 - [ ] Test chính sách inactive/thiếu, dữ liệu sai, sửa total từ client, duplicate confirmation và SQL Server.
 
 Đầu ra chính: `ShipmentIntakeService`, `PricingPolicy`, request/quote DTO, `phase-02-intake-payment.sql`; `Payment`/repository cần thống nhất với Phase 04 trước khi dùng chung.
@@ -172,7 +172,7 @@ Phần pickup kết thúc ở việc nhận kiện và bàn giao dữ liệu đ�
 - [x] Chỉ shipping fee đã `PAID` thuộc nhánh hợp lệ mới sinh nghĩa vụ hoàn.
 - [x] Bốn trigger trong plan: `SENDER_REQUEST`, `PICKUP_TIMEOUT`, `PICKUP_SERVICE_FAILURE`, `DROPOFF_TIMEOUT`.
 - [x] Cùng transaction với cancellation/event tạo đúng một row `PENDING_WALLET_CREDIT`; unique theo payment/idempotency key.
-- [ ] Payload có shipment, sender, payment, amount, cancel reason và delivery state.
+- [x] Payload có shipment, sender, payment, amount, cancel reason và delivery state.
 - [x] Payment vẫn `PAID` khi outbox pending; không tuyên bố hoàn tiền xong.
 - [x] Sender cash chưa thu/receiver chưa thu không sinh refund.
 - [ ] Test duplicate retry/job, unique constraint, commit/rollback đồng thời trên SQL Server.
@@ -184,8 +184,8 @@ Phần pickup kết thúc ở việc nhận kiện và bàn giao dữ liệu đ�
 
 ### 02-08 — Mở khóa chi tiết, realtime và nghiệm thu
 
-- [ ] Chỉ linked recipient đủ điều kiện được unlock bằng mã vận đơn đầy đủ, khớp chính xác, hoặc OTP bound đúng recipient + shipment + purpose.
-- [ ] Không dùng OTP đăng ký làm bằng chứng unlock shipment khác; OTP có expiry, giới hạn thử và dùng một lần.
+- [x] Chỉ linked recipient đủ điều kiện được unlock bằng mã vận đơn đầy đủ, khớp chính xác, hoặc OTP bound đúng recipient + shipment + purpose.
+- [x] Không dùng OTP đăng ký làm bằng chứng unlock shipment khác; OTP có expiry, giới hạn thử và dùng một lần. Hiện unlock chỉ dùng mã vận đơn, chưa có nhánh OTP.
 - [x] Chi tiết sau unlock vẫn là DTO dành cho recipient, không phải toàn bộ audit/finance/staff nội bộ.
 - [x] Dùng STOMP hiện có; destination do server xác định và chỉ publish sau commit thành công.
 - [x] Payload intake/assignment/pickup/cancel không chứa contact/address/OTP, payment/refund amount hoặc staff/incident/audit.
@@ -246,7 +246,7 @@ Schema và migration cần phân biệt:
 6. `ddl-auto=none`: Hibernate không tự tạo/sửa schema. Cấu hình local/secret không commit.
 7. Trước SQL integration test, cần DB kiểm chứng riêng và account phù hợp vì test có tạo/xóa fixture. Không dùng database của các bài tập khác.
 
-**Trạng thái local ngày 23/10/2026:** đã chọn `ute_express`, SQL login `uteexpress_app`, JDK 22 và nhập config local. Schema cần cho account/shipment/payment đã được kiểm tra; 11 SQL integration tests đạt, gồm rollback/concurrency. Fixture được dọn sau kiểm thử. DB chưa có bảng giá để dùng trên giao diện; người dùng chọn cung cấp bảng giá của nhóm, không seed giá mẫu. Hibernate vẫn dùng `ddl-auto=none`; không chạy lại schema nền như một thao tác reset. Hướng dẫn ở [PHASE_02_ACCOUNT_SETUP.md](PHASE_02_ACCOUNT_SETUP.md).
+**Trạng thái local ngày 23/10/2026:** đã chọn `ute_express`, SQL login `uteexpress_app`, JDK 22 và nhập config local. Schema cần cho account/shipment/payment đã được kiểm tra; 11 SQL integration tests đạt, gồm rollback/concurrency. Fixture được dọn sau kiểm thử. Ngày 23/10 người dùng đồng ý nạp bảng giá demo bằng `phase-02-pricing-seed.sql` (27 dòng `ACTIVE`) để thử giao diện; nhóm vẫn cần chốt giá chính thức. Bảng `refund_settlement_outbox` chưa được áp dụng trên DB local. Hibernate vẫn dùng `ddl-auto=none`; không chạy lại schema nền như một thao tác reset. Hướng dẫn ở [PHASE_02_ACCOUNT_SETUP.md](PHASE_02_ACCOUNT_SETUP.md).
 
 ## 6. Các điểm phải phối hợp với Vạn/Phát
 
@@ -293,15 +293,15 @@ Bạn vẫn cần hiểu interface, đọc/review mã của đồng đội và t
 ## 9. Việc cần làm tiếp
 
 1. Mở lại Eclipse, refresh project và chạy `UteExpressApplication` với `local,otp-local`; kiểm thử trang chủ và đăng ký → OTP local → kích hoạt → đăng nhập trên trình duyệt. Launch local đã cấu hình loại test code và working directory; vẫn cần xác nhận thực tế trong IDE.
-2. Nhận bảng giá của nhóm do người dùng cung cấp: dịch vụ, tuyến, cân cơ bản/giá cơ bản, bậc cân thêm/giá thêm, tỷ lệ bảo hiểm/COD và quy tắc áp dụng. Kiểm tra rồi nạp dữ liệu đã thống nhất; không seed giá demo.
-3. Khi có giá, thử báo giá/tạo đơn và ba nhánh thanh toán trên trình duyệt. Test SQL đã qua sender-online, sender-cash và receiver-cash với fixture riêng, cùng rollback/linking và payment đồng thời. Google/provider thật tiếp tục hoãn theo yêu cầu.
+2. Bảng giá demo đã nạp; nhóm quyết định giữ hay thay bằng bảng giá chính thức (dịch vụ, tuyến, cân cơ bản/giá cơ bản, bậc cân thêm/giá thêm, tỷ lệ bảo hiểm/COD). Chỉ cần sửa số trong `phase-02-pricing-seed.sql`.
+3. Thử báo giá/tạo đơn và ba nhánh thanh toán trên trình duyệt. Test SQL đã qua sender-online, sender-cash và receiver-cash với fixture riêng, cùng rollback/linking và payment đồng thời. Google/provider thật tiếp tục hoãn theo yêu cầu.
 4. Hoàn thiện intake: chốt quy tắc giá/service/hub với nhóm, lưu dấu policy/dịch vụ và quy định thời hạn thanh toán. Wizard và mốc chờ bàn giao đã có; scheduler, version và các field lifecycle còn lại vẫn mở.
-5. Sau đó làm first-mile/phân công shipper, hủy/timeout 48 giờ; tiếp theo tracking, refund outbox và recipient unlock/realtime theo thứ tự trong checklist.
+5. First-mile, hủy/timeout 48 giờ, tracking, refund outbox và unlock đã có code. Việc tiếp: áp dụng `phase-02-refund-outbox.sql`, nạp hub/nhân sự để UAT, chạy lại SQL suite và thêm SQL test cho phần mới (race hủy/lấy hàng, hai hub).
 6. Bạn kiểm thử giao diện/vận hành và phối hợp quyết định với nhóm; phần sửa code và automated tests do trợ lý thực hiện khi tiếp tục triển khai. Ghi bằng chứng thật vào [PHASE_02_DIRECTOR_CHECKLIST.md](PHASE_02_DIRECTOR_CHECKLIST.md), không tick nghiệm thu chỉ vì đã có class.
 
 Baseline đã chạy trên máy này với JDK 22: **58 test, 0 failures, 0 errors, 1 skipped**, `BUILD SUCCESS`. Test bị skip là SQL Server integration; đây không phải bằng chứng DB đã sẵn sàng. Các con số Phase 04 trong handoff là báo cáo của nhánh đó, chưa được chạy lại trong phiên rà soát này.
 
-Kết quả mới nhất ngày 23/10/2026: **171 test đạt, 0 failures/errors/skips**, gồm **11 SQL Server tests**, WAR build thành công. Có wizard, kiểm tra quote session/giá đã xem, 7 test Jasper shipment và 10 kiểm tra Chrome. Đã áp dụng migration chờ bàn giao. Các kết quả 127/151 test là lịch sử trước wizard, lưu trong nhật ký checklist. Browser UAT với bảng giá nhóm vẫn chưa hoàn tất.
+Kết quả mới nhất ngày 24/10/2026: `mvn test` chạy **197 test, 0 lỗi, 9 bỏ qua** (SQL Server tests không bật biến môi trường). Kết quả 171 test / 11 SQL đạt ngày 23/10 là trước khi thêm first-mile/tracking/refund. Browser UAT theo vai trò vẫn chưa hoàn tất.
 
 ## 10. Nguồn và phạm vi rà soát
 
