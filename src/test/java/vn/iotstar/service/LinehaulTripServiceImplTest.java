@@ -80,6 +80,16 @@ class LinehaulTripServiceImplTest {
         trip.start(driver);
         when(incidentRepository.save(any(Incident.class))).thenAnswer(i -> { ReflectionTestUtils.setField(i.<Incident>getArgument(0), "id", 77L); return i.<Incident>getArgument(0); });
         assertThat(service.reportTripDelay(new TripDelayCommand(40L, "Weather closure", "INC-1"))).isEqualTo(77L);
+        ArgumentCaptor<Incident> incidentCaptor = ArgumentCaptor.forClass(Incident.class);
+        verify(incidentRepository).save(incidentCaptor.capture());
+        Incident incident = incidentCaptor.getValue();
+        assertThat(incident.getShipmentId()).isNull();
+        assertThat(incident.getTripId()).isEqualTo(40L);
+        assertThat(incident.getHubId()).isEqualTo(1L);
+        assertThat(incident.getReportedBy()).isEqualTo(9L);
+        assertThat(incident.getType()).isEqualTo("TRIP_DELAY");
+        assertThat(incident.getStatus()).isEqualTo("OPEN");
+        assertThat(incident.getDescription()).contains("Weather closure", "INC-1");
         assertThatThrownBy(() -> service.reportTripDelay(new TripDelayCommand(40L, " ", null))).isInstanceOf(HubOperationAccessDeniedException.class);
     }
     private static User user(Long id, String name) { return new User(id, name, "hash", UserRole.ROLE_LINEHAUL_DRIVER, "ACTIVE"); }

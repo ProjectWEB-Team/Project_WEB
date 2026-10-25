@@ -80,8 +80,8 @@ public class DestinationReceiptServiceImpl implements DestinationReceiptService 
             } else if (!item.isReceived() && !item.isMissing()) {
                 item.markMissing(actorUser);
                 shipmentEventRepository.save(ShipmentEvent.missingParcel(item.getShipment(), actorUser, profile.getHub()));
-                Incident incident = incidentRepository.save(Incident.missingParcel(handover.getTransportTrip(), actorUser,
-                        "receipt:handover:" + handover.getId() + ":container:" + command.containerId() + ":shipment:" + item.getShipment().getId()));
+                Incident incident = incidentRepository.save(Incident.missingParcel(item.getShipment(), handover.getTransportTrip(), actorUser,
+                        profile.getHub(), "receipt:handover:" + handover.getId() + ":container:" + command.containerId() + ":shipment:" + item.getShipment().getId()));
                 applicationEventPublisher.publishEvent(new OperationalActionNotification("NEW_INCIDENT", profile.getHub().getId(), "incident:" + incident.getId()));
             }
         }

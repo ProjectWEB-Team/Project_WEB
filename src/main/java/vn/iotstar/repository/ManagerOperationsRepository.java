@@ -76,7 +76,8 @@ public class ManagerOperationsRepository {
     }
 
     public long countActionableIncidents(Collection<Long> hubIds) {
-        return entityManager.createQuery("select count(i) from Incident i where i.hub.id in :hubIds and i.incidentType in ('TRIP_DELAY', 'MISSING_PARCEL')", Long.class)
+        return entityManager.createQuery("select count(i) from Incident i where i.hubId in :hubIds " +
+                        "and i.type in ('TRIP_DELAY', 'MISSING_PARCEL') and i.status in ('OPEN', 'INVESTIGATING')", Long.class)
                 .setParameter("hubIds", hubIds).getSingleResult();
     }
 

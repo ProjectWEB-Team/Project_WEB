@@ -25,6 +25,10 @@ class Phase03TripSqlServerIntegrationTest {
                 "db/phase-03-container-handover-schema.sql",
                 "db/phase-03-linehaul-trip-schema.sql");
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM sys.tables WHERE name IN ('transport_trips', 'incidents')", Integer.class)).isEqualTo(2);
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.incidents') " +
+                "AND name IN ('shipment_id', 'trip_id', 'hub_id', 'type', 'description', 'reported_by', 'status', 'created_at', 'resolved_at')", Integer.class)).isEqualTo(9);
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.incidents') " +
+                "AND name IN ('transport_trip_id', 'actor_user_id', 'incident_type', 'note', 'evidence_reference')", Integer.class)).isZero();
     }
     static boolean sqlServerVerificationConfigured() { return has("UTEEXPRESS_SQLSERVER_URL") && has("UTEEXPRESS_SQLSERVER_USERNAME") && has("UTEEXPRESS_SQLSERVER_PASSWORD") && has("UTEEXPRESS_JWT_SECRET"); }
     private static boolean has(String name) { String value = System.getenv(name); return value != null && !value.isBlank(); }

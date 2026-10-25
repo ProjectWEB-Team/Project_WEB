@@ -5,11 +5,6 @@ GO
 IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_container_items_received_by')
     ALTER TABLE dbo.container_items ADD CONSTRAINT FK_container_items_received_by FOREIGN KEY (received_by_user_id) REFERENCES dbo.users(id);
 GO
-IF EXISTS (SELECT 1 FROM sys.check_constraints WHERE name = N'CK_incidents_driver_type')
-    ALTER TABLE dbo.incidents DROP CONSTRAINT CK_incidents_driver_type;
-IF NOT EXISTS (SELECT 1 FROM sys.check_constraints WHERE name = N'CK_incidents_receipt_type')
-    ALTER TABLE dbo.incidents ADD CONSTRAINT CK_incidents_receipt_type CHECK (incident_type IN (N'TRIP_DELAY', N'MISSING_PARCEL'));
-GO
 CREATE OR ALTER TRIGGER dbo.TR_container_items_receipt_evidence
 ON dbo.container_items AFTER INSERT, UPDATE
 AS

@@ -27,7 +27,8 @@ class Phase03ReceiptSqlServerIntegrationTest {
                 "db/phase-03-linehaul-trip-schema.sql",
                 "db/phase-03-destination-receipt-schema.sql");
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.container_items') AND name IN ('received_at', 'received_by_user_id')", Integer.class)).isEqualTo(2);
-        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM sys.check_constraints WHERE name = 'CK_incidents_receipt_type'", Integer.class)).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.incidents') " +
+                "AND name IN ('shipment_id', 'trip_id', 'hub_id', 'type', 'reported_by', 'status')", Integer.class)).isEqualTo(6);
     }
 
     static boolean sqlServerVerificationConfigured() { return has("UTEEXPRESS_SQLSERVER_URL") && has("UTEEXPRESS_SQLSERVER_USERNAME") && has("UTEEXPRESS_SQLSERVER_PASSWORD") && has("UTEEXPRESS_JWT_SECRET"); }
