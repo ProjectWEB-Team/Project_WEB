@@ -39,7 +39,8 @@ public class Hub {
     @Column(nullable = false, length = 20, columnDefinition = "NVARCHAR(20)")
     private String status;
 
-    protected Hub() { }
+    protected Hub() {
+    }
 
     public static Hub active(String code, String name, int level, String type, String region, String province) {
         Hub hub = new Hub();
@@ -61,5 +62,7 @@ public class Hub {
     public Hub getParentHub() { return parentHub; }
     public String getRegion() { return region; }
     public String getProvince() { return province; }
+    public String getDistrict() { return district; }
+    public String getAddress() { return address; }
     public String getStatus() { return status; }
 }

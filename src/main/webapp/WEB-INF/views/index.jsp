@@ -1,7 +1,4 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ taglib prefix="c" uri="https://jakarta.ee/tags/jstl/core" %>
-<%@ taglib prefix="fmt" uri="https://jakarta.ee/tags/jstl/fmt" %>
-<%@ taglib prefix="fn" uri="https://jakarta.ee/tags/jstl/functions" %>
 
 <jsp:include page="layout/header.jsp" />
 

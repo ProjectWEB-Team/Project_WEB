@@ -15,9 +15,10 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-/** Minimal Phase-01 shipment record; later operational and financial fields remain untouched. */
+/** Shipment record; columns owned by later phases stay unmapped. */
 @Entity
 @Table(name = "shipments")
 public class Shipment implements Serializable {
@@ -33,6 +34,11 @@ public class Shipment implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "sender_user_id", nullable = false)
     private User sender;
+
+    /** Set only by ReceiverLinkService after the receiver's phone is verified; snapshots never change. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "receiver_user_id")
+    private User receiver;
 
     @Column(name = "sender_name", nullable = false, length = 100, columnDefinition = "NVARCHAR(100)")
     private String senderName;
@@ -53,6 +59,20 @@ public class Shipment implements Serializable {
     private String receiverAddress;
 
     /* Required schema fields held to fixed, non-workflow-driving Phase-01 defaults. */
+    @Column(name = "receiver_province", length = 100, columnDefinition = "NVARCHAR(100)")
+    private String receiverProvince;
+
+    @Column(name = "receiver_district", length = 100, columnDefinition = "NVARCHAR(100)")
+    private String receiverDistrict;
+
+    @Column(name = "weight") private Integer weight;
+    @Column(name = "length") private Integer length;
+    @Column(name = "width") private Integer width;
+    @Column(name = "height") private Integer height;
+    @Column(name = "declared_value") private BigDecimal declaredValue;
+    @Column(name = "shipping_fee") private BigDecimal shippingFee;
+    @Column(name = "cod_amount") private BigDecimal codAmount;
+
     @Column(name = "pickup_method", nullable = false, length = 50, columnDefinition = "NVARCHAR(50)")
     private String pickupMethod;
 
@@ -86,6 +106,15 @@ public class Shipment implements Serializable {
     @Column(name = "created_at", nullable = false, columnDefinition = "DATETIME2(0)")
     private LocalDateTime createdAt;
 
+    @Column(name = "waiting_for_handover_at", columnDefinition = "DATETIME2(0)")
+    private LocalDateTime waitingForHandoverAt;
+
+    /* First-mile origin is a scalar; current hub is canonically the relationship above. */
+    @Column(name = "origin_hub_id") private Long originHubId;
+    @Column(name = "current_hub_id", insertable = false, updatable = false) private Long currentHubId;
+    @Column(name = "picked_up_at", columnDefinition = "DATETIME2(0)") private LocalDateTime pickedUpAt;
+    @Column(name = "cancel_reason", length = 255, columnDefinition = "NVARCHAR(255)") private String cancelReason;
+
     protected Shipment() {
     }
 
@@ -109,6 +138,54 @@ public class Shipment implements Serializable {
         return shipment;
     }
 
+    /** Phase-02 intake data; every value is server-derived or validated before this call. */
+    public void applyIntake(User receiver, String province, String district, String pickupMethod, String feePayer,
+                            String inspectionPolicy, int weightG, int lengthCm, int widthCm, int heightCm,
+                            BigDecimal declaredValue, BigDecimal codAmount, BigDecimal shippingFee,
+                            String paymentStatus, ShipmentStatus status, LocalDateTime createdAt) {
+        this.receiver = receiver; this.receiverProvince = province; this.receiverDistrict = district;
+        this.pickupMethod = pickupMethod; this.feePayer = feePayer; this.inspectionPolicy = inspectionPolicy;
+        this.weight = weightG; this.length = lengthCm; this.width = widthCm; this.height = heightCm;
+        this.declaredValue = declaredValue; this.codAmount = codAmount; this.shippingFee = shippingFee;
+        this.paymentStatus = paymentStatus; this.currentStatus = status;
+        this.createdAt = createdAt;
+        this.waitingForHandoverAt = status == ShipmentStatus.WAITING_FOR_HANDOVER ? createdAt : null;
+    }
+
+    public void confirmOnlinePayment(LocalDateTime confirmedAt) {
+        paymentStatus = "PAID";
+        currentStatus = ShipmentStatus.WAITING_FOR_HANDOVER;
+        if (waitingForHandoverAt == null) {
+            waitingForHandoverAt = confirmedAt;
+        }
+    }
+
+    /** Callers hold the row lock and have checked the cancellable state. */
+    public void cancel(String reason) {
+        currentStatus = ShipmentStatus.CANCELLED;
+        cancelReason = reason;
+    }
+
+    public void assignOriginHub(Long hubId) {
+        if (originHubId == null) originHubId = hubId;
+    }
+
+    public void markPickedUp(LocalDateTime at, Hub hub, boolean cashCollected) {
+        currentStatus = ShipmentStatus.PICKED_UP;
+        pickedUpAt = at;
+        currentHub = hub;
+        currentHubId = hub == null ? null : hub.getId();
+        if (cashCollected) paymentStatus = "PAID";
+    }
+
+    /** Compatibility for isolated Phase-02 tests; live first-mile flow uses the Hub relationship. */
+    public void markPickedUp(LocalDateTime at, Long hubId, boolean cashCollected) {
+        currentStatus = ShipmentStatus.PICKED_UP;
+        pickedUpAt = at;
+        currentHubId = hubId;
+        if (cashCollected) paymentStatus = "PAID";
+    }
+
     @PrePersist
     void assignCreatedAt() {
         if (createdAt == null) {
@@ -119,12 +196,17 @@ public class Shipment implements Serializable {
     public Long getId() { return id; }
     public String getTrackingNumber() { return trackingNumber; }
     public User getSender() { return sender; }
+    public User getReceiver() { return receiver; }
     public String getSenderName() { return senderName; }
     public String getSenderPhone() { return senderPhone; }
     public String getSenderAddress() { return senderAddress; }
     public String getReceiverName() { return receiverName; }
     public String getReceiverPhone() { return receiverPhone; }
     public String getReceiverAddress() { return receiverAddress; }
+    public BigDecimal getShippingFee() { return shippingFee; }
+    public String getPaymentStatus() { return paymentStatus; }
+    public String getPickupMethod() { return pickupMethod; }
+    public String getFeePayer() { return feePayer; }
     public ShipmentStatus getCurrentStatus() { return currentStatus; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public Hub getCurrentHub() { return currentHub; }
@@ -136,6 +218,15 @@ public class Shipment implements Serializable {
     }
     public void receiveAt(Hub hub) {
         this.currentHub = hub;
+        this.currentHubId = hub == null ? null : hub.getId();
         this.currentStatus = ShipmentStatus.AT_HUB;
     }
+    public LocalDateTime getWaitingForHandoverAt() { return waitingForHandoverAt; }
+    public String getReceiverProvince() { return receiverProvince; }
+    public String getReceiverDistrict() { return receiverDistrict; }
+    public BigDecimal getCodAmount() { return codAmount; }
+    public Long getOriginHubId() { return originHubId; }
+    public Long getCurrentHubId() { return currentHubId; }
+    public LocalDateTime getPickedUpAt() { return pickedUpAt; }
+    public String getCancelReason() { return cancelReason; }
 }

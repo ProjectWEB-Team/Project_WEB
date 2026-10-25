@@ -4,7 +4,7 @@ import vn.iotstar.entity.ShipmentStatus;
 
 import java.time.LocalDateTime;
 
-/** Safe, private realtime payload for the Phase-01 shipment creation tracer. */
+/** Safe, private realtime payload for shipment lifecycle changes: no contact, address, money or staff data. */
 public record ShipmentCreatedEventResponse(String trackingNumber, ShipmentStatus currentStatus,
                                            String eventType, LocalDateTime occurredAt) {
 }

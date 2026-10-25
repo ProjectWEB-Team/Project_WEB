@@ -27,8 +27,9 @@ public class ShipmentEvent implements Serializable {
     @JoinColumn(name = "shipment_id", nullable = false)
     private Shipment shipment;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "actor_user_id", nullable = false)
+    /** Null only for server-owned automated events such as timeout cancellation. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "actor_user_id")
     private User actor;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -48,11 +49,15 @@ public class ShipmentEvent implements Serializable {
     }
 
     public static ShipmentEvent shipmentCreated(Shipment shipment, User actor) {
+        return of(shipment, actor, "SHIPMENT_CREATED", "Shipment created");
+    }
+
+    public static ShipmentEvent of(Shipment shipment, User actor, String eventType, String description) {
         ShipmentEvent event = new ShipmentEvent();
         event.shipment = shipment;
         event.actor = actor;
-        event.eventType = "SHIPMENT_CREATED";
-        event.description = "Shipment created";
+        event.eventType = eventType;
+        event.description = description;
         event.createdAt = LocalDateTime.now();
         return event;
     }
