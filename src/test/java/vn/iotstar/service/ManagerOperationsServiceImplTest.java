@@ -80,6 +80,28 @@ class ManagerOperationsServiceImplTest {
         when(managerOperationsRepository.countBlockedRoutes(anyList())).thenReturn(blocked);
         when(managerOperationsRepository.countActionableIncidents(anyList())).thenReturn(incidents);
     }
+
+    @Test void scopedWorkItemListsAndDetailsNeverQueryAnUnscopedProjection() {
+        User manager = user(71L, UserRole.ROLE_MANAGER); authenticate(manager);
+        when(managerOperationsRepository.findActiveProfileByUserId(71L)).thenReturn(Optional.of(EmployeeProfile.active(manager, hub(11L, "SOC-A"), "MANAGER")));
+        when(managerOperationsRepository.findHubSubtreeIds(11L)).thenReturn(List.of(11L, 12L));
+        var item = new vn.iotstar.dto.operations.OperationalWorkItemResponse("MISSING", 4L, 101L, 12L, "Missing parcel requires investigation");
+        when(managerOperationsRepository.findWorkItems(List.of(11L, 12L))).thenReturn(List.of(item));
+        when(managerOperationsRepository.findWorkItem(List.of(11L, 12L), "MISSING", 4L)).thenReturn(Optional.of(item));
+        when(managerOperationsRepository.findWorkItem(List.of(11L, 12L), "MISSING", 99L)).thenReturn(Optional.empty());
+        assertThat(service.getWorkItems()).containsExactly(item);
+        assertThat(service.getWorkItem("MISSING", 4L)).isEqualTo(item);
+        assertThatThrownBy(() -> service.getWorkItem("MISSING", 99L)).isInstanceOf(HubOperationAccessDeniedException.class);
+        assertThatThrownBy(() -> service.getWorkItem("PAYMENT", 4L)).isInstanceOf(HubOperationAccessDeniedException.class);
+        verify(managerOperationsRepository, never()).findWorkItem(anyList(), eq("PAYMENT"), anyLong());
+    }
+
+    @Test void nonManagerCannotReadWorkItemDetailsOrList() {
+        authenticate(user(7L, UserRole.ROLE_USER));
+        assertThatThrownBy(service::getWorkItems).isInstanceOf(HubOperationAccessDeniedException.class);
+        assertThatThrownBy(() -> service.getWorkItem("MISSING", 1L)).isInstanceOf(HubOperationAccessDeniedException.class);
+        verifyNoInteractions(managerOperationsRepository);
+    }
     private static User user(Long id, UserRole role) { return new User(id, role.name().toLowerCase(), "hash", role, "ACTIVE"); }
     private static Hub hub(Long id, String code) { Hub hub = Hub.active(code, code, 1, "SOC", "SOUTH", "HCM"); ReflectionTestUtils.setField(hub, "id", id); return hub; }
     private static void authenticate(User user) { SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities())); }

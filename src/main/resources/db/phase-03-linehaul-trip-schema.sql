@@ -42,13 +42,22 @@ IF COL_LENGTH(N'dbo.incidents', N'description') IS NULL ALTER TABLE dbo.incident
 IF COL_LENGTH(N'dbo.incidents', N'reported_by') IS NULL ALTER TABLE dbo.incidents ADD reported_by BIGINT NULL;
 IF COL_LENGTH(N'dbo.incidents', N'status') IS NULL ALTER TABLE dbo.incidents ADD status NVARCHAR(50) NULL;
 IF COL_LENGTH(N'dbo.incidents', N'resolved_at') IS NULL ALTER TABLE dbo.incidents ADD resolved_at DATETIME2(0) NULL;
+GO
 IF COL_LENGTH(N'dbo.incidents', N'transport_trip_id') IS NOT NULL
-    UPDATE dbo.incidents SET trip_id = COALESCE(trip_id, transport_trip_id),
+BEGIN
+    IF COL_LENGTH(N'dbo.incidents', N'actor_user_id') IS NULL
+       OR COL_LENGTH(N'dbo.incidents', N'incident_type') IS NULL
+       OR COL_LENGTH(N'dbo.incidents', N'note') IS NULL
+       OR COL_LENGTH(N'dbo.incidents', N'evidence_reference') IS NULL
+        THROW 51025, 'Incomplete legacy incident representation; map the missing legacy fields before retry.', 1;
+    /* Compile only after the legacy shape is established, including on repeat canonical runs. */
+    EXEC(N'UPDATE dbo.incidents SET trip_id = COALESCE(trip_id, transport_trip_id),
         reported_by = COALESCE(reported_by, actor_user_id),
         type = COALESCE(type, incident_type),
-        description = COALESCE(description, CONCAT(note, CASE WHEN evidence_reference IS NULL THEN N'' ELSE N' [evidence:' + evidence_reference + N']' END)),
-        status = COALESCE(status, N'OPEN')
-    WHERE trip_id IS NULL OR reported_by IS NULL OR type IS NULL OR status IS NULL;
+        description = COALESCE(description, CONCAT(note, CASE WHEN evidence_reference IS NULL THEN N'''' ELSE N'' [evidence:'' + evidence_reference + N'']'' END)),
+        status = COALESCE(status, N''OPEN'')
+    WHERE trip_id IS NULL OR reported_by IS NULL OR type IS NULL OR status IS NULL;');
+END;
 GO
 IF EXISTS (SELECT 1 FROM dbo.incidents WHERE reported_by IS NULL OR type IS NULL OR status IS NULL)
     THROW 51013, 'Canonical incident migration requires reporter, type, and status.', 1;

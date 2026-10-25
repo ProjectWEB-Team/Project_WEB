@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import vn.iotstar.dto.hub.DestinationReceiptCommand;
 import vn.iotstar.dto.hub.DestinationReconciliationCommand;
@@ -39,6 +40,18 @@ public class InboundOperationsController {
         if (errors.hasErrors()) { redirect.addFlashAttribute("operationMessage", "Enter valid reconciliation scans."); return "redirect:/hub/inbound"; }
         destinationReceiptService.reconcileContainer(command);
         redirect.addFlashAttribute("operationMessage", "Container reconciliation recorded.");
+        return "redirect:/hub/inbound";
+    }
+
+    @PostMapping("/reconcile-empty")
+    public String reconcileEmpty(@RequestParam Long handoverId, @RequestParam Long containerId,
+                                 @RequestParam(defaultValue = "false") boolean confirmAllMissing, RedirectAttributes redirect) {
+        if (!confirmAllMissing) {
+            redirect.addFlashAttribute("operationMessage", "Confirm that no expected parcel was physically received.");
+        } else {
+            destinationReceiptService.reconcileContainer(new DestinationReconciliationCommand(handoverId, containerId, java.util.List.of()));
+            redirect.addFlashAttribute("operationMessage", "Missing container contents recorded for investigation.");
+        }
         return "redirect:/hub/inbound";
     }
 }

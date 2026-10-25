@@ -27,7 +27,7 @@
 
     <div class="card shadow-sm">
         <div class="card-body">
-            <form action="${pageContext.request.contextPath}/user/return-collection" method="post">
+            <form action="${pageContext.request.contextPath}/hub/return-collection" method="post">
                 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
                 <input type="hidden" name="handoverType" value="SELF_PICKUP"/>
                 <div class="mb-3">
@@ -38,23 +38,14 @@
                     <label for="identityProof" class="form-label">Identity Proof / OTP</label>
                     <input type="text" class="form-control" id="identityProof" name="identityProof" placeholder="Citizen ID or Pickup OTP" required>
                 </div>
-                <div class="mb-3">
-                    <label for="settledReturnFee" class="form-label">Return Fee Paid (VND)</label>
-                    <input type="number" step="0.01" class="form-control" id="settledReturnFee" name="settledReturnFee" placeholder="0.00">
-                </div>
-                <div class="mb-3">
-                    <label for="paymentMethod" class="form-label">Phương thức thanh toán phí hoàn</label>
-                    <select class="form-select" id="paymentMethod" name="paymentMethod">
-                        <option value="CASH">Tiền mặt</option>
-                        <option value="E_WALLET">Ví điện tử</option>
-                        <option value="VNPAY">VNPay</option>
-                    </select>
-                </div>
                 <button type="submit" class="btn btn-primary w-100">Collect Returned Package</button>
             </form>
         </div>
     </div>
-</main>
+<h2>Thu phí hoàn bằng tiền mặt tại hub</h2><form action="${pageContext.request.contextPath}/hub/return-collection/cash" method="post">
+<input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"><label>Mã ID vận đơn<input name="shipmentId" type="number" required></label>
+<button>Xác nhận đã thu đủ nghĩa vụ phí được hệ thống tính</button></form>
+<p>Người gửi thanh toán bằng ví/VNPay demo tại trang phí vận đơn, nhân viên xác minh danh tính và bàn giao sau khi đã trả đủ phí.</p></main>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

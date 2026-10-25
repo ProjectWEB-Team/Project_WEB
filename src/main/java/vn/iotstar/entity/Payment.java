@@ -33,6 +33,7 @@ public class Payment implements Serializable {
     @Column(name = "paid_at", columnDefinition = "DATETIME2(0)") private LocalDateTime paidAt;
     @Column(name = "refunded_at", columnDefinition = "DATETIME2(0)") private LocalDateTime refundedAt;
     @Column(name = "created_at", nullable = false, columnDefinition = "DATETIME2(0)") private LocalDateTime createdAt;
+    @Column(name = "collected_by_user_id") private Long collectedByUserId;
 
     protected Payment() {
     }
@@ -75,6 +76,19 @@ public class Payment implements Serializable {
     public BigDecimal getAmount() { return amount; }
     public String getMethod() { return method; }
     public String getStatus() { return status; }
+    public Long getCollectedByUserId() { return collectedByUserId; }
+    public void collect(String method, Long collectorId, String reference) {
+        if (method == null || !java.util.Set.of("CASH", "VNPAY", "E_WALLET").contains(method)) throw new IllegalArgumentException("Unsupported payment method");
+        if ("PAID".equals(status)) {
+            if (!this.method.equals(method) || !java.util.Objects.equals(collectedByUserId, collectorId))
+                throw new IllegalStateException("Paid collection does not match replay");
+            return;
+        }
+        if (!"UNPAID".equals(status) && !"PENDING".equals(status)) throw new IllegalStateException("Payment cannot be collected");
+        this.method = method;
+        this.collectedByUserId = collectorId;
+        markPaid(reference);
+    }
     public String getTransactionRef() { return transactionRef; }
     public LocalDateTime getPaidAt() { return paidAt; }
     public LocalDateTime getRefundedAt() { return refundedAt; }
@@ -84,4 +98,9 @@ public class Payment implements Serializable {
     public void setPaidAt(LocalDateTime paidAt) { this.paidAt = paidAt; }
     public void setRefundedAt(LocalDateTime refundedAt) { this.refundedAt = refundedAt; }
     public void setTransactionRef(String transactionRef) { this.transactionRef = transactionRef; }
+    public void reviseUnpaidAmount(BigDecimal amount) {
+        if (!"UNPAID".equals(status) && !"PENDING".equals(status)) throw new IllegalStateException("Cannot reprice a settled payment");
+        if (amount == null || amount.signum() < 0) throw new IllegalArgumentException("Invalid payment amount");
+        this.amount = amount;
+    }
 }

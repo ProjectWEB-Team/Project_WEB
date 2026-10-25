@@ -4,135 +4,89 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.iotstar.config.LogisticsProperties;
-import vn.iotstar.entity.Shipment;
-import vn.iotstar.entity.ShipmentEvent;
-import vn.iotstar.entity.ShipmentStatus;
-import vn.iotstar.entity.User;
-import vn.iotstar.entity.UserRole;
+import vn.iotstar.entity.*;
 import vn.iotstar.exception.ResourceNotFoundException;
-import vn.iotstar.repository.ShipmentEventRepository;
-import vn.iotstar.repository.ShipmentRepository;
-import vn.iotstar.repository.UserRepository;
+import vn.iotstar.repository.*;
 import vn.iotstar.security.AuthenticatedActor;
 import vn.iotstar.service.ShipmentReturnService;
-
-import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.*;
 import java.util.List;
-import java.util.Optional;
 
-/**
- * Return line of the Workflow: a parcel travels back to the origin hub, waits
- * for the sender during a grace period, and is disposed as an exception when
- * the sender neither collects it nor pays the return fee.
- */
+/** Immutable physical-origin arrival starts grace; only a scoped manager decides disposal. */
 @Service
 @Transactional
 public class ShipmentReturnServiceImpl implements ShipmentReturnService {
-
-    /** Event that marks the arrival of a returned parcel at the origin hub. */
-    public static final String EVENT_RETURNED_AT_ORIGIN_HUB = "RETURNED_AT_ORIGIN_HUB";
-
+    public static final String EVENT_RETURNED_AT_ORIGIN_HUB="RETURNED_AT_ORIGIN_HUB";
     private final ShipmentRepository shipmentRepository;
     private final ShipmentEventRepository shipmentEventRepository;
     private final UserRepository userRepository;
     private final LogisticsProperties logisticsProperties;
-
-    public ShipmentReturnServiceImpl(ShipmentRepository shipmentRepository,
-                                      ShipmentEventRepository shipmentEventRepository,
-                                      UserRepository userRepository,
-                                      LogisticsProperties logisticsProperties) {
-        this.shipmentRepository = shipmentRepository;
-        this.shipmentEventRepository = shipmentEventRepository;
-        this.userRepository = userRepository;
-        this.logisticsProperties = logisticsProperties;
+    private final ShipmentAssignmentRepository assignments;
+    private final ManagerOperationsRepository managers;
+    private final LastMileAccess access;
+    private final Clock clock;
+    public ShipmentReturnServiceImpl(ShipmentRepository shipmentRepository,ShipmentEventRepository shipmentEventRepository,
+            UserRepository userRepository,LogisticsProperties logisticsProperties,ShipmentAssignmentRepository assignments,
+            ManagerOperationsRepository managers,LastMileAccess access,Clock clock) {
+        this.shipmentRepository=shipmentRepository;this.shipmentEventRepository=shipmentEventRepository;
+        this.userRepository=userRepository;this.logisticsProperties=logisticsProperties;this.assignments=assignments;
+        this.managers=managers;this.access=access;this.clock=clock;
     }
-
-    @Override
-    public Shipment markReturnArrivedAtOriginHub(Long shipmentId) {
-        AuthenticatedActor actor = AuthenticatedActor.requireCurrent();
-        if (!actor.hasRole(UserRole.ROLE_HUB_STAFF) && !actor.hasRole(UserRole.ROLE_MANAGER)
-                && !actor.hasRole(UserRole.ROLE_ADMIN)) {
-            throw new AccessDeniedException("Hub staff, manager or administrator required to receive a return");
-        }
-
-        Shipment shipment = shipmentRepository.findByIdForUpdate(shipmentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Shipment not found: " + shipmentId));
-
-        if (!ShipmentStatus.RETURN_TO_SENDER.equals(shipment.getCurrentStatus())) {
-            throw new IllegalStateException("Shipment must be RETURN_TO_SENDER to arrive at the origin hub. Current: "
-                    + shipment.getCurrentStatus());
-        }
-
-        User currentUser = userRepository.findById(actor.userId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + actor.userId()));
-
-        shipmentEventRepository.save(ShipmentEvent.create(
-                shipment, currentUser, EVENT_RETURNED_AT_ORIGIN_HUB,
-                "Returned parcel arrived at the origin hub and waits for the sender"));
-
-        return shipment;
+    @Override public Shipment markReturnArrivedAtOriginHub(Long shipmentId) {
+        var actor=AuthenticatedActor.requireCurrent();var s=locked(shipmentId);
+        if(actor.hasRole(UserRole.ROLE_HUB_STAFF)) access.requireAt(s,access.require(UserRole.ROLE_HUB_STAFF,"INBOUND","GENERAL_STAFF"));
+        else requireManagerScope(s);
+        if(!atOrigin(s) || s.getReturnArrivedAtOriginAt()==null) throw new IllegalStateException("Actual origin receipt is required");
+        if(!shipmentEventRepository.existsByShipmentIdAndEventType(s.getId(),EVENT_RETURNED_AT_ORIGIN_HUB))
+            shipmentEventRepository.save(ShipmentEvent.of(s,userRepository.getReferenceById(actor.userId()),EVENT_RETURNED_AT_ORIGIN_HUB,"Returned parcel received at origin"));
+        return s;
     }
-
-    @Override
-    @Transactional(readOnly = true)
+    @Override @Transactional(readOnly=true)
     public List<Shipment> findOverdueReturnedShipments(LocalDateTime referenceTime) {
-        LocalDateTime deadline = referenceTime.minus(gracePeriod());
         return shipmentRepository.findByCurrentStatus(ShipmentStatus.RETURN_TO_SENDER).stream()
-                .filter(shipment -> gracePeriodStart(shipment).isBefore(deadline))
-                .toList();
+                .filter(s->eligible(s,referenceTime)).toList();
     }
-
-    @Override
-    public Shipment disposeOverdueReturn(Long shipmentId, String reason) {
-        AuthenticatedActor actor = AuthenticatedActor.requireCurrent();
-        if (!actor.hasRole(UserRole.ROLE_MANAGER) && !actor.hasRole(UserRole.ROLE_ADMIN)) {
-            throw new AccessDeniedException("ROLE_MANAGER or ROLE_ADMIN required to dispose an overdue return");
-        }
-
-        Shipment shipment = shipmentRepository.findByIdForUpdate(shipmentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Shipment not found: " + shipmentId));
-
-        if (ShipmentStatus.CLOSED_EXCEPTION.equals(shipment.getCurrentStatus())) {
-            return shipment;
-        }
-        if (!ShipmentStatus.RETURN_TO_SENDER.equals(shipment.getCurrentStatus())) {
-            throw new IllegalStateException("Only a parcel waiting for the sender can be disposed. Current: "
-                    + shipment.getCurrentStatus());
-        }
-
-        User manager = userRepository.findById(actor.userId())
-                .orElseThrow(() -> new ResourceNotFoundException("Manager not found: " + actor.userId()));
-
-        shipment.transitionTo(ShipmentStatus.CLOSED_EXCEPTION);
-        shipment.setClosureReason("DISPOSED");
-        shipment = shipmentRepository.save(shipment);
-
-        shipmentEventRepository.save(ShipmentEvent.create(
-                shipment, manager, "RETURN_DISPOSED",
-                "Returned parcel disposed after the grace period: " + (reason != null ? reason : "no reason given")));
-
-        return shipment;
+    @Transactional(readOnly=true)
+    public List<ReturnDisposalCandidate> disposalCandidates() {
+        var ids=managerScope();
+        return findOverdueReturnedShipments(ServerTime.now(clock)).stream().filter(s->ids.contains(s.getOriginHubId()))
+                .limit(100).map(s->new ReturnDisposalCandidate(s.getId(),s.getTrackingNumber(),s.getReturnArrivedAtOriginAt())).toList();
     }
-
-    /**
-     * The grace period starts when the parcel reaches the origin hub. The
-     * arrival is read from the event history so no extra column is needed.
-     */
-    private LocalDateTime gracePeriodStart(Shipment shipment) {
-        Optional<ShipmentEvent> arrival = shipmentEventRepository
-                .findFirstByShipmentIdAndEventTypeOrderByCreatedAtDesc(shipment.getId(), EVENT_RETURNED_AT_ORIGIN_HUB);
-        if (arrival.isPresent()) {
-            return arrival.get().getCreatedAt();
-        }
-        return shipment.getCreatedAt() != null ? shipment.getCreatedAt() : LocalDateTime.now();
+    @Override public Shipment disposeOverdueReturn(Long shipmentId,String reason) {
+        var s=locked(shipmentId); requireManagerScope(s);
+        if(s.getCurrentStatus()==ShipmentStatus.CLOSED_EXCEPTION && "DISPOSED".equals(s.getClosureReason())) return s;
+        if(!eligible(s,ServerTime.now(clock))) throw new IllegalStateException("Return is not overdue available origin inventory");
+        if(reason==null || reason.isBlank() || reason.length()>255) throw new IllegalArgumentException("A bounded disposal reason is required");
+        s.transitionTo(ShipmentStatus.CLOSED_EXCEPTION);s.setClosureReason("DISPOSED");
+        shipmentEventRepository.save(ShipmentEvent.of(s,userRepository.getReferenceById(AuthenticatedActor.requireCurrent().userId()),"RETURN_DISPOSED",reason));
+        return s;
     }
-
-    private Duration gracePeriod() {
-        int minutes = logisticsProperties.getTimeout().getDisposedGraceMinutes();
-        if (minutes > 0) {
-            return Duration.ofMinutes(minutes);
-        }
-        return Duration.ofDays(logisticsProperties.getTimeout().getDisposedGraceDays());
+    private boolean eligible(Shipment s,LocalDateTime now) {
+        return atOrigin(s) && !s.isOnHold() && s.getReturnArrivedAtOriginAt()!=null
+                && !s.getReturnArrivedAtOriginAt().plus(gracePeriod()).isAfter(now)
+                && !shipmentRepository.hasActiveContainerCustody(s.getId())
+                && !assignments.existsByShipmentIdAndStatusIn(s.getId(),List.of("ASSIGNED","ACCEPTED","IN_PROGRESS"));
     }
+    private boolean atOrigin(Shipment s) {
+        return "RETURN".equals(s.getDirection()) && s.getCurrentStatus()==ShipmentStatus.RETURN_TO_SENDER
+                && s.getOriginHubId()!=null && s.getOriginHubId().equals(s.getCurrentHubId());
+    }
+    private void requireManagerScope(Shipment s) {
+        if(s.getOriginHubId()==null || !managerScope().contains(s.getOriginHubId())) throw new AccessDeniedException("Return is outside manager scope");
+    }
+    private List<Long> managerScope() {
+        var actor=AuthenticatedActor.requireCurrent();
+        if(actor.hasRole(UserRole.ROLE_ADMIN)) return managers.findAllActiveHubIds();
+        if(!actor.hasRole(UserRole.ROLE_MANAGER)) throw new AccessDeniedException("Manager required");
+        var profile=managers.findActiveProfileByUserId(actor.userId()).orElseThrow(()->new AccessDeniedException("Active manager hub required"));
+        return managers.findHubSubtreeIds(profile.getHub().getId());
+    }
+    private Shipment locked(Long id){return shipmentRepository.findByIdForUpdate(id).orElseThrow(()->new ResourceNotFoundException("Shipment"));}
+    private Duration gracePeriod(){
+        int minutes=logisticsProperties.getTimeout().getDisposedGraceMinutes();
+        int days=logisticsProperties.getTimeout().getDisposedGraceDays();
+        if(minutes<0 || days<=0) throw new IllegalStateException("Invalid return grace policy");
+        return minutes>0?Duration.ofMinutes(minutes):Duration.ofDays(days);
+    }
+    public record ReturnDisposalCandidate(Long shipmentId,String trackingNumber,LocalDateTime arrivedAt) { }
 }

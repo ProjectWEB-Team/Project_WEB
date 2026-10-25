@@ -61,10 +61,15 @@ class Phase01WalkingSkeletonTest {
     @MockBean private UserDetailsService userDetailsService;
     @MockBean private Clock clock;
     @MockBean private ShipmentCancellation shipmentCancellation;
+    @MockBean private vn.iotstar.repository.HubRepository hubRepository;
 
     @Test
     void authenticatedOwnerCreatesReadsAndPublishesTheMinimalShipmentTracer() throws Exception {
         when(clock.instant()).thenReturn(Instant.parse("2026-10-23T00:00:00Z"));
+        var destination=vn.iotstar.entity.Hub.active("DEST", "Destination", 1, "DELIVERY_HUB", "SOUTH", "HCM");
+        ReflectionTestUtils.setField(destination,"id",99L);
+        when(hubRepository.findByStatusAndTypeAndProvinceAndDistrict("ACTIVE","DELIVERY_HUB","HCM","Q1"))
+                .thenReturn(List.of(destination));
         User owner = new User(7L, "owner", "hash", UserRole.ROLE_USER, "ACTIVE");
         Authentication actor = new UsernamePasswordAuthenticationToken(owner, null, owner.getAuthorities());
         PricingPolicy policy = mock(PricingPolicy.class);
@@ -100,6 +105,7 @@ class Phase01WalkingSkeletonTest {
         verify(shipmentEventRepository).save(eventCaptor.capture());
         verify(shipmentEventPublisher).publishAfterCommit(any(), publicationCaptor.capture());
         assertThat(shipmentCaptor.getValue().getCurrentStatus()).isEqualTo(ShipmentStatus.WAITING_FOR_PAYMENT);
+        assertThat(shipmentCaptor.getValue().getDestinationHubId()).isEqualTo(99L);
         assertThat(eventCaptor.getValue().getEventType()).isEqualTo("SHIPMENT_CREATED");
         assertThat(publicationCaptor.getValue().trackingNumber()).isEqualTo(shipmentCaptor.getValue().getTrackingNumber());
         assertThat(publicationCaptor.getValue().currentStatus()).isEqualTo(ShipmentStatus.WAITING_FOR_PAYMENT);

@@ -2,7 +2,6 @@ package vn.iotstar.realtime;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
@@ -13,10 +12,13 @@ import vn.iotstar.entity.Handover;
 import vn.iotstar.entity.TransportTrip;
 import vn.iotstar.entity.User;
 import vn.iotstar.entity.UserRole;
+import vn.iotstar.entity.Hub;
+import vn.iotstar.entity.Incident;
 
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Objects;
 
 /** D-13: an after-commit, server-targeted operational notification boundary. */
 @Component
@@ -32,7 +34,8 @@ public class OperationalRealtimePublisher {
     public void publishAfterCommit(OperationalActionNotification notification) {
         if (!ALLOWED_TYPES.contains(notification.type())) return;
         OperationalActionEventResponse payload = new OperationalActionEventResponse(notification.type(), notification.diagnosticReference());
-        recipients(notification).forEach(user -> messagingTemplate.convertAndSendToUser(user.getUsername(), USER_OPERATION_DESTINATION, payload));
+        recipients(notification).stream().map(User::getUsername).distinct()
+                .forEach(username -> messagingTemplate.convertAndSendToUser(username, USER_OPERATION_DESTINATION, payload));
     }
 
     private Set<User> recipients(OperationalActionNotification notification) {
@@ -48,21 +51,40 @@ public class OperationalRealtimePublisher {
             }
             case "BLOCKED_ROUTE" -> recipients.addAll(supervisorsAtHub(notification.currentHubId()));
             case "NEW_INCIDENT" -> {
-                recipients.addAll(staffAtHub(notification.currentHubId(), "INBOUND"));
-                recipients.addAll(supervisorsAtHub(notification.currentHubId()));
+                Incident incident=numericId(notification.diagnosticReference(), "incident:")
+                        .map(id -> entityManager.find(Incident.class,id)).orElse(null);
+                if (incident==null || incident.getHubId()==null
+                        || !Objects.equals(incident.getHubId(),notification.currentHubId())) break;
+                if ("MISSING_PARCEL".equals(incident.getType())) {
+                    TransportTrip boundTrip=incident.getTripId()==null ? null : entityManager.find(TransportTrip.class,incident.getTripId());
+                    if (incident.getShipmentId()==null || boundTrip==null || boundTrip.getOriginHub()==null
+                            || boundTrip.getDestinationHub()==null
+                            || !Objects.equals(incident.getHubId(),boundTrip.getDestinationHub().getId())) break;
+                    recipients.addAll(supervisorsAtHub(boundTrip.getOriginHub().getId()));
+                    User driver=boundTrip.getDriver();
+                    if (driver!=null && driver.getRole()==UserRole.ROLE_LINEHAUL_DRIVER) recipients.add(driver);
+                }
+                recipients.addAll(staffAtHub(incident.getHubId(), "INBOUND"));
+                recipients.addAll(supervisorsAtHub(incident.getHubId()));
             }
             default -> { }
         }
+        recipients.removeIf(user -> user == null || !"ACTIVE".equals(user.getStatus()));
         return recipients;
     }
 
     private List<User> staffAtHub(Long hubId, String position) {
-        return entityManager.createQuery("select p.user from EmployeeProfile p where p.hub.id = :hubId and p.status = 'ACTIVE' and (p.position = :position or p.position = 'GENERAL_STAFF')", User.class)
+        return entityManager.createQuery("select p.user from EmployeeProfile p where p.hub.id = :hubId and p.hub.status = 'ACTIVE' and p.user.status = 'ACTIVE' and p.status = 'ACTIVE' and (p.position = :position or p.position = 'GENERAL_STAFF')", User.class)
                 .setParameter("hubId", hubId).setParameter("position", position).getResultList();
     }
     private List<User> supervisorsAtHub(Long hubId) {
-        return entityManager.createQuery("select u from User u left join EmployeeProfile p on p.user = u and p.status = 'ACTIVE' where u.role = :admin or (u.role = :manager and p.hub.id = :hubId)", User.class)
-                .setParameter("admin", UserRole.ROLE_ADMIN).setParameter("manager", UserRole.ROLE_MANAGER).setParameter("hubId", hubId).getResultList();
+        Set<Long> ancestors=new LinkedHashSet<>();
+        Hub hub=hubId==null ? null : entityManager.find(Hub.class,hubId);
+        while (hub!=null && "ACTIVE".equals(hub.getStatus()) && ancestors.add(hub.getId())) hub=hub.getParentHub();
+        // A nonmatching sentinel keeps JPQL IN portable for an unassigned/invalid hub.
+        if (ancestors.isEmpty()) ancestors.add(-1L);
+        return entityManager.createQuery("select u from User u left join EmployeeProfile p on p.user = u and p.status = 'ACTIVE' where u.status = 'ACTIVE' and (u.role = :admin or (u.role = :manager and p.hub.status = 'ACTIVE' and p.hub.id in :hubIds))", User.class)
+                .setParameter("admin", UserRole.ROLE_ADMIN).setParameter("manager", UserRole.ROLE_MANAGER).setParameter("hubIds", ancestors).getResultList();
     }
     private java.util.Optional<Handover> handover(String reference) {
         return numericId(reference, "handover:").map(id -> entityManager.find(Handover.class, id));

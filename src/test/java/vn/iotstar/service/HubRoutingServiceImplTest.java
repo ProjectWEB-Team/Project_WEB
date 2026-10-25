@@ -64,7 +64,7 @@ class HubRoutingServiceImplTest {
         when(hubOperationsRepository.findShipmentByIdForUpdate(101L)).thenReturn(Optional.of(fixture.shipment()));
         when(userRepository.getReferenceById(7L)).thenReturn(fixture.staff());
 
-        service.receiveAtHub(new InboundShipmentCommand(101L));
+        service.receiveAtHub(InboundShipmentCommand.pickupReceipt(101L));
 
         assertThat(fixture.shipment().getCurrentStatus()).isEqualTo(ShipmentStatus.AT_HUB);
         assertThat(fixture.shipment().getCurrentHub()).isEqualTo(fixture.currentHub());
@@ -82,7 +82,7 @@ class HubRoutingServiceImplTest {
         when(hubOperationsRepository.findActiveProfileByUserId(7L)).thenReturn(Optional.of(fixture.inboundProfile()));
         when(hubOperationsRepository.findShipmentByIdForUpdate(101L)).thenReturn(Optional.of(fixture.shipment()));
 
-        assertThatThrownBy(() -> service.receiveAtHub(new InboundShipmentCommand(101L)))
+        assertThatThrownBy(() -> service.receiveAtHub(InboundShipmentCommand.pickupReceipt(101L)))
                 .isInstanceOf(HubOperationAccessDeniedException.class);
 
         verifyNoInteractions(shipmentEventRepository);
@@ -97,6 +97,7 @@ class HubRoutingServiceImplTest {
         missingItem.markMissing(fixture.staff());
         Handover discrepancy = Handover.pending(fixture.currentHub(), fixture.currentHub(), fixture.inboundProfile(), driver, 1, null);
         discrepancy.recordContainerScan();
+        discrepancy.depart();
         discrepancy.completeDestinationReceipt(true);
         ReflectionTestUtils.setField(fixture.shipment(), "currentStatus", ShipmentStatus.IN_TRANSIT);
         authenticate(fixture.staff());
@@ -104,8 +105,8 @@ class HubRoutingServiceImplTest {
         when(hubOperationsRepository.findShipmentByIdForUpdate(101L)).thenReturn(Optional.of(fixture.shipment()));
 
         assertThat(missingItem.isMissing()).isTrue();
-        assertThat(discrepancy.getStatus()).isEqualTo("DISCREPANCY");
-        assertThatThrownBy(() -> service.receiveAtHub(new InboundShipmentCommand(101L)))
+        assertThat(discrepancy.getStatus()).isEqualTo("COMPLETED_WITH_DISCREPANCY");
+        assertThatThrownBy(() -> service.receiveAtHub(InboundShipmentCommand.pickupReceipt(101L)))
                 .isInstanceOf(HubOperationAccessDeniedException.class);
 
         assertThat(fixture.shipment().getCurrentStatus()).isEqualTo(ShipmentStatus.IN_TRANSIT);
@@ -122,7 +123,7 @@ class HubRoutingServiceImplTest {
         when(hubOperationsRepository.findActiveProfileByUserId(7L)).thenReturn(Optional.of(fixture.inboundProfile()));
         when(hubOperationsRepository.findShipmentByIdForUpdate(101L)).thenReturn(Optional.of(fixture.shipment()));
 
-        assertThatThrownBy(() -> service.receiveAtHub(new InboundShipmentCommand(101L)))
+        assertThatThrownBy(() -> service.receiveAtHub(InboundShipmentCommand.pickupReceipt(101L)))
                 .isInstanceOf(HubOperationAccessDeniedException.class);
 
         verifyNoInteractions(shipmentEventRepository);
@@ -136,7 +137,7 @@ class HubRoutingServiceImplTest {
         authenticate(fixture.staff());
         when(hubOperationsRepository.findActiveProfileByUserId(7L)).thenReturn(Optional.of(fixture.sorterProfile()));
         when(hubOperationsRepository.findShipmentByIdForUpdate(101L)).thenReturn(Optional.of(fixture.shipment()));
-        when(hubOperationsRepository.findByRouteDecisionKey("shipment:101:hub:11"))
+        when(hubOperationsRepository.findByRouteDecisionKey("shipment:101:hub:11:FORWARD"))
                 .thenReturn(Optional.empty(), Optional.of(fixture.route()));
         when(hubOperationsRepository.findActiveRules(11L, "SOUTH", "Can Tho")).thenReturn(List.of(fixture.rule()));
         when(userRepository.getReferenceById(7L)).thenReturn(fixture.staff());
@@ -160,7 +161,7 @@ class HubRoutingServiceImplTest {
         authenticate(fixture.staff());
         when(hubOperationsRepository.findActiveProfileByUserId(7L)).thenReturn(Optional.of(fixture.sorterProfile()));
         when(hubOperationsRepository.findShipmentByIdForUpdate(101L)).thenReturn(Optional.of(fixture.shipment()));
-        when(hubOperationsRepository.findByRouteDecisionKey("shipment:101:hub:11")).thenReturn(Optional.empty());
+        when(hubOperationsRepository.findByRouteDecisionKey("shipment:101:hub:11:FORWARD")).thenReturn(Optional.empty());
         when(hubOperationsRepository.findActiveRules(11L, "SOUTH", "Can Tho")).thenReturn(List.of());
         RoutingExceptionRecord existing = RoutingExceptionRecord.openRouteLookupBlocked(fixture.shipment(), fixture.currentHub(), fixture.staff());
         when(routingExceptionRepository.findOpenRouteLookupBlockedForUpdate(101L, 11L))
@@ -195,7 +196,7 @@ class HubRoutingServiceImplTest {
         authenticate(fixture.staff());
         when(hubOperationsRepository.findActiveProfileByUserId(7L)).thenReturn(Optional.of(fixture.sorterProfile()));
         when(hubOperationsRepository.findShipmentByIdForUpdate(101L)).thenReturn(Optional.of(fixture.shipment()));
-        when(hubOperationsRepository.findByRouteDecisionKey("shipment:101:hub:11")).thenReturn(Optional.empty());
+        when(hubOperationsRepository.findByRouteDecisionKey("shipment:101:hub:11:FORWARD")).thenReturn(Optional.empty());
         when(hubOperationsRepository.findActiveRules(11L, "SOUTH", "Can Tho")).thenReturn(List.of(fixture.rule()));
         when(hubOperationsRepository.saveRoute(any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(routingExceptionRepository.findOpenRouteLookupBlockedForUpdate(101L, 11L)).thenReturn(Optional.of(open));
@@ -264,6 +265,41 @@ class HubRoutingServiceImplTest {
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities()));
     }
 
+    @Test
+    void destinationHubStopsLinehaulRoutingWithoutCreatingAnotherRoute() {
+        Fixture f = fixture();
+        f.shipment().receiveAt(f.currentHub());
+        f.shipment().setDestinationHubId(f.currentHub().getId());
+        authenticate(f.staff());
+        when(hubOperationsRepository.findActiveProfileByUserId(7L)).thenReturn(Optional.of(f.sorterProfile()));
+        when(hubOperationsRepository.findShipmentByIdForUpdate(101L)).thenReturn(Optional.of(f.shipment()));
+        assertThat(service.sortAtHub(new SortShipmentCommand(101L)).containerReady()).isFalse();
+        assertThat(service.sortAtHub(new SortShipmentCommand(101L)).nextHubCode()).isEqualTo("HUB-A");
+        verify(hubOperationsRepository, never()).findActiveRules(anyLong(), anyString(), anyString());
+        verify(hubOperationsRepository, never()).saveRoute(any());
+        verifyNoInteractions(shipmentEventRepository);
+    }
+
+    @Test void returnUsesRealOriginGeographyAndDirectionSpecificDecision() {
+        Fixture f=fixture();f.shipment().receiveAt(f.currentHub());f.shipment().setDirection("RETURN");
+        f.shipment().transitionTo(ShipmentStatus.RETURN_TO_SENDER);f.shipment().setOriginHubId(99L);
+        Hub origin=Hub.active("ORIGIN","Origin",1,"DELIVERY_HUB","NORTH","Ha Noi");ReflectionTestUtils.setField(origin,"id",99L);
+        authenticate(f.staff());
+        when(hubOperationsRepository.findActiveProfileByUserId(7L)).thenReturn(Optional.of(f.sorterProfile()));
+        when(hubOperationsRepository.findShipmentByIdForUpdate(101L)).thenReturn(Optional.of(f.shipment()));
+        when(hubOperationsRepository.findActiveHub(99L)).thenReturn(Optional.of(origin));
+        when(hubOperationsRepository.findActiveRules(11L,"NORTH","Ha Noi")).thenReturn(List.of(HubRoutingRule.active(f.currentHub(),"NORTH","Ha Noi",origin)));
+        when(hubOperationsRepository.saveRoute(any())).thenAnswer(i->i.getArgument(0));when(userRepository.getReferenceById(7L)).thenReturn(f.staff());
+        assertThat(service.sortAtHub(new SortShipmentCommand(101L)).nextHubCode()).isEqualTo("ORIGIN");
+        verify(hubOperationsRepository).findByRouteDecisionKey("shipment:101:hub:11:RETURN");
+        verify(hubOperationsRepository,never()).findByRouteDecisionKey("shipment:101:hub:11:FORWARD");
+        verify(hubOperationsRepository,never()).findActiveRules(11L,"SOUTH","Can Tho");
+    }
+    @Test void actualOriginStopsReturnRouting() {
+        Fixture f=fixture();f.shipment().setDirection("RETURN");f.shipment().setOriginHubId(11L);f.shipment().transitionTo(ShipmentStatus.RETURN_TO_SENDER);f.shipment().receiveAt(f.currentHub());
+        authenticate(f.staff());when(hubOperationsRepository.findActiveProfileByUserId(7L)).thenReturn(Optional.of(f.sorterProfile()));when(hubOperationsRepository.findShipmentByIdForUpdate(101L)).thenReturn(Optional.of(f.shipment()));
+        assertThat(service.sortAtHub(new SortShipmentCommand(101L)).containerReady()).isFalse();verify(hubOperationsRepository,never()).saveRoute(any());
+    }
     private Fixture fixture() {
         User staff = new User(7L, "sorter", "hash", UserRole.ROLE_HUB_STAFF, "ACTIVE");
         User sender = new User(8L, "sender", "hash", UserRole.ROLE_USER, "ACTIVE");
@@ -273,14 +309,15 @@ class HubRoutingServiceImplTest {
         ReflectionTestUtils.setField(next, "id", 12L);
         Shipment shipment = Shipment.create("UTX-001", sender, "Sender", "0900000001", "Address", "Receiver", "0900000002", "Can Tho");
         ReflectionTestUtils.setField(shipment, "id", 101L);
-        ReflectionTestUtils.setField(shipment, "currentStatus", ShipmentStatus.WAITING_FOR_HANDOVER);
+        ReflectionTestUtils.setField(shipment, "currentStatus", ShipmentStatus.PICKED_UP);
+        ReflectionTestUtils.setField(shipment, "pickupMethod", "HOME_PICKUP");
         ReflectionTestUtils.setField(shipment, "currentHub", current);
         shipment.setDestinationGrouping("SOUTH", "Can Tho");
         EmployeeProfile inbound = EmployeeProfile.active(staff, current, "INBOUND");
         EmployeeProfile sorter = EmployeeProfile.active(staff, current, "SORTER");
         HubRoutingRule rule = HubRoutingRule.active(current, "SOUTH", "Can Tho", next);
         return new Fixture(staff, current, shipment, inbound, sorter, rule,
-                vn.iotstar.entity.ShipmentRoute.decided(shipment, current, next, "shipment:101:hub:11"));
+                vn.iotstar.entity.ShipmentRoute.decided(shipment, current, next, "shipment:101:hub:11:FORWARD"));
     }
 
     private record Fixture(User staff, Hub currentHub, Shipment shipment, EmployeeProfile inboundProfile,

@@ -97,10 +97,7 @@ public class WithdrawalServiceImpl implements WithdrawalService {
         request.setCompletedAt(LocalDateTime.now());
         WithdrawalRequest approved = withdrawalRepository.save(request);
 
-        notificationEventPublisher.publishAfterCommit(actor, new NotificationEventResponse(
-                "WITHDRAWAL_APPROVED", null, "COMPLETED", request.getAmount().toPlainString(),
-                "WITHDRAWAL#" + request.getId(),
-                "Your withdrawal was approved", LocalDateTime.now()));
+        notifyOwner(request, "WITHDRAWAL_APPROVED", "Your withdrawal was approved");
 
         return approved;
     }
@@ -134,10 +131,7 @@ public class WithdrawalServiceImpl implements WithdrawalService {
         request.setRejectedAt(LocalDateTime.now());
         WithdrawalRequest rejected = withdrawalRepository.save(request);
 
-        notificationEventPublisher.publishAfterCommit(actor, new NotificationEventResponse(
-                "WITHDRAWAL_REJECTED", null, "REJECTED", request.getAmount().toPlainString(),
-                "WITHDRAWAL#" + request.getId(),
-                "Your withdrawal was rejected: " + dto.getRejectionReason(), LocalDateTime.now()));
+        notifyOwner(request, "WITHDRAWAL_REJECTED", "Your withdrawal was rejected. Review its details in your wallet.");
 
         return rejected;
     }
@@ -145,12 +139,15 @@ public class WithdrawalServiceImpl implements WithdrawalService {
     @Override
     @Transactional(readOnly = true)
     public List<WithdrawalRequest> getUserWithdrawals(Long userId) {
+        AuthenticatedActor actor=AuthenticatedActor.requireCurrent();
+        if (!actor.hasRole(UserRole.ROLE_ADMIN) && !actor.userId().equals(userId)) throw new AccessDeniedException("Withdrawal owner required");
         return withdrawalRepository.findByUserIdOrderByRequestedAtDesc(userId);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<WithdrawalRequest> getPendingWithdrawals() {
+        if (!AuthenticatedActor.requireCurrent().hasRole(UserRole.ROLE_ADMIN)) throw new AccessDeniedException("Administrator required");
         return withdrawalRepository.findByStatusOrderByRequestedAtAsc("PENDING");
     }
 
@@ -168,6 +165,12 @@ public class WithdrawalServiceImpl implements WithdrawalService {
                             request.getRejectionReason(), request.getRequestedAt());
                 })
                 .toList();
+    }
+
+    private void notifyOwner(WithdrawalRequest request, String type, String message) {
+        User owner=userRepository.findById(request.getUserId()).orElseThrow(() -> new ResourceNotFoundException("Withdrawal owner"));
+        notificationEventPublisher.publishToUserAfterCommit(owner.getUsername(),
+                new NotificationEventResponse(type, "WITHDRAWAL#"+request.getId(), message));
     }
 }
 

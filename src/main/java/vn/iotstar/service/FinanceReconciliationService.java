@@ -18,14 +18,17 @@ public interface FinanceReconciliationService {
      */
     ShipperReconciliationItem payoutReadyCod(Long codTransactionId);
 
-    List<ShipperReconciliation> getReconciliationsByShipper(Long shipperId);
+    List<vn.iotstar.dto.finance.ReconciliationSummaryResponse> getReconciliationsByShipper(Long shipperId);
 
-    List<ShipperReconciliationItem> getReconciliationItems(Long reconciliationId);
+    List<vn.iotstar.dto.finance.ReconciliationItemResponse> getReconciliationItems(Long reconciliationId);
+
+    List<ShiftExpectedItemResponse> getReadyPayouts(Long shipperId);
 
     /**
      * Money items the shipper is expected to hand in for the given shift, so the
      * manager reconciles against system data instead of typed-in amounts.
      */
     List<ShiftExpectedItemResponse> getShiftExpectedItems(Long shipperId, LocalDate reconciliationDate);
+    List<ShiftExpectedItemResponse> getShiftExpectedItems(Long shipperId, LocalDate reconciliationDate, String collectionMethod);
 }
 

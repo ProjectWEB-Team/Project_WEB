@@ -69,7 +69,7 @@ class ContainerHandoverServiceImplTest {
         when(hubOperationsRepository.findActiveProfileByUserId(7L)).thenReturn(Optional.of(EmployeeProfile.active(staff, origin, "OUTBOUND")));
         when(custodyRepository.findContainerForUpdate(201L)).thenReturn(Optional.of(container));
         when(custodyRepository.findShipmentForUpdate(101L)).thenReturn(Optional.of(shipment));
-        when(custodyRepository.findPendingRouteForShipmentAtHub(101L, 11L)).thenReturn(Optional.of(ShipmentRoute.decided(shipment, origin, destination, "shipment:101:hub:11")));
+        when(custodyRepository.findPendingRouteForShipmentAtHub(101L, 11L)).thenReturn(Optional.of(ShipmentRoute.decided(shipment, origin, destination, "shipment:101:hub:11:FORWARD")));
         when(custodyRepository.containerAlreadyContains(201L, 101L)).thenReturn(false);
         when(userRepository.getReferenceById(7L)).thenReturn(staff);
 
@@ -91,8 +91,8 @@ class ContainerHandoverServiceImplTest {
         shipment.receiveAt(hubB);
         ParcelContainer container = ParcelContainer.open("BAG-B-C", hubB, hubC, staff);
         ReflectionTestUtils.setField(container, "id", 201L);
-        ShipmentRoute oldHop = ShipmentRoute.decided(shipment, hubA, hubB, "shipment:101:hub:11");
-        ShipmentRoute currentHop = ShipmentRoute.decided(shipment, hubB, hubC, "shipment:101:hub:12");
+        ShipmentRoute oldHop = ShipmentRoute.decided(shipment, hubA, hubB, "shipment:101:hub:11:FORWARD");
+        ShipmentRoute currentHop = ShipmentRoute.decided(shipment, hubB, hubC, "shipment:101:hub:12:FORWARD");
         authenticate(staff);
         when(hubOperationsRepository.findActiveProfileByUserId(7L)).thenReturn(Optional.of(EmployeeProfile.active(staff, hubB, "OUTBOUND")));
         when(custodyRepository.findContainerForUpdate(201L)).thenReturn(Optional.of(container));
@@ -107,6 +107,28 @@ class ContainerHandoverServiceImplTest {
         verify(custodyRepository, never()).findPendingRouteForShipmentAtHub(101L, 11L);
         assertThat(currentHop.getStatus()).isEqualTo("LOADED");
         assertThat(oldHop.getStatus()).isEqualTo("PENDING");
+    }
+
+    @Test
+    void anotherActiveContainerRejectsLoadingBeforeRouteLookupOrMutation() {
+        User staff = user(7L, "outbound", UserRole.ROLE_HUB_STAFF);
+        Hub origin = hub(11L, "HUB-A"), destination = hub(12L, "HUB-B");
+        Shipment shipment = Shipment.create("UTE-CUSTODY", user(8L, "sender", UserRole.ROLE_USER), "S", "1", "A", "R", "2", "B");
+        shipment.setId(101L); shipment.receiveAt(origin);
+        ParcelContainer second = ParcelContainer.open("BAG-SECOND", origin, destination, staff);
+        ReflectionTestUtils.setField(second, "id", 202L);
+        authenticate(staff);
+        when(hubOperationsRepository.findActiveProfileByUserId(7L)).thenReturn(Optional.of(EmployeeProfile.active(staff, origin, "OUTBOUND")));
+        when(custodyRepository.findContainerForUpdate(202L)).thenReturn(Optional.of(second));
+        when(custodyRepository.findShipmentForUpdate(101L)).thenReturn(Optional.of(shipment));
+        when(custodyRepository.hasOtherActiveContainerCustody(202L, 101L)).thenReturn(true);
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.loadShipment(new LoadContainerCommand(202L, 101L)))
+                .isInstanceOf(vn.iotstar.exception.HubOperationAccessDeniedException.class);
+
+        verify(custodyRepository, never()).findPendingRouteForShipmentAtHub(anyLong(), anyLong());
+        verify(custodyRepository, never()).persist(any());
+        verifyNoInteractions(shipmentEventRepository, applicationEventPublisher);
     }
 
     @Test
@@ -128,6 +150,19 @@ class ContainerHandoverServiceImplTest {
         ArgumentCaptor<OperationalActionNotification> notification = ArgumentCaptor.forClass(OperationalActionNotification.class);
         verify(applicationEventPublisher, times(1)).publishEvent(notification.capture());
         assertThat(notification.getValue().type()).isEqualTo("HANDOVER_ACCEPTED");
+    }
+    @Test void reverseLoadRejectsForwardDecisionThenLoadsCanonicalReturnRoute() {
+        User staff=user(7L,"outbound",UserRole.ROLE_HUB_STAFF);Hub current=hub(11L,"CURRENT"),origin=hub(12L,"ORIGIN");
+        Shipment s=Shipment.create("RETURN",user(8L,"sender",UserRole.ROLE_USER),"S","1","A","R","2","B");s.setId(101L);s.setOriginHubId(12L);s.setDirection("RETURN");s.transitionTo(ShipmentStatus.RETURN_TO_SENDER);s.receiveAt(current);
+        ParcelContainer c=ParcelContainer.open("REV",current,origin,staff);ReflectionTestUtils.setField(c,"id",201L);authenticate(staff);
+        when(hubOperationsRepository.findActiveProfileByUserId(7L)).thenReturn(Optional.of(EmployeeProfile.active(staff,current,"OUTBOUND")));
+        when(custodyRepository.findContainerForUpdate(201L)).thenReturn(Optional.of(c));when(custodyRepository.findShipmentForUpdate(101L)).thenReturn(Optional.of(s));
+        ShipmentRoute forward=ShipmentRoute.decided(s,current,origin,"shipment:101:hub:11:FORWARD"),reverse=ShipmentRoute.decided(s,current,origin,"shipment:101:hub:11:RETURN");
+        when(custodyRepository.findPendingRouteForShipmentAtHub(101L,11L)).thenReturn(Optional.of(forward),Optional.of(reverse));
+        org.assertj.core.api.Assertions.assertThatThrownBy(()->service.loadShipment(new LoadContainerCommand(201L,101L))).isInstanceOf(vn.iotstar.exception.HubOperationAccessDeniedException.class);
+        verify(custodyRepository,never()).persist(any());when(userRepository.getReferenceById(7L)).thenReturn(staff);
+        service.loadShipment(new LoadContainerCommand(201L,101L));assertThat(reverse.getStatus()).isEqualTo("LOADED");assertThat(forward.getStatus()).isEqualTo("PENDING");
+        assertThat(s.getDirection()).isEqualTo("RETURN");assertThat(s.getCurrentStatus()).isEqualTo(ShipmentStatus.RETURN_TO_SENDER);
     }
 
     @Test

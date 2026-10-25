@@ -24,6 +24,7 @@ public interface ShipmentAssignmentRepository extends JpaRepository<ShipmentAssi
     List<ShipmentAssignment> findByAssigneeIdAndStatus(Long assigneeId, String status);
     List<ShipmentAssignment> findByAssigneeIdAndStatusIn(Long assigneeId, List<String> statuses);
     List<ShipmentAssignment> findByShipmentIdOrderByAssignedAtDesc(Long shipmentId);
+    boolean existsByShipmentIdAndStatusIn(Long shipmentId, List<String> statuses);
     @Query("select a.shipment.id from ShipmentAssignment a where a.assignmentType = 'PICKUP' and a.status = 'ASSIGNED' and a.assignedAt <= :cutoff")
     List<Long> findExpiredPickupShipmentIds(@Param("cutoff") LocalDateTime cutoff);
 }

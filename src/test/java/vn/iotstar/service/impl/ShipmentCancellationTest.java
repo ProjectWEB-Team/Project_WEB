@@ -60,7 +60,7 @@ class ShipmentCancellationTest {
     @Test
     void paidSenderFeeCreatesOnePendingObligationAndKeepsPaymentPaid() {
         Payment paid = payment("SENDER", "VNPAY", "PAID");
-        when(paymentRepository.findFirstByShipmentIdAndPaymentType(42L, "SHIPPING_FEE")).thenReturn(Optional.of(paid));
+        when(paymentRepository.findByShipmentIdForUpdate(42L)).thenReturn(java.util.List.of(paid));
 
         cancellation.cancel(shipment, "SENDER_REQUEST", sender);
 
@@ -77,17 +77,17 @@ class ShipmentCancellationTest {
 
     @Test
     void retryDoesNotDuplicateObligationAndUncollectedFeesCreateNone() {
-        when(paymentRepository.findFirstByShipmentIdAndPaymentType(42L, "SHIPPING_FEE"))
-                .thenReturn(Optional.of(payment("SENDER", "VNPAY", "PAID")));
+        when(paymentRepository.findByShipmentIdForUpdate(42L))
+                .thenReturn(java.util.List.of(payment("SENDER", "VNPAY", "PAID")));
         when(outboxRepository.existsByPaymentId(9L)).thenReturn(true);
         cancellation.cancel(shipment, "PICKUP_TIMEOUT", null);
 
-        when(paymentRepository.findFirstByShipmentIdAndPaymentType(42L, "SHIPPING_FEE"))
-                .thenReturn(Optional.of(payment("SENDER", "CASH", "UNPAID")));
+        when(paymentRepository.findByShipmentIdForUpdate(42L))
+                .thenReturn(java.util.List.of(payment("SENDER", "CASH", "UNPAID")));
         cancellation.cancel(shipment, "PICKUP_TIMEOUT", null);
 
-        when(paymentRepository.findFirstByShipmentIdAndPaymentType(42L, "SHIPPING_FEE"))
-                .thenReturn(Optional.of(payment("RECEIVER", "CASH", "UNPAID")));
+        when(paymentRepository.findByShipmentIdForUpdate(42L))
+                .thenReturn(java.util.List.of(payment("RECEIVER", "CASH", "UNPAID")));
         cancellation.cancel(shipment, "DROPOFF_TIMEOUT", null);
 
         verify(outboxRepository, never()).save(any());
@@ -111,5 +111,15 @@ class ShipmentCancellationTest {
         Payment payment = Payment.shippingFee(shipment, payer, new BigDecimal("25000"), method, status);
         ReflectionTestUtils.setField(payment, "id", 9L);
         return payment;
+    }
+
+    @Test void paidSurchargeAndBaseFeeCreateSeparateObligations() {
+        Payment fee=payment("SENDER","VNPAY","PAID");
+        Payment extra=Payment.create(shipment,"SENDER","WEIGHT_SURCHARGE",BigDecimal.TEN,"E_WALLET","PAID");extra.setId(10L);
+        when(paymentRepository.findByShipmentIdForUpdate(42L)).thenReturn(java.util.List.of(fee,extra));
+        cancellation.cancel(shipment,"SENDER_REQUEST",sender);
+        var capture=ArgumentCaptor.forClass(RefundSettlementOutbox.class);
+        org.mockito.Mockito.verify(outboxRepository,org.mockito.Mockito.times(2)).save(capture.capture());
+        assertThat(capture.getAllValues()).extracting(RefundSettlementOutbox::getPaymentId).containsExactly(9L,10L);
     }
 }

@@ -1,291 +1,221 @@
 package vn.iotstar.service.impl;
 
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import vn.iotstar.dto.finance.ReconciliationSubmissionRequest;
-import vn.iotstar.dto.finance.ShiftExpectedItemResponse;
+import vn.iotstar.dto.finance.*;
 import vn.iotstar.dto.realtime.NotificationEventResponse;
-import vn.iotstar.entity.CodTransaction;
-import vn.iotstar.entity.Incident;
-import vn.iotstar.entity.Payment;
-import vn.iotstar.entity.Shipment;
-import vn.iotstar.entity.ShipmentEvent;
-import vn.iotstar.entity.ShipperReconciliation;
-import vn.iotstar.entity.ShipperReconciliationItem;
-import vn.iotstar.entity.User;
-import vn.iotstar.entity.UserRole;
-import vn.iotstar.entity.Wallet;
-import vn.iotstar.entity.WalletTransaction;
+import vn.iotstar.entity.*;
 import vn.iotstar.exception.ResourceNotFoundException;
 import vn.iotstar.realtime.NotificationEventPublisher;
-import vn.iotstar.repository.CodTransactionRepository;
-import vn.iotstar.repository.FinanceReconciliationRepository;
-import vn.iotstar.repository.IncidentRepository;
-import vn.iotstar.repository.PaymentRepository;
-import vn.iotstar.repository.ShipmentEventRepository;
-import vn.iotstar.repository.ShipmentRepository;
-import vn.iotstar.repository.ShipperReconciliationItemRepository;
-import vn.iotstar.repository.UserRepository;
-import vn.iotstar.repository.WalletRepository;
-import vn.iotstar.repository.WalletTransactionRepository;
-import vn.iotstar.security.AuthenticatedActor;
+import vn.iotstar.repository.*;
 import vn.iotstar.service.FinanceReconciliationService;
-
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @Transactional
 public class FinanceReconciliationServiceImpl implements FinanceReconciliationService {
+    public static final String COD="COD_TRANSACTION";
+    public static final String RECEIVER_FEE="RECEIVER_CASH_SHIPPING_FEE_PAYMENT";
+    public static final String OTHER_FEE="SHIPPER_CASH_FEE_PAYMENT";
+    private static final Set<String> FEE_TYPES=Set.of("SHIPPING_FEE","RETURN_FEE","FORWARD_FEE_ON_RETURN","WEIGHT_SURCHARGE");
+    private final FinanceReconciliationRepository reconciliations;
+    private final ShipperReconciliationItemRepository items;
+    private final CodTransactionRepository cods;
+    private final PaymentRepository payments;
+    private final WalletRepository wallets;
+    private final WalletTransactionRepository transactions;
+    private final IncidentRepository incidents;
+    private final ShipmentRepository shipments;
+    private final UserRepository users;
+    private final ShipmentEventRepository events;
+    private final NotificationEventPublisher notifications;
+    private final FinanceAccess access;
+    private final Clock clock;
 
-    private final FinanceReconciliationRepository reconciliationRepository;
-    private final ShipperReconciliationItemRepository itemRepository;
-    private final CodTransactionRepository codTransactionRepository;
-    private final PaymentRepository paymentRepository;
-    private final WalletRepository walletRepository;
-    private final WalletTransactionRepository walletTransactionRepository;
-    private final IncidentRepository incidentRepository;
-    private final ShipmentRepository shipmentRepository;
-    private final UserRepository userRepository;
-    private final ShipmentEventRepository shipmentEventRepository;
-    private final NotificationEventPublisher notificationEventPublisher;
-
-    public FinanceReconciliationServiceImpl(FinanceReconciliationRepository reconciliationRepository,
-                                           ShipperReconciliationItemRepository itemRepository,
-                                           CodTransactionRepository codTransactionRepository,
-                                           PaymentRepository paymentRepository,
-                                           WalletRepository walletRepository,
-                                           WalletTransactionRepository walletTransactionRepository,
-                                           IncidentRepository incidentRepository,
-                                           ShipmentRepository shipmentRepository,
-                                           UserRepository userRepository,
-                                           ShipmentEventRepository shipmentEventRepository,
-                                           NotificationEventPublisher notificationEventPublisher) {
-        this.reconciliationRepository = reconciliationRepository;
-        this.itemRepository = itemRepository;
-        this.codTransactionRepository = codTransactionRepository;
-        this.paymentRepository = paymentRepository;
-        this.walletRepository = walletRepository;
-        this.walletTransactionRepository = walletTransactionRepository;
-        this.incidentRepository = incidentRepository;
-        this.shipmentRepository = shipmentRepository;
-        this.userRepository = userRepository;
-        this.shipmentEventRepository = shipmentEventRepository;
-        this.notificationEventPublisher = notificationEventPublisher;
+    public FinanceReconciliationServiceImpl(FinanceReconciliationRepository reconciliations, ShipperReconciliationItemRepository items,
+            CodTransactionRepository cods, PaymentRepository payments, WalletRepository wallets, WalletTransactionRepository transactions,
+            IncidentRepository incidents, ShipmentRepository shipments, UserRepository users, ShipmentEventRepository events,
+            NotificationEventPublisher notifications, FinanceAccess access, Clock clock) {
+        this.reconciliations=reconciliations; this.items=items; this.cods=cods; this.payments=payments;
+        this.wallets=wallets; this.transactions=transactions; this.incidents=incidents; this.shipments=shipments;
+        this.users=users; this.events=events; this.notifications=notifications; this.access=access; this.clock=clock;
     }
 
-    @Override
-    public ShipperReconciliation reconcile(ReconciliationSubmissionRequest request) {
-        AuthenticatedActor actor = AuthenticatedActor.requireCurrent();
-        if (!actor.hasRole(UserRole.ROLE_MANAGER) && !actor.hasRole(UserRole.ROLE_ADMIN)) {
-            throw new AccessDeniedException("ROLE_MANAGER or ROLE_ADMIN required for reconciliation");
+    @Override public ShipperReconciliation reconcile(ReconciliationSubmissionRequest request) {
+        FinanceAccess.Scope scope=access.current();
+        if (request==null || request.getShipperId()==null || request.getItems()==null || request.getItems().isEmpty() || request.getItems().size()>100)
+            throw new IllegalArgumentException("Select between 1 and 100 authoritative shift items");
+        EmployeeProfile shipper=access.shipper(scope,request.getShipperId());
+        LocalDate date=date(request.getReconciliationDate());
+        String method=method(request.getCollectionMethod());
+        String evidence=request.getSettlementEvidence();
+        if ((evidence!=null && evidence.length()>255) || (!"CASH".equals(method) && (evidence==null || evidence.isBlank())))
+            throw new IllegalArgumentException("Record verified settlement evidence for electronic COD");
+        Set<String> keys=new HashSet<>();
+        for (var row:request.getItems()) {
+            if (row==null || row.getSourceId()==null || row.getSourceId()<=0 || row.getShipmentId()==null || row.getShipmentId()<=0 || row.getSourceType()==null || !Set.of(COD,RECEIVER_FEE,OTHER_FEE).contains(row.getSourceType())
+                    || row.getActualAmount()==null || row.getActualAmount().signum()<0 || (row.getNote()!=null && row.getNote().length()>255)
+                    || !keys.add(row.getSourceType()+":"+row.getSourceId())) throw new IllegalArgumentException("Invalid or duplicate reconciliation item");
         }
-
-        User manager = userRepository.findById(actor.userId())
-                .orElseThrow(() -> new ResourceNotFoundException("Manager not found: " + actor.userId()));
-
-        User shipper = userRepository.findById(request.getShipperId())
-                .orElseThrow(() -> new ResourceNotFoundException("Shipper not found: " + request.getShipperId()));
-
-        LocalDate recDate = request.getReconciliationDate() != null ? request.getReconciliationDate() : LocalDate.now();
-
-        BigDecimal totalExpected = BigDecimal.ZERO;
-        BigDecimal totalActual = BigDecimal.ZERO;
-
-        for (ReconciliationSubmissionRequest.ItemRequest ir : request.getItems()) {
-            if (ir.getExpectedAmount() != null) {
-                totalExpected = totalExpected.add(ir.getExpectedAmount());
+        // Stable shipment-first ordering agrees with collection, refund and loss settlement.
+        request.getItems().stream().map(ReconciliationSubmissionRequest.ItemRequest::getShipmentId).distinct().sorted()
+                .forEach(id -> shipments.findByIdForUpdate(id).orElseThrow(() -> new ResourceNotFoundException("Shipment")));
+        List<Source> sources=new ArrayList<>();
+        for (var row:request.getItems().stream().sorted(Comparator.comparing(ReconciliationSubmissionRequest.ItemRequest::getSourceType)
+                .thenComparing(ReconciliationSubmissionRequest.ItemRequest::getSourceId)).toList()) {
+            if (items.findBySourceTypeAndSourceId(row.getSourceType(),row.getSourceId()).isPresent())
+                throw new IllegalStateException("Source is already reconciled");
+            Source source;
+            if (COD.equals(row.getSourceType())) {
+                CodTransaction cod=cods.findByIdForUpdate(row.getSourceId()).orElseThrow(() -> new ResourceNotFoundException("COD source"));
+                validateCod(cod,shipper.getUser().getId(),date,method);
+                source=new Source(row,cod.getShipment(),cod.getAmount(),cod);
+            } else {
+                if (!"CASH".equals(method)) throw new IllegalArgumentException("Electronic reconciliation accepts COD sources only");
+                Payment payment=payments.findByIdForUpdate(row.getSourceId()).orElseThrow(() -> new ResourceNotFoundException("Payment source"));
+                validatePayment(payment,shipper.getUser().getId(),date);
+                if (!paymentSourceType(payment).equals(row.getSourceType())) throw new IllegalArgumentException("Payment source type does not match");
+                source=new Source(row,payment.getShipment(),payment.getAmount(),null);
             }
-            if (ir.getActualAmount() != null) {
-                totalActual = totalActual.add(ir.getActualAmount());
-            }
+            if (!Objects.equals(source.shipment().getId(),row.getShipmentId())
+                    || (row.getExpectedAmount()!=null && row.getExpectedAmount().compareTo(source.expected())!=0))
+                throw new IllegalArgumentException("Submitted shipment or expected amount does not match the source");
+            sources.add(source);
         }
-
-        ShipperReconciliation reconciliation = ShipperReconciliation.create(
-                shipper, manager, recDate, totalExpected, totalActual);
-        reconciliation = reconciliationRepository.save(reconciliation);
-
-        boolean hasDiscrepancy = false;
-
-        for (ReconciliationSubmissionRequest.ItemRequest ir : request.getItems()) {
-            // Check unique source constraint
-            Optional<ShipperReconciliationItem> existingItem = itemRepository.findBySourceTypeAndSourceId(
-                    ir.getSourceType(), ir.getSourceId());
-            if (existingItem.isPresent()) {
-                throw new IllegalStateException("Source already reconciled: " + ir.getSourceType() + " #" + ir.getSourceId());
+        BigDecimal expected=sources.stream().map(Source::expected).reduce(BigDecimal.ZERO,BigDecimal::add);
+        BigDecimal actual=sources.stream().map(s -> s.row().getActualAmount()).reduce(BigDecimal.ZERO,BigDecimal::add);
+        User manager=users.getReferenceById(scope.actor().userId());
+        ShipperReconciliation reconciliation=ShipperReconciliation.create(shipper.getUser(),manager,date,expected,actual);
+        reconciliation.assignHub(shipper.getHubId());
+        reconciliation.recordSettlement(method,evidence);
+        reconciliation=reconciliations.save(reconciliation);
+        boolean discrepancy=false;
+        for (Source source:sources) {
+            var row=source.row();
+            ShipperReconciliationItem item=ShipperReconciliationItem.create(reconciliation,source.shipment(),row.getSourceType(),row.getSourceId(),
+                    source.expected(),row.getActualAmount(),row.getNote());
+            items.save(item);
+            boolean matched="MATCHED".equals(item.getStatus());
+            discrepancy |= !matched;
+            if (source.cod()!=null) {
+                source.cod().setStatus(matched ? "READY_FOR_PAYOUT" : "HOLD_DISPUTE");
+                source.cod().setReconciledAt(ServerTime.now(clock));
             }
-
-            Shipment shipment = shipmentRepository.findById(ir.getShipmentId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Shipment not found: " + ir.getShipmentId()));
-
-            ShipperReconciliationItem item = ShipperReconciliationItem.create(
-                    reconciliation, shipment, ir.getSourceType(), ir.getSourceId(),
-                    ir.getExpectedAmount(), ir.getActualAmount(), ir.getNote());
-            itemRepository.save(item);
-
-            boolean isMatched = "MATCHED".equals(item.getStatus());
-            if (!isMatched) {
-                hasDiscrepancy = true;
-            }
-
-            if ("COD_TRANSACTION".equalsIgnoreCase(ir.getSourceType())) {
-                CodTransaction cod = codTransactionRepository.findByIdForUpdate(ir.getSourceId())
-                        .orElseThrow(() -> new ResourceNotFoundException("COD transaction not found: " + ir.getSourceId()));
-
-                if (isMatched) {
-                    // The COD becomes reconciled and ready for payout. The wallet
-                    // credit is a separate, explicit payout step.
-                    cod.setStatus("READY_FOR_PAYOUT");
-                    cod.setReconciledAt(LocalDateTime.now());
-                    codTransactionRepository.save(cod);
-
-                    shipmentEventRepository.save(ShipmentEvent.create(
-                            shipment, manager, "COD_RECONCILED", "COD reconciled and ready for payout"));
-                } else {
-                    // Discrepancy item: hold in HOLD_DISPUTE
-                    cod.setStatus("HOLD_DISPUTE");
-                    cod.setReconciledAt(LocalDateTime.now());
-                    codTransactionRepository.save(cod);
-
-                    String incidentType = "SHORTAGE".equals(item.getStatus()) ? "MONEY_SHORTAGE" : "MONEY_OVERAGE";
-                    Incident incident = Incident.create(
-                            shipment.getId(), null, shipment.getCurrentHubId(), incidentType,
-                            "Reconciliation discrepancy for COD: expected " + ir.getExpectedAmount() + ", actual " + ir.getActualAmount(),
-                            manager.getId());
-                    incidentRepository.save(incident);
-
-                    shipmentEventRepository.save(ShipmentEvent.create(
-                            shipment, manager, "COD_DISPUTE", "COD discrepancy held in dispute: " + incidentType));
-                }
-            } else if ("RECEIVER_CASH_SHIPPING_FEE_PAYMENT".equalsIgnoreCase(ir.getSourceType())) {
-                Payment payment = paymentRepository.findByIdForUpdate(ir.getSourceId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Payment not found: " + ir.getSourceId()));
-
-                if (isMatched) {
-                    // Receiver cash shipping fee is verified and accounted for.
-                    // Strictly NO COD_PAYOUT or wallet credit.
-                    shipmentEventRepository.save(ShipmentEvent.create(
-                            shipment, manager, "SHIPPING_FEE_RECONCILED", "Receiver cash shipping fee reconciled"));
-                } else {
-                    String incidentType = "SHORTAGE".equals(item.getStatus()) ? "MONEY_SHORTAGE" : "MONEY_OVERAGE";
-                    Incident incident = Incident.create(
-                            shipment.getId(), null, shipment.getCurrentHubId(), incidentType,
-                            "Reconciliation discrepancy for receiver cash fee: expected " + ir.getExpectedAmount() + ", actual " + ir.getActualAmount(),
-                            manager.getId());
-                    incidentRepository.save(incident);
-
-                    shipmentEventRepository.save(ShipmentEvent.create(
-                            shipment, manager, "FEE_DISPUTE", "Receiver cash fee discrepancy: " + incidentType));
-                }
-            }
+            if (!matched) incidents.save(Incident.create(source.shipment().getId(),null,shipper.getHubId(),
+                    "SHORTAGE".equals(item.getStatus()) ? "MONEY_SHORTAGE" : "MONEY_OVERAGE",
+                    "Reconciliation item " + row.getSourceType()+":"+row.getSourceId()+" requires review",manager.getId()));
+            events.save(ShipmentEvent.of(source.shipment(),manager,
+                    source.cod()!=null ? (matched ? "COD_RECONCILED" : "COD_DISPUTE") : (matched ? "SHIPPING_FEE_RECONCILED" : "FEE_DISPUTE"),
+                    matched ? "Collected source reconciled" : "Collected source discrepancy requires review"));
         }
-
-        // The shift status is decided by the items, not by the totals, so a
-        // shortage compensated by an overage still counts as a discrepancy.
-        reconciliation.complete(hasDiscrepancy);
-        reconciliation = reconciliationRepository.save(reconciliation);
-
+        reconciliation.complete(discrepancy);
         return reconciliation;
     }
 
-    @Override
-    public ShipperReconciliationItem payoutReadyCod(Long codTransactionId) {
-        AuthenticatedActor actor = AuthenticatedActor.requireCurrent();
-        if (!actor.hasRole(UserRole.ROLE_MANAGER) && !actor.hasRole(UserRole.ROLE_ADMIN)) {
-            throw new AccessDeniedException("ROLE_MANAGER or ROLE_ADMIN required to pay out reconciled COD");
+    private String method(String method) {
+        if (method==null || !Set.of("CASH","VNPAY","TRANSFER").contains(method)) throw new IllegalArgumentException("Unsupported collection method");
+        return method;
+    }
+    private void validateCod(CodTransaction cod,Long shipperId,LocalDate date,String method) {
+        if (cod.getCollectedByShipper()==null || !Objects.equals(cod.getCollectedByShipper().getId(),shipperId)
+                || !method.equals(cod.getMethod()) || !"COLLECTED".equals(cod.getStatus()) || cod.getCollectedAt()==null
+                || !date.equals(cod.getCollectedAt().toLocalDate()) || cod.getAmount()==null || cod.getAmount().signum()<=0
+                || cod.getShipment().getCurrentStatus()!=ShipmentStatus.DELIVERED
+                || cod.getShipment().getCodAmount()==null || cod.getAmount().compareTo(cod.getShipment().getCodAmount())!=0)
+            throw new IllegalArgumentException("COD is not an eligible collected source for this shipper, method and date");
+    }
+    private void validatePayment(Payment payment,Long shipperId,LocalDate date) {
+        if (!Objects.equals(payment.getCollectedByUserId(),shipperId) || !"CASH".equals(payment.getMethod())
+                || !"PAID".equals(payment.getStatus()) || payment.getPaidAt()==null || !date.equals(payment.getPaidAt().toLocalDate())
+                || !FEE_TYPES.contains(payment.getPaymentType()) || !Set.of("SENDER","RECEIVER").contains(payment.getPayerType())
+                || (!"SHIPPING_FEE".equals(payment.getPaymentType()) && !"SENDER".equals(payment.getPayerType()))
+                || payment.getAmount()==null || payment.getAmount().signum()<=0 || payment.getShipment().getCurrentStatus()==ShipmentStatus.CANCELLED)
+            throw new IllegalArgumentException("Payment is not an eligible collected cash source for this shipper and date");
+    }
+    private String paymentSourceType(Payment payment) {
+        return "SHIPPING_FEE".equals(payment.getPaymentType()) && "RECEIVER".equals(payment.getPayerType()) ? RECEIVER_FEE : OTHER_FEE;
+    }
+    private record Source(ReconciliationSubmissionRequest.ItemRequest row,Shipment shipment,BigDecimal expected,CodTransaction cod) { }
+    private LocalDate date(LocalDate supplied) { return supplied==null ? ServerTime.now(clock).toLocalDate() : supplied; }
+
+    @Override public ShipperReconciliationItem payoutReadyCod(Long id) {
+        FinanceAccess.Scope scope=access.current();
+        CodTransaction reference=cods.findById(id).orElseThrow(() -> new ResourceNotFoundException("COD source"));
+        Shipment shipment=shipments.findByIdForUpdate(reference.getShipment().getId()).orElseThrow(() -> new ResourceNotFoundException("Shipment"));
+        CodTransaction cod=cods.findByIdForUpdate(id).orElseThrow(() -> new ResourceNotFoundException("COD source"));
+        ShipperReconciliationItem item=items.findBySourceTypeAndSourceId(COD,id).orElseThrow(() -> new IllegalStateException("No reconciled source"));
+        scope.requireHub(item.getReconciliation().getHubId());
+        var header=item.getReconciliation();
+        if (!Objects.equals(header.getCollectionMethod(),cod.getMethod()) || (!"CASH".equals(cod.getMethod())
+                && (header.getSettlementEvidence()==null || header.getSettlementEvidence().isBlank())))
+            throw new IllegalStateException("COD has no matching verified settlement record");
+        if (!"MATCHED".equals(item.getStatus()) || !Objects.equals(item.getShipment().getId(),shipment.getId())
+                || !Objects.equals(cod.getShipment().getId(),shipment.getId())
+                || !Objects.equals(item.getReconciliation().getShipper().getId(),cod.getCollectedByShipper().getId())
+                || cod.getAmount().compareTo(item.getExpectedAmount())!=0
+                || cod.getAmount().compareTo(item.getActualAmount())!=0 || cod.getAmount().signum()<=0)
+            throw new IllegalStateException("COD payout does not match its reconciled source");
+        var existing=transactions.findFirstByTransactionTypeAndReferenceTypeAndReferenceId("COD_PAYOUT","SHIPMENT",shipment.getId());
+        if ("PAID_TO_SENDER".equals(cod.getStatus())) {
+            WalletTransaction tx=existing.orElseThrow(() -> new IllegalStateException("Payout has no wallet evidence"));
+            if (!Objects.equals(tx.getUserId(),shipment.getSender().getId()) || tx.getAmount().compareTo(cod.getAmount())!=0)
+                throw new IllegalStateException("Payout wallet evidence does not match");
+            return item;
         }
-
-        CodTransaction cod = codTransactionRepository.findByIdForUpdate(codTransactionId)
-                .orElseThrow(() -> new ResourceNotFoundException("COD transaction not found: " + codTransactionId));
-
-        if (!"READY_FOR_PAYOUT".equals(cod.getStatus())) {
-            if ("PAID_TO_SENDER".equals(cod.getStatus())) {
-                return itemRepository.findBySourceTypeAndSourceId("COD_TRANSACTION", codTransactionId)
-                        .orElseThrow(() -> new ResourceNotFoundException(
-                                "Reconciliation item not found for COD: " + codTransactionId));
-            }
-            throw new IllegalStateException("Only reconciled COD can be paid out. Current: " + cod.getStatus());
-        }
-
-        Shipment shipment = cod.getShipment();
-        User manager = userRepository.findById(actor.userId())
-                .orElseThrow(() -> new ResourceNotFoundException("Manager not found: " + actor.userId()));
-
-        Long senderId = shipment.getSender().getId();
-        Wallet wallet = walletRepository.findByUserIdForUpdate(senderId)
-                .orElseGet(() -> walletRepository.save(Wallet.createForUser(senderId)));
-
-        BigDecimal balanceBefore = wallet.getBalance();
-        wallet.credit(cod.getAmount());
-        BigDecimal balanceAfter = wallet.getBalance();
-        walletRepository.save(wallet);
-
-        WalletTransaction tx = WalletTransaction.create(
-                senderId, "COD_PAYOUT", cod.getAmount(),
-                balanceBefore, balanceAfter, shipment.getId(), "SHIPMENT",
-                "COD payout for shipment " + shipment.getTrackingNumber());
-        walletTransactionRepository.save(tx);
-
-        cod.setStatus("PAID_TO_SENDER");
-        cod.setPayoutAt(LocalDateTime.now());
-        codTransactionRepository.save(cod);
-
-        shipmentEventRepository.save(ShipmentEvent.create(
-                shipment, manager, "COD_PAYOUT_COMPLETED", "COD paid out to sender wallet"));
-
-        notificationEventPublisher.publishAfterCommit(actor, new NotificationEventResponse(
-                "COD_PAYOUT_COMPLETED", shipment.getTrackingNumber(), shipment.getCurrentStatus().name(),
-                cod.getAmount().toPlainString(), "SHIPMENT#" + shipment.getId(),
-                "COD has been credited to your e-wallet", LocalDateTime.now()));
-
-        return itemRepository.findBySourceTypeAndSourceId("COD_TRANSACTION", codTransactionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Reconciliation item not found for COD: " + codTransactionId));
+        if (!"READY_FOR_PAYOUT".equals(cod.getStatus()) || existing.isPresent()) throw new IllegalStateException("COD is not ready for a new payout");
+        Wallet wallet=wallets.findByUserIdForUpdate(shipment.getSender().getId()).orElseGet(() -> wallets.save(Wallet.createForUser(shipment.getSender().getId())));
+        BigDecimal before=wallet.getBalance(); wallet.credit(cod.getAmount());
+        transactions.save(WalletTransaction.create(shipment.getSender().getId(),"COD_PAYOUT",cod.getAmount(),before,wallet.getBalance(),shipment.getId(),"SHIPMENT","Reconciled COD payout"));
+        cod.setStatus("PAID_TO_SENDER"); cod.setPayoutAt(ServerTime.now(clock));
+        events.save(ShipmentEvent.of(shipment,users.getReferenceById(scope.actor().userId()),"COD_PAYOUT_COMPLETED","Reconciled COD paid to sender"));
+        notifications.publishToUserAfterCommit(shipment.getSender().getUsername(),new NotificationEventResponse("COD_PAYOUT_COMPLETED","SHIPMENT#"+shipment.getId(),"Your COD payout is complete"));
+        return item;
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<ShipperReconciliation> getReconciliationsByShipper(Long shipperId) {
-        return reconciliationRepository.findByShipperId(shipperId);
+    @Override @Transactional(readOnly=true) public List<ReconciliationSummaryResponse> getReconciliationsByShipper(Long shipperId) {
+        FinanceAccess.Scope scope=access.current(); access.shipper(scope,shipperId);
+        return reconciliations.findTop100ByShipperIdOrderByIdDesc(shipperId).stream().filter(r -> scope.contains(r.getHubId()))
+                .map(r -> new ReconciliationSummaryResponse(r.getId(),r.getReconciliationDate(),r.getExpectedAmount(),r.getActualAmount(),r.getDifferenceAmount(),r.getStatus(),r.getCollectionMethod())).toList();
     }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<ShipperReconciliationItem> getReconciliationItems(Long reconciliationId) {
-        return itemRepository.findByReconciliationId(reconciliationId);
+    @Override @Transactional(readOnly=true) public List<ReconciliationItemResponse> getReconciliationItems(Long id) {
+        FinanceAccess.Scope scope=access.current();
+        ShipperReconciliation reconciliation=reconciliations.findById(id).orElseThrow(() -> new ResourceNotFoundException("Reconciliation"));
+        scope.requireHub(reconciliation.getHubId());
+        return items.findTop100ByReconciliationIdOrderByIdAsc(id).stream().map(i -> new ReconciliationItemResponse(i.getShipment().getId(),
+                i.getShipment().getTrackingNumber(),i.getSourceType(),i.getSourceId(),i.getExpectedAmount(),i.getActualAmount(),i.getDifferenceAmount(),i.getStatus())).toList();
     }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<ShiftExpectedItemResponse> getShiftExpectedItems(Long shipperId, LocalDate reconciliationDate) {
-        LocalDate shiftDate = reconciliationDate != null ? reconciliationDate : LocalDate.now();
-        List<ShiftExpectedItemResponse> items = new ArrayList<>();
-
-        for (CodTransaction cod : codTransactionRepository.findByCollectedByShipperIdAndStatus(shipperId, "COLLECTED")) {
-            if (cod.getCollectedAt() == null || !cod.getCollectedAt().toLocalDate().equals(shiftDate)) {
-                continue;
-            }
-            items.add(new ShiftExpectedItemResponse(
-                    cod.getShipment().getId(), cod.getShipment().getTrackingNumber(),
-                    "COD_TRANSACTION", cod.getId(), cod.getAmount(), cod.getStatus(),
-                    "Cash on delivery collected by the shipper"));
+    @Override @Transactional(readOnly=true) public List<ShiftExpectedItemResponse> getShiftExpectedItems(Long shipperId,LocalDate suppliedDate) {
+        return getShiftExpectedItems(shipperId,suppliedDate,"CASH");
+    }
+    @Override @Transactional(readOnly=true) public List<ShiftExpectedItemResponse> getShiftExpectedItems(Long shipperId,LocalDate suppliedDate,String collectionMethod) {
+        FinanceAccess.Scope scope=access.current(); access.shipper(scope,shipperId);
+        LocalDate date=date(suppliedDate);
+        String method=method(collectionMethod);
+        List<ShiftExpectedItemResponse> result=new ArrayList<>();
+        for (CodTransaction cod:cods.findByCollectedByShipperIdAndStatus(shipperId,"COLLECTED")) {
+            if (!method.equals(cod.getMethod()) || cod.getCollectedAt()==null || !date.equals(cod.getCollectedAt().toLocalDate())
+                    || cod.getShipment().getCurrentStatus()!=ShipmentStatus.DELIVERED || items.findBySourceTypeAndSourceId(COD,cod.getId()).isPresent()) continue;
+            validateCod(cod,shipperId,date,method);
+            result.add(response(cod.getShipment(),COD,cod.getId(),cod.getAmount(),cod.getStatus()));
         }
-
-        for (Payment payment : paymentRepository.findByStatusAndPaymentTypeAndPayerType("PAID", "SHIPPING_FEE", "RECEIVER")) {
-            if (payment.getPaidAt() == null || !payment.getPaidAt().toLocalDate().equals(shiftDate)) {
-                continue;
-            }
-            items.add(new ShiftExpectedItemResponse(
-                    payment.getShipment().getId(), payment.getShipment().getTrackingNumber(),
-                    "RECEIVER_CASH_SHIPPING_FEE_PAYMENT", payment.getId(), payment.getAmount(), payment.getStatus(),
-                    "Receiver cash shipping fee collected by the shipper"));
+        if ("CASH".equals(method)) for (Payment payment:payments.findCashShiftPayments(shipperId,date.atStartOfDay(),date.plusDays(1).atStartOfDay())) {
+            if (!FEE_TYPES.contains(payment.getPaymentType()) || payment.getShipment().getCurrentStatus()==ShipmentStatus.CANCELLED
+                    || items.findBySourceTypeAndSourceId(paymentSourceType(payment),payment.getId()).isPresent()) continue;
+            validatePayment(payment,shipperId,date);
+            result.add(response(payment.getShipment(),paymentSourceType(payment),payment.getId(),payment.getAmount(),payment.getStatus()));
         }
-
-        return items;
+        return result.stream().limit(100).toList();
+    }
+    @Override @Transactional(readOnly=true) public List<ShiftExpectedItemResponse> getReadyPayouts(Long shipperId) {
+        FinanceAccess.Scope scope=access.current(); access.shipper(scope,shipperId);
+        return cods.findByCollectedByShipperIdAndStatus(shipperId,"READY_FOR_PAYOUT").stream()
+                .filter(c -> items.findBySourceTypeAndSourceId(COD,c.getId()).filter(i -> "MATCHED".equals(i.getStatus()) && scope.contains(i.getReconciliation().getHubId())).isPresent())
+                .limit(100).map(c -> response(c.getShipment(),COD,c.getId(),c.getAmount(),c.getStatus())).toList();
+    }
+    private ShiftExpectedItemResponse response(Shipment s,String type,Long id,BigDecimal amount,String status) {
+        return new ShiftExpectedItemResponse(s.getId(),s.getTrackingNumber(),type,id,amount,status,"Recorded collection");
     }
 }
-

@@ -3,6 +3,7 @@ package vn.iotstar.service.impl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.iotstar.dto.operations.ManagerOperationsDashboardResponse;
+import vn.iotstar.dto.operations.OperationalWorkItemResponse;
 import vn.iotstar.entity.EmployeeProfile;
 import vn.iotstar.entity.UserRole;
 import vn.iotstar.exception.HubOperationAccessDeniedException;
@@ -27,6 +28,7 @@ public class ManagerOperationsServiceImpl implements ManagerOperationsService {
         AuthenticatedActor actor = AuthenticatedActor.requireCurrent();
         Scope scope = resolveScope(actor);
         List<Long> hubIds = scope.hubIds();
+        if (hubIds.isEmpty()) return new ManagerOperationsDashboardResponse(scope.label(), scope.systemWide(), 0, 0, 0, 0, 0, 0, 0);
         return new ManagerOperationsDashboardResponse(
                 scope.label(), scope.systemWide(),
                 managerOperationsRepository.countInboundShipments(hubIds),
@@ -36,6 +38,24 @@ public class ManagerOperationsServiceImpl implements ManagerOperationsService {
                 managerOperationsRepository.countActiveTrips(hubIds),
                 managerOperationsRepository.countBlockedRoutes(hubIds),
                 managerOperationsRepository.countActionableIncidents(hubIds));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<OperationalWorkItemResponse> getWorkItems() {
+        Scope scope = resolveScope(AuthenticatedActor.requireCurrent());
+        if (scope.hubIds().isEmpty()) return List.of();
+        return managerOperationsRepository.findWorkItems(scope.hubIds());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public OperationalWorkItemResponse getWorkItem(String kind, Long id) {
+        Scope scope = resolveScope(AuthenticatedActor.requireCurrent());
+        if (id == null || id <= 0 || !List.of("ROUTE", "MISSING", "HANDOVER").contains(kind) || scope.hubIds().isEmpty())
+            throw new HubOperationAccessDeniedException();
+        return managerOperationsRepository.findWorkItem(scope.hubIds(), kind, id)
+                .orElseThrow(HubOperationAccessDeniedException::new);
     }
 
     private Scope resolveScope(AuthenticatedActor actor) {

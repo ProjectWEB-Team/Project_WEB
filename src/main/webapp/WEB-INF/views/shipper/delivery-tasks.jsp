@@ -133,6 +133,10 @@
                                                 <form action="${pageContext.request.contextPath}/shipper/delivery-tasks/collect" method="post" class="d-inline">
                                                     <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
                                                     <input type="hidden" name="shipmentId" value="${task.shipmentId}"/>
+                                                    <label>COD amount received <input class="form-control form-control-sm" type="number" name="codAmountCollected" min="0" step="1" required value="${task.codAmount}"/></label>
+                                                    <label>COD method <select class="form-select form-select-sm" name="codPaymentMethod"><option value="CASH">Cash</option><option value="VNPAY">VNPAY</option><option value="TRANSFER">Transfer</option></select></label>
+                                                    <label>Receiver fee received <input class="form-control form-control-sm" type="number" name="shippingFeeCollected" min="0" step="1" required value="${task.feePayer == 'RECEIVER' ? task.shippingFee : 0}"/></label>
+                                                    <label>Receiver fee method <select class="form-select form-select-sm" name="shippingFeePaymentMethod"><option value="CASH">Cash</option><option value="VNPAY">VNPAY</option></select></label>
                                                     <button type="submit" class="btn btn-outline-success btn-sm">Collect</button>
                                                 </form>
                                             </c:if>

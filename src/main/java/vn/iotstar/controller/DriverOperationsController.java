@@ -27,13 +27,14 @@ public class DriverOperationsController {
 
     @GetMapping("/driver")
     public String trips(Model model) {
+        model.addAttribute("vehicles", linehaulTripService.availableVehicles());
         if (!model.containsAttribute("tripDelayCommand")) model.addAttribute("tripDelayCommand", new TripDelayCommand(null, null, null));
         return "driver/trips";
     }
 
     @PostMapping("/driver/handovers/accept")
-    public String accept(@RequestParam Long handoverId, RedirectAttributes redirect) {
-        linehaulTripService.acceptHandover(handoverId);
+    public String accept(@RequestParam Long handoverId, @RequestParam Long vehicleId, RedirectAttributes redirect) {
+        linehaulTripService.acceptHandover(handoverId, vehicleId);
         redirect.addFlashAttribute("operationMessage", "Assigned handover accepted for linehaul.");
         return "redirect:/driver";
     }

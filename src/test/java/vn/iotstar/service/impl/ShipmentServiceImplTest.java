@@ -56,12 +56,18 @@ class ShipmentServiceImplTest {
     @Mock private PaymentRepository paymentRepository;
     @Mock private Clock clock;
     @Mock private ShipmentCancellation cancellation;
+    @Mock private vn.iotstar.repository.HubRepository hubRepository;
     @InjectMocks private ShipmentServiceImpl shipmentService;
     private static final LocalDateTime CREATED_AT = LocalDateTime.of(2026, 10, 23, 23, 59, 59);
 
     @BeforeEach
     void useServerTime() {
         lenient().when(clock.instant()).thenReturn(CREATED_AT.atZone(ZoneId.systemDefault()).toInstant().plusNanos(999_999_999));
+        var destination = vn.iotstar.entity.Hub.active("HCM-Q1", "Q1", 1, "DELIVERY_HUB", "SOUTH", "HCM");
+        ReflectionTestUtils.setField(destination, "id", 91L);
+        ReflectionTestUtils.setField(destination, "district", "Q1");
+        lenient().when(hubRepository.findByStatusAndTypeAndProvinceAndDistrict("ACTIVE", "DELIVERY_HUB", "HCM", "Q1"))
+                .thenReturn(List.of(destination));
     }
 
     @AfterEach
@@ -94,6 +100,9 @@ class ShipmentServiceImplTest {
         assertThat(shipment.getCreatedAt()).isEqualTo(CREATED_AT);
         assertThat(shipment.getWaitingForHandoverAt()).isNull();
         assertThat(shipment.getTrackingNumber()).startsWith("UTX-");
+        assertThat(shipment.getDestinationHubId()).isEqualTo(91L);
+        assertThat(shipment.getDestinationRegion()).isEqualTo("SOUTH");
+        assertThat(shipment.getDestinationProvince()).isEqualTo("HCM");
         assertThat(eventCaptor.getValue().getShipment()).isSameAs(shipment);
         assertThat(eventCaptor.getValue().getActor()).isSameAs(user);
         assertThat(eventCaptor.getValue().getEventType()).isEqualTo("SHIPMENT_CREATED");
@@ -331,6 +340,51 @@ class ShipmentServiceImplTest {
         lenient().when(policy.getCodFeePercent()).thenReturn(new BigDecimal("2"));
         when(pricingPolicyRepository.findFirstByServiceCodeAndFromRegionAndToRegionAndStatusOrderByIdDesc(
                 "STANDARD", "SOUTH", "SOUTH", "ACTIVE")).thenReturn(Optional.of(policy));
+    }
+
+    @Test
+    void missingOrAmbiguousDeliveryCoverageCannotCreateFinancialOrShipmentRecords() {
+        authenticate(7L, "owner");
+        stubPolicy();
+        when(hubRepository.findByStatusAndTypeAndProvinceAndDistrict("ACTIVE", "DELIVERY_HUB", "HCM", "Q1"))
+                .thenReturn(List.of(), List.of(mock(vn.iotstar.entity.Hub.class), mock(vn.iotstar.entity.Hub.class)));
+        assertThatThrownBy(() -> shipmentService.create(request())).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> shipmentService.create(request())).isInstanceOf(IllegalArgumentException.class);
+        verifyNoInteractions(shipmentRepository, paymentRepository, shipmentEventRepository, shipmentEventPublisher);
+    }
+
+    @Test
+    void realIntakeOutputFeedsSelfDropoffAndTerminalSortingWithoutFixtureRoutingFields() {
+        User owner = authenticate(7L, "owner");
+        stubPolicy();
+        when(userRepository.getReferenceById(7L)).thenReturn(owner);
+        var persisted = new java.util.concurrent.atomic.AtomicReference<Shipment>();
+        var fee = new java.util.concurrent.atomic.AtomicReference<Payment>();
+        when(shipmentRepository.save(any())).thenAnswer(inv -> { Shipment s = inv.getArgument(0); s.setId(42L); persisted.set(s); return s; });
+        when(paymentRepository.save(any())).thenAnswer(inv -> { Payment p = inv.getArgument(0); fee.set(p); return p; });
+        when(shipmentEventRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        CreateShipmentRequest request = request(); request.setPaymentMethod("CASH");
+        shipmentService.create(request);
+
+        var operations = mock(vn.iotstar.repository.HubOperationsRepository.class);
+        var hub = hubRepository.findByStatusAndTypeAndProvinceAndDistrict("ACTIVE", "DELIVERY_HUB", "HCM", "Q1").getFirst();
+        User staff = new User(11L, "general", "hash", UserRole.ROLE_HUB_STAFF, "ACTIVE");
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(staff, null, staff.getAuthorities()));
+        when(operations.findActiveProfileByUserId(11L)).thenReturn(Optional.of(vn.iotstar.entity.EmployeeProfile.active(staff, hub, "GENERAL_STAFF")));
+        when(operations.findShipmentByIdForUpdate(42L)).thenReturn(Optional.of(persisted.get()));
+        when(userRepository.getReferenceById(11L)).thenReturn(staff);
+        when(paymentRepository.findFirstByShipmentIdAndPaymentType(42L, "SHIPPING_FEE")).thenAnswer(inv -> Optional.of(fee.get()));
+        var hubService = new HubOperationsServiceImpl(operations, shipmentEventRepository,
+                mock(vn.iotstar.repository.RoutingExceptionRepository.class), userRepository,
+                mock(org.springframework.context.ApplicationEventPublisher.class), paymentRepository, pricingPolicyRepository,
+                cancellation, shipmentEventPublisher);
+        hubService.receiveAtHub(new vn.iotstar.dto.hub.InboundShipmentCommand(42L, persisted.get().getTrackingNumber(),
+                500, 10, 10, 10, new BigDecimal("20000"), null));
+        assertThat(hubService.sortAtHub(new vn.iotstar.dto.hub.SortShipmentCommand(42L)).containerReady()).isFalse();
+        assertThat(persisted.get().getDestinationHubId()).isEqualTo(persisted.get().getCurrentHubId());
+        assertThat(persisted.get().getCurrentStatus()).isEqualTo(ShipmentStatus.AT_HUB);
+        assertThat(fee.get().getStatus()).isEqualTo("PAID");
+        verify(operations, never()).saveRoute(any());
     }
 
     private User authenticate(Long id, String username) {

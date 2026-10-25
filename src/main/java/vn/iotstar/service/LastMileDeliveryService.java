@@ -22,6 +22,8 @@ public interface LastMileDeliveryService {
     ReturnTaskResponse processReturnHandover(ReturnHandoverRequest request);
 
     ReturnTaskResponse confirmReturnDelivery(Long shipmentId);
+    ReturnTaskResponse scanReturnDelivery(Long shipmentId);
+    void receiveFailedDelivery(Long shipmentId, String trackingNumber);
 
     List<DeliveryTaskResponse> getAssignedDeliveryTasks();
 

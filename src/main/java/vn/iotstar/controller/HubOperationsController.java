@@ -30,7 +30,7 @@ public class HubOperationsController {
             model.addAttribute("sortShipmentCommand", new SortShipmentCommand(null));
         }
         if (!model.containsAttribute("inboundShipmentCommand")) {
-            model.addAttribute("inboundShipmentCommand", new InboundShipmentCommand(null));
+            model.addAttribute("inboundShipmentCommand", InboundShipmentCommand.pickupReceipt(null));
         }
         return "hub/sorter-queue";
     }
@@ -42,8 +42,13 @@ public class HubOperationsController {
             redirectAttributes.addFlashAttribute("operationMessage", "Enter a shipment identifier.");
             return "redirect:/hub/sorter";
         }
-        hubOperationsService.receiveAtHub(command);
-        redirectAttributes.addFlashAttribute("operationMessage", "Shipment received at this hub.");
+        try {
+            hubOperationsService.receiveAtHub(command);
+        } catch (IllegalArgumentException | IllegalStateException exception) {
+            redirectAttributes.addFlashAttribute("operationMessage", exception.getMessage());
+            return "redirect:/hub/sorter";
+        }
+        redirectAttributes.addFlashAttribute("operationMessage", "Inbound request completed.");
         return "redirect:/hub/sorter";
     }
 

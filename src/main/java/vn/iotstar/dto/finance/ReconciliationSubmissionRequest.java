@@ -14,7 +14,13 @@ public class ReconciliationSubmissionRequest implements Serializable {
     private Long shipperId;
 
     private LocalDate reconciliationDate;
+    @jakarta.validation.constraints.Pattern(regexp="CASH|VNPAY|TRANSFER")
+    private String collectionMethod = "CASH";
+    @jakarta.validation.constraints.Size(max=255)
+    private String settlementEvidence;
 
+    @jakarta.validation.Valid
+    @jakarta.validation.constraints.Size(min=1,max=100)
     private List<ItemRequest> items = new ArrayList<>();
 
     public ReconciliationSubmissionRequest() {
@@ -29,12 +35,12 @@ public class ReconciliationSubmissionRequest implements Serializable {
     public static class ItemRequest implements Serializable {
         private static final long serialVersionUID = 1L;
 
-        private Long shipmentId;
-        private String sourceType; // COD_TRANSACTION, RECEIVER_CASH_SHIPPING_FEE_PAYMENT
-        private Long sourceId;
+        @NotNull @jakarta.validation.constraints.Positive private Long shipmentId;
+        @jakarta.validation.constraints.NotBlank private String sourceType;
+        @NotNull @jakarta.validation.constraints.Positive private Long sourceId;
         private BigDecimal expectedAmount;
-        private BigDecimal actualAmount;
-        private String note;
+        @NotNull @jakarta.validation.constraints.DecimalMin("0") private BigDecimal actualAmount;
+        @jakarta.validation.constraints.Size(max=255) private String note;
 
         public ItemRequest() {
         }
@@ -67,6 +73,10 @@ public class ReconciliationSubmissionRequest implements Serializable {
     public void setShipperId(Long shipperId) { this.shipperId = shipperId; }
     public LocalDate getReconciliationDate() { return reconciliationDate; }
     public void setReconciliationDate(LocalDate reconciliationDate) { this.reconciliationDate = reconciliationDate; }
+    public String getCollectionMethod() { return collectionMethod; }
+    public void setCollectionMethod(String collectionMethod) { this.collectionMethod=collectionMethod; }
+    public String getSettlementEvidence() { return settlementEvidence; }
+    public void setSettlementEvidence(String settlementEvidence) { this.settlementEvidence=settlementEvidence; }
     public List<ItemRequest> getItems() { return items; }
     public void setItems(List<ItemRequest> items) { this.items = items; }
 }

@@ -5,6 +5,7 @@ import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Repository;
 import vn.iotstar.entity.EmployeeProfile;
 import vn.iotstar.entity.ShipmentStatus;
+import vn.iotstar.dto.operations.OperationalWorkItemResponse;
 
 import java.util.Collection;
 import java.util.List;
@@ -46,9 +47,52 @@ public class ManagerOperationsRepository {
     }
 
     public long countSortingBacklog(Collection<Long> hubIds) {
-        return entityManager.createQuery("select count(s) from Shipment s where s.currentHub.id in :hubIds and s.currentStatus = :status " +
-                        "and not exists (select r.id from ShipmentRoute r where r.shipment.id = s.id)", Long.class)
-                .setParameter("hubIds", hubIds).setParameter("status", ShipmentStatus.AT_HUB).getSingleResult();
+        return entityManager.createQuery("select count(s) from Shipment s where s.currentHub.id in :hubIds and s.onHold = false " +
+                "and ((s.direction = 'FORWARD' and s.currentStatus = :forward and (s.destinationHubId is null or s.destinationHubId <> s.currentHub.id)) " +
+                "or (s.direction = 'RETURN' and s.currentStatus = :returning and s.originHubId <> s.currentHub.id)) " +
+                "and not exists (select r.id from ShipmentRoute r where r.shipment = s and r.currentHub.id = s.currentHub.id " +
+                "and r.routeDecisionKey = concat('shipment:', cast(s.id as string), ':hub:', cast(s.currentHub.id as string), ':', s.direction))", Long.class)
+                .setParameter("hubIds", hubIds).setParameter("forward", ShipmentStatus.AT_HUB)
+                .setParameter("returning", ShipmentStatus.RETURN_TO_SENDER).getSingleResult();
+    }
+
+    public List<OperationalWorkItemResponse> findWorkItems(Collection<Long> hubIds) {
+        if (hubIds.isEmpty()) return List.of();
+        return java.util.stream.Stream.of("ROUTE", "MISSING", "HANDOVER")
+                .flatMap(kind -> workItems(hubIds, kind, null).stream()).toList();
+    }
+
+    public Optional<OperationalWorkItemResponse> findWorkItem(Collection<Long> hubIds, String kind, Long id) {
+        if (hubIds.isEmpty()) return Optional.empty();
+        return workItems(hubIds, kind, id).stream().findFirst();
+    }
+
+    private List<OperationalWorkItemResponse> workItems(Collection<Long> hubIds, String kind, Long id) {
+        String select;
+        String summary;
+        switch (kind) {
+            case "ROUTE" -> {
+                select = "select e.id, e.shipment.id, e.hub.id from RoutingExceptionRecord e where e.hub.id in :hubIds "
+                        + "and e.exceptionType = 'ROUTE_LOOKUP_BLOCKED' and e.status = 'OPEN'";
+                summary = "Static route requires correction";
+            }
+            case "MISSING" -> {
+                select = "select e.id, e.shipmentId, e.hubId from Incident e where e.hubId in :hubIds "
+                        + "and e.type = 'MISSING_PARCEL' and e.status in ('OPEN', 'INVESTIGATING')";
+                summary = "Missing parcel requires investigation";
+            }
+            case "HANDOVER" -> {
+                select = "select e.id, null, e.fromHub.id from Handover e where (e.fromHub.id in :hubIds or e.toHub.id in :hubIds) "
+                        + "and e.status in ('PENDING_ACCEPTANCE', 'ACCEPTED', 'IN_TRANSIT')";
+                summary = "Handover requires acceptance or receipt";
+            }
+            default -> throw new IllegalArgumentException("Unknown operational work item");
+        }
+        var query = entityManager.createQuery(select + (id == null ? "" : " and e.id = :id") + " order by e.id", Object[].class)
+                .setParameter("hubIds", hubIds).setMaxResults(id == null ? 25 : 1);
+        if (id != null) query.setParameter("id", id);
+        return query.getResultList().stream().map(row -> new OperationalWorkItemResponse(kind, (Long) row[0],
+                (Long) row[1], (Long) row[2], summary)).toList();
     }
 
     public long countOutboundContainers(Collection<Long> hubIds) {
@@ -58,13 +102,13 @@ public class ManagerOperationsRepository {
 
     public long countActiveHandovers(Collection<Long> hubIds) {
         return entityManager.createQuery("select count(h) from Handover h where (h.fromHub.id in :hubIds or h.toHub.id in :hubIds) " +
-                        "and h.status in ('PENDING_ACCEPTANCE', 'ACCEPTED')", Long.class)
+                        "and h.status in ('PENDING_ACCEPTANCE', 'ACCEPTED', 'IN_TRANSIT')", Long.class)
                 .setParameter("hubIds", hubIds).getSingleResult();
     }
 
     public long countActiveTrips(Collection<Long> hubIds) {
         return entityManager.createQuery("select count(t) from TransportTrip t where (t.originHub.id in :hubIds or t.destinationHub.id in :hubIds) " +
-                        "and t.status in ('ACCEPTED', 'STARTED', 'ARRIVED')", Long.class)
+                        "and t.status in ('SCHEDULED', 'DEPARTED', 'IN_TRANSIT', 'ARRIVED')", Long.class)
                 .setParameter("hubIds", hubIds).getSingleResult();
     }
 

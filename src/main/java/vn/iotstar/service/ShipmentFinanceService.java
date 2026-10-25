@@ -29,7 +29,12 @@ public interface ShipmentFinanceService {
      * Paid payments of cancelled shipments that still have no refund, so the
      * intake slice can settle the refund obligation it recorded.
      */
-    List<Payment> listPendingRefundCandidates();
+    List<vn.iotstar.dto.finance.RefundCandidateResponse> listPendingRefundCandidates();
+
+    List<vn.iotstar.dto.finance.LossCompensationCandidate> listConfirmedLossCandidates();
+
+    /** Internal scheduled consumer; validates the persisted obligation, never creates one. */
+    void settlePendingRefund(Long paymentId);
 
     /**
      * Total amount a lost shipment owes its sender: the declared value plus the

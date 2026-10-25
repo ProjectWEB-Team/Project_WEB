@@ -11,6 +11,7 @@ import vn.iotstar.dto.shipment.ShipmentDetailResponse;
 import vn.iotstar.dto.shipment.ShipmentEventResponse;
 import vn.iotstar.dto.shipment.ShipmentSummaryResponse;
 import vn.iotstar.entity.Payment;
+import vn.iotstar.entity.Hub;
 import vn.iotstar.entity.PricingPolicy;
 import vn.iotstar.entity.Shipment;
 import vn.iotstar.entity.ShipmentEvent;
@@ -22,6 +23,7 @@ import vn.iotstar.exception.ResourceNotFoundException;
 import vn.iotstar.exception.ShipmentAccessDeniedException;
 import vn.iotstar.realtime.ShipmentEventPublisher;
 import vn.iotstar.repository.PaymentRepository;
+import vn.iotstar.repository.HubRepository;
 import vn.iotstar.repository.PricingPolicyRepository;
 import vn.iotstar.repository.ShipmentEventRepository;
 import vn.iotstar.repository.ShipmentRepository;
@@ -50,11 +52,12 @@ public class ShipmentServiceImpl implements ShipmentService {
     private final PaymentRepository paymentRepository;
     private final Clock clock;
     private final ShipmentCancellation cancellation;
+    private final HubRepository hubRepository;
 
     public ShipmentServiceImpl(ShipmentRepository shipmentRepository, ShipmentEventRepository shipmentEventRepository,
                                UserRepository userRepository, ShipmentEventPublisher shipmentEventPublisher,
                                PricingPolicyRepository pricingPolicyRepository, PaymentRepository paymentRepository,
-                               Clock clock, ShipmentCancellation cancellation) {
+                               Clock clock, ShipmentCancellation cancellation, HubRepository hubRepository) {
         this.shipmentRepository = shipmentRepository;
         this.shipmentEventRepository = shipmentEventRepository;
         this.userRepository = userRepository;
@@ -63,6 +66,7 @@ public class ShipmentServiceImpl implements ShipmentService {
         this.paymentRepository = paymentRepository;
         this.clock = clock;
         this.cancellation = cancellation;
+        this.hubRepository = hubRepository;
     }
 
     @Override
@@ -96,6 +100,7 @@ public class ShipmentServiceImpl implements ShipmentService {
         if (acceptedFee != null && fee.compareTo(acceptedFee) != 0) {
             throw new IllegalArgumentException("Bảng giá đã thay đổi. Vui lòng báo giá lại trước khi tạo đơn.");
         }
+        Hub destination = resolveDestination(request);
         User sender = userRepository.getReferenceById(actor.userId());
         // Only a verified customer account owns a receiver link; otherwise ReceiverLinkService links it later.
         User receiver = userRepository.findByPhone(receiverPhone)
@@ -111,6 +116,9 @@ public class ShipmentServiceImpl implements ShipmentService {
                 onlinePrepaid ? "PENDING" : "UNPAID",
                 onlinePrepaid ? ShipmentStatus.WAITING_FOR_PAYMENT : ShipmentStatus.WAITING_FOR_HANDOVER,
                 serverTime());
+        shipment.setDestinationHubId(destination.getId());
+        shipment.setDestinationGrouping(destination.getRegion(), destination.getProvince());
+        shipment.setServiceCode(request.getServiceCode());
         Shipment savedShipment = shipmentRepository.save(shipment);
         paymentRepository.save(Payment.shippingFee(savedShipment, request.getFeePayer(), fee,
                 request.getPaymentMethod(), onlinePrepaid ? "PENDING" : "UNPAID"));
@@ -204,6 +212,20 @@ public class ShipmentServiceImpl implements ShipmentService {
         }
     }
 
+    private Hub resolveDestination(CreateShipmentRequest request) {
+        List<Hub> matches = hubRepository.findByStatusAndTypeAndProvinceAndDistrict(
+                "ACTIVE", "DELIVERY_HUB", request.getReceiverProvince().trim(), request.getReceiverDistrict().trim());
+        if (matches.size() != 1) {
+            throw new IllegalArgumentException("Địa chỉ nhận chưa có một bưu cục giao hàng hợp lệ duy nhất.");
+        }
+        Hub hub = matches.getFirst();
+        if (hub.getId() == null || !"ACTIVE".equals(hub.getStatus()) || !"DELIVERY_HUB".equals(hub.getType())
+                || !Integer.valueOf(1).equals(hub.getLevel()) || !hub.getRegion().equals(request.getToRegion())) {
+            throw new IllegalArgumentException("Vùng báo giá không khớp bưu cục giao hàng.");
+        }
+        return hub;
+    }
+
     private LocalDateTime serverTime() {
         return ServerTime.now(clock);
     }
@@ -220,19 +242,7 @@ public class ShipmentServiceImpl implements ShipmentService {
                 .findFirstByServiceCodeAndFromRegionAndToRegionAndStatusOrderByIdDesc(
                         request.getServiceCode(), request.getFromRegion(), request.getToRegion(), "ACTIVE")
                 .orElseThrow(() -> new IllegalArgumentException("Chưa có bảng giá cho dịch vụ và tuyến này."));
-        BigDecimal fee = policy.getBasePrice();
-        int extraGrams = request.getWeightGrams() - policy.getBaseWeightG();
-        if (extraGrams > 0) {
-            int steps = (extraGrams + policy.getExtraWeightStepG() - 1) / policy.getExtraWeightStepG();
-            fee = fee.add(policy.getExtraWeightPrice().multiply(BigDecimal.valueOf(steps)));
-        }
-        fee = fee.add(percent(request.getDeclaredValue(), policy.getInsuranceRatePercent()))
-                .add(percent(request.getCodAmount(), policy.getCodFeePercent()));
-        return fee.setScale(0, RoundingMode.HALF_UP);
-    }
-
-    private BigDecimal percent(BigDecimal amount, BigDecimal rate) {
-        return rate == null ? BigDecimal.ZERO : amount.multiply(rate).divide(BigDecimal.valueOf(100));
+        return ShippingFeeCalculator.calculate(policy, request.getWeightGrams(), request.getDeclaredValue(), request.getCodAmount());
     }
 
     private String newTrackingNumber() {

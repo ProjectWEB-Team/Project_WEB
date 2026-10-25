@@ -23,6 +23,16 @@
         <div class="col"><div class="card h-100"><div class="card-body"><h2 class="h6">Blocked routes</h2><p class="display-6 mb-0"><c:out value="${dashboard.blockedRouteCount}"/></p></div></div></div>
         <div class="col"><div class="card h-100"><div class="card-body"><h2 class="h6">Actionable incidents</h2><p class="display-6 mb-0"><c:out value="${dashboard.actionableIncidentCount}"/></p></div></div></div>
     </div>
+    <section class="mt-4">
+        <h2 class="h5">Action required</h2>
+        <p class="text-muted">Up to 25 open items per category in your current scope.</p>
+        <ul class="list-group">
+            <c:forEach items="${workItems}" var="item">
+                <li class="list-group-item"><a href="${pageContext.request.contextPath}/manager/operations/work/${item.kind}/${item.id}"><c:out value="${item.summary}"/> #<c:out value="${item.id}"/></a></li>
+            </c:forEach>
+            <c:if test="${empty workItems}"><li class="list-group-item text-muted">No open work items in this scope.</li></c:if>
+        </ul>
+    </section>
 </main>
 </body>
 </html>

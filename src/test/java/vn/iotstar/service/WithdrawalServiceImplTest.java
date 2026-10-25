@@ -131,6 +131,7 @@ class WithdrawalServiceImplTest {
     @Test
     @DisplayName("Approval: deducts the locked balance and completes the request")
     void approvalDeductsLockedBalance() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(new User(1L,"owner","hash",UserRole.ROLE_USER,"ACTIVE")));
         WithdrawalRequest request = WithdrawalRequest.create(
                 1L, new BigDecimal("50000.00"), "Vietcombank", "0123456789", "Nguyen Van A", null);
         request.setId(7L);
@@ -143,6 +144,8 @@ class WithdrawalServiceImplTest {
         assertThat(result.getStatus()).isEqualTo("COMPLETED");
         assertThat(result.getCompletedAt()).isNotNull();
         verify(walletLedgerService).recordWithdrawalDeduct(1L, new BigDecimal("50000.00"), 7L);
+        verify(notificationEventPublisher).publishToUserAfterCommit(eq("owner"), any());
+        verify(notificationEventPublisher,never()).publishAfterCommit(any(), any());
     }
 
     @Test
@@ -163,6 +166,7 @@ class WithdrawalServiceImplTest {
     @Test
     @DisplayName("Rejection: releases the locked balance and keeps the reason")
     void rejectionReleasesLockedBalance() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(new User(1L,"owner","hash",UserRole.ROLE_USER,"ACTIVE")));
         WithdrawalRequest request = WithdrawalRequest.create(
                 1L, new BigDecimal("50000.00"), "Vietcombank", "0123456789", "Nguyen Van A", null);
         request.setId(7L);
@@ -176,6 +180,7 @@ class WithdrawalServiceImplTest {
         assertThat(result.getStatus()).isEqualTo("REJECTED");
         assertThat(result.getRejectionReason()).isEqualTo("Account number does not match");
         verify(walletLedgerService).recordWithdrawalRefund(1L, new BigDecimal("50000.00"), 7L);
+        verify(notificationEventPublisher).publishToUserAfterCommit(eq("owner"), argThat(e -> !e.getMessage().contains("Account number")));
     }
 
     @Test
@@ -184,5 +189,11 @@ class WithdrawalServiceImplTest {
         assertThatThrownBy(() -> withdrawalService.rejectWithdrawal(new WithdrawalReviewDto(7L, "  ")))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Rejection reason is required");
+    }
+    @Test void userCannotReadOtherUsersOrPendingAdminQueue() {
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(regularUser,null,regularUser.getAuthorities()));
+        assertThatThrownBy(()->withdrawalService.getUserWithdrawals(1L)).isInstanceOf(AccessDeniedException.class);
+        assertThatThrownBy(()->withdrawalService.getPendingWithdrawals()).isInstanceOf(AccessDeniedException.class);
+        verifyNoInteractions(withdrawalRepository);
     }
 }

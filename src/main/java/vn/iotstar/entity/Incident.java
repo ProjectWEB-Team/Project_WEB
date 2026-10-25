@@ -33,6 +33,11 @@ public class Incident implements Serializable {
     @Column(name = "status", nullable = false, length = 50, columnDefinition = "NVARCHAR(50)") private String status;
     @Column(name = "created_at", nullable = false, columnDefinition = "DATETIME2(0)") private LocalDateTime createdAt;
     @Column(name = "resolved_at", columnDefinition = "DATETIME2(0)") private LocalDateTime resolvedAt;
+    @Column(name = "resolution_outcome", length = 30) private String resolutionOutcome;
+    @Column(name = "resolution_evidence", length = 500) private String resolutionEvidence;
+    @Column(name = "investigated_by") private Long investigatedBy;
+    @Column(name = "investigated_at", columnDefinition = "DATETIME2(0)") private LocalDateTime investigatedAt;
+    @Column(name = "compensated_at", columnDefinition = "DATETIME2(0)") private LocalDateTime compensatedAt;
 
     protected Incident() {
     }
@@ -99,6 +104,25 @@ public class Incident implements Serializable {
     public String getStatus() { return status; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getResolvedAt() { return resolvedAt; }
+    public String getResolutionOutcome() { return resolutionOutcome; }
+    public String getResolutionEvidence() { return resolutionEvidence; }
+    public Long getInvestigatedBy() { return investigatedBy; }
+    public LocalDateTime getInvestigatedAt() { return investigatedAt; }
+    public LocalDateTime getCompensatedAt() { return compensatedAt; }
+    public void recordCompensation(LocalDateTime at) {
+        if (!"CONFIRMED_LOST".equals(resolutionOutcome) || !"INVESTIGATING".equals(status) || compensatedAt != null)
+            throw new IllegalStateException("Incident is not awaiting compensation");
+        compensatedAt=at; status="RESOLVED"; resolvedAt=at;
+    }
+    public void recordInvestigation(String outcome, String evidence, Long actorId) {
+        if (resolutionOutcome != null || !"MISSING_PARCEL".equals(type) || !"INVESTIGATING".equals(status))
+            throw new IllegalStateException("Incident is not awaiting investigation");
+        if (!("FOUND".equals(outcome) || "CONFIRMED_LOST".equals(outcome)) || evidence == null || evidence.isBlank()
+                || evidence.length() > 500 || actorId == null) throw new IllegalArgumentException("Accountable investigation evidence required");
+        resolutionOutcome = outcome; resolutionEvidence = evidence; investigatedBy = actorId; investigatedAt = LocalDateTime.now();
+        if ("FOUND".equals(outcome)) { status = "RESOLVED"; resolvedAt = investigatedAt; }
+        // Confirmed loss remains held/investigating until the finance transaction credits compensation and closes it.
+    }
     public void setId(Long id) { this.id = id; }
     public void setStatus(String status) { this.status = status; }
     public void setResolvedAt(LocalDateTime resolvedAt) { this.resolvedAt = resolvedAt; }

@@ -75,14 +75,19 @@ public class ContainerHandoverServiceImpl implements ContainerHandoverService {
         ParcelContainer container = lockedContainer(command.containerId());
         Shipment shipment = custodyRepository.findShipmentForUpdate(command.shipmentId())
                 .orElseThrow(() -> new ResourceNotFoundException("Shipment"));
-        if (!"OPEN".equals(container.getStatus()) || shipment.getCurrentStatus() != ShipmentStatus.AT_HUB
+        if (!"OPEN".equals(container.getStatus()) || shipment.isOnHold()
+                || ("RETURN".equals(shipment.getDirection()) && Objects.equals(shipment.getOriginHubId(), profile.getHub().getId()))
+                || !("FORWARD".equals(shipment.getDirection()) && shipment.getCurrentStatus() == ShipmentStatus.AT_HUB
+                     || "RETURN".equals(shipment.getDirection()) && shipment.getCurrentStatus() == ShipmentStatus.RETURN_TO_SENDER)
                 || !sameHub(profile.getHub(), container.getOriginHub()) || !sameHub(profile.getHub(), shipment.getCurrentHub())
-                || custodyRepository.containerAlreadyContains(container.getId(), shipment.getId())) {
+                || custodyRepository.containerAlreadyContains(container.getId(), shipment.getId())
+                || custodyRepository.hasOtherActiveContainerCustody(container.getId(), shipment.getId())) {
             throw new HubOperationAccessDeniedException();
         }
         ShipmentRoute route = custodyRepository.findPendingRouteForShipmentAtHub(shipment.getId(), profile.getHub().getId())
                 .orElseThrow(HubOperationAccessDeniedException::new);
-        if (!sameHub(route.getHub(), container.getDestinationHub())) throw new HubOperationAccessDeniedException();
+        if (!shipment.routeDecisionKey(profile.getHub().getId()).equals(route.getRouteDecisionKey())
+                || !sameHub(route.getHub(), container.getDestinationHub())) throw new HubOperationAccessDeniedException();
         custodyRepository.persist(ContainerItem.scanned(container, shipment));
         route.markOutboundLoaded();
         User user = userRepository.getReferenceById(actor.userId());

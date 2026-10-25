@@ -32,6 +32,13 @@ import vn.iotstar.repository.ShipmentEventRepository;
 import vn.iotstar.repository.ShipmentRepository;
 import vn.iotstar.repository.UserRepository;
 import vn.iotstar.service.impl.LastMileDeliveryServiceImpl;
+import vn.iotstar.service.impl.LastMileAccess;
+import vn.iotstar.service.impl.ShipmentFeeService;
+import vn.iotstar.entity.Hub;
+import vn.iotstar.entity.EmployeeProfile;
+import vn.iotstar.repository.EmployeeProfileRepository;
+import org.springframework.test.util.ReflectionTestUtils;
+import java.time.LocalDateTime;
 import vn.iotstar.config.LogisticsProperties;
 import vn.iotstar.service.StorageService;
 import vn.iotstar.service.WalletLedgerService;
@@ -71,6 +78,7 @@ class LastMileDeliveryServiceImplTest {
     @Mock
     private StorageService storageService;
 
+    @Mock private EmployeeProfileRepository profiles;
     private final LogisticsProperties logisticsProperties = new LogisticsProperties();
 
     private LastMileDeliveryServiceImpl deliveryService;
@@ -94,7 +102,7 @@ class LastMileDeliveryServiceImplTest {
                 notificationEventPublisher,
                 walletLedgerService,
                 logisticsProperties,
-                storageService
+                storageService, new LastMileAccess(profiles,lastMileDeliveryRepository,java.time.Clock.systemUTC()), new ShipmentFeeService(shipmentRepository,paymentRepository,shipmentAssignmentRepository,shipmentEventRepository,userRepository,walletLedgerService,new LastMileAccess(profiles,lastMileDeliveryRepository,java.time.Clock.systemUTC()))
         );
 
         shipper = new User(10L, "shipper_test", "hash", UserRole.ROLE_SHIPPER, "ACTIVE");
@@ -110,6 +118,9 @@ class LastMileDeliveryServiceImplTest {
         shipment.setFeePayer("RECEIVER");
 
         assignment = ShipmentAssignment.create(shipment, shipper, "DELIVERY");
+        Hub hub=Hub.active("H100","Hub",1,"DELIVERY_HUB","SOUTH","P");
+        ReflectionTestUtils.setField(hub,"id",100L);
+        lenient().when(profiles.findFirstByUserId(10L)).thenReturn(Optional.of(EmployeeProfile.active(shipper,hub,"SHIPPER")));
 
         // Set security context
         UsernamePasswordAuthenticationToken auth =
@@ -163,13 +174,14 @@ class LastMileDeliveryServiceImplTest {
         DeliveryScanRequest request = new DeliveryScanRequest(1L, 999L); // Wrong hub ID
         assertThatThrownBy(() -> deliveryService.scanForDelivery(request))
                 .isInstanceOf(AccessDeniedException.class)
-                .hasMessageContaining("not at the scanning hub");
+                .hasMessageContaining("Wrong scan hub");
     }
 
     @Test
     @DisplayName("Collect COD and receiver fee: Creates distinct records and events")
     void recordCollectionSuccess() {
         shipment.transitionTo(ShipmentStatus.OUT_FOR_DELIVERY);
+        shipment.setCurrentHubId(null); assignment.setStatus("IN_PROGRESS"); assignment.setAcceptedAt(LocalDateTime.now());
         when(shipmentRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(shipment));
         when(userRepository.findById(10L)).thenReturn(Optional.of(shipper));
         when(shipmentAssignmentRepository.findFirstByShipmentIdAndAssigneeIdAndStatus(any(), any(), eq("IN_PROGRESS")))
@@ -189,6 +201,7 @@ class LastMileDeliveryServiceImplTest {
     @DisplayName("Confirm delivery: Fails if COD obligation is uncollected")
     void confirmDeliveryFailsWhenCodUncollected() {
         shipment.transitionTo(ShipmentStatus.OUT_FOR_DELIVERY);
+        shipment.setCurrentHubId(null); assignment.setStatus("IN_PROGRESS"); assignment.setAcceptedAt(LocalDateTime.now());
         when(shipmentRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(shipment));
         when(userRepository.findById(10L)).thenReturn(Optional.of(shipper));
         when(shipmentAssignmentRepository.findByShipmentIdOrderByAssignedAtDesc(any())).thenReturn(List.of(assignment));
@@ -203,8 +216,10 @@ class LastMileDeliveryServiceImplTest {
     @DisplayName("Confirm delivery: Succeeds after collections, records attempt and event")
     void confirmDeliverySuccess() {
         shipment.transitionTo(ShipmentStatus.OUT_FOR_DELIVERY);
+        shipment.setCurrentHubId(null); assignment.setStatus("IN_PROGRESS"); assignment.setAcceptedAt(LocalDateTime.now());
         CodTransaction codTx = CodTransaction.createCollected(shipment, shipper, new BigDecimal("200000.00"), "CASH");
-        Payment feePayment = Payment.create(shipment, "RECEIVER", "SHIPPING_FEE", new BigDecimal("30000.00"), "CASH", "PAID");
+        Payment feePayment = Payment.create(shipment, "RECEIVER", "SHIPPING_FEE", new BigDecimal("30000.00"), "CASH", "UNPAID");
+        feePayment.collect("CASH",10L,"TEST-DELIVERY");
 
         when(shipmentRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(shipment));
         when(userRepository.findById(10L)).thenReturn(Optional.of(shipper));

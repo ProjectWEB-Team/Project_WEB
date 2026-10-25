@@ -26,8 +26,14 @@ public class HandoverContainer {
     public static HandoverContainer expected(Handover handover, ParcelContainer container) {
         HandoverContainer item = new HandoverContainer(); item.handover = handover; item.container = container; item.status = "EXPECTED"; return item;
     }
-    public boolean isScanned() { return "SCANNED".equals(status); }
-    public void markScanned() { if (!isScanned()) { status = "SCANNED"; scannedAt = LocalDateTime.now(); } }
+    public boolean isScanned() { return scannedAt != null; }
+    public void markScanned() { if (!isScanned()) { status = "LOADED"; scannedAt = LocalDateTime.now(); } }
+    public void completeReceipt(boolean discrepancy) {
+        if (!isScanned()) throw new IllegalStateException("Container was not scanned for custody");
+        status = discrepancy ? "DISCREPANCY" : "DELIVERED";
+    }
+    public String getStatus() { return status; }
+    public LocalDateTime getScannedAt() { return scannedAt; }
     public Handover getHandover() { return handover; }
     public ParcelContainer getContainer() { return container; }
 }

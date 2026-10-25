@@ -39,7 +39,7 @@ public class OperationsAuditRepository {
     }
 
     public List<ShipmentEvent> findEventsForShipment(Long shipmentId) {
-        return entityManager.createQuery("select e from ShipmentEvent e join fetch e.actor left join fetch e.hub where e.shipment.id = :shipmentId order by e.createdAt asc, e.id asc", ShipmentEvent.class)
+        return entityManager.createQuery("select e from ShipmentEvent e left join fetch e.actor left join fetch e.hub where e.shipment.id = :shipmentId order by e.createdAt asc, e.id asc", ShipmentEvent.class)
                 .setParameter("shipmentId", shipmentId).getResultList();
     }
 
@@ -55,7 +55,7 @@ public class OperationsAuditRepository {
         return entityManager.createQuery("select new vn.iotstar.dto.operations.AuditCustodyReference(c.id, h.id, t.id, d.id) " +
                         "from ContainerItem ci join ci.container c join HandoverContainer hc on hc.container = c " +
                         "join hc.handover h left join h.transportTrip t join h.receiverDriver d " +
-                        "where ci.shipment.id = :shipmentId and d.id = :driverUserId and h.status = 'ACCEPTED'", AuditCustodyReference.class)
+                        "where ci.shipment.id = :shipmentId and d.id = :driverUserId and h.status in ('ACCEPTED', 'IN_TRANSIT')", AuditCustodyReference.class)
                 .setParameter("shipmentId", shipmentId).setParameter("driverUserId", driverUserId).getResultList();
     }
 }

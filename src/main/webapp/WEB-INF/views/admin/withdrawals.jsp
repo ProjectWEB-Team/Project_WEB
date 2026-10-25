@@ -1,7 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ taglib prefix="c" uri="https://jakarta.ee/tags/jstl/core" %>
-<%@ taglib prefix="fmt" uri="https://jakarta.ee/tags/jstl/fmt" %>
-<%@ taglib prefix="fn" uri="https://jakarta.ee/tags/jstl/functions" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
 <jsp:include page="../layout/header.jsp" />
 
@@ -64,7 +64,7 @@
                                         <fmt:formatNumber value="${item.amount}" type="currency" currencySymbol="₫"/>
                                     </td>
                                     <td class="small text-ute-muted">
-                                        <fmt:formatDate value="${item.requestedAt}" pattern="dd/MM/yyyy HH:mm"/>
+                                        <c:out value="${item.requestedAt}"/>
                                     </td>
                                     <td>
                                         <div class="d-flex flex-column gap-2">

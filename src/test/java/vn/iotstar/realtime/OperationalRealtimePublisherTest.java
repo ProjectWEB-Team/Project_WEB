@@ -35,6 +35,9 @@ class OperationalRealtimePublisherTest {
         TypedQuery<User> supervisors = mock(TypedQuery.class);
         User manager = new User(7L, "manager", "hash", UserRole.ROLE_MANAGER, "ACTIVE");
         User admin = new User(8L, "admin", "hash", UserRole.ROLE_ADMIN, "ACTIVE");
+        var root=vn.iotstar.entity.Hub.active("ROOT","Root",1,"SOC","R","P");ReflectionTestUtils.setField(root,"id",1L);
+        var leaf=vn.iotstar.entity.Hub.active("LEAF","Leaf",2,"HUB","R","P");ReflectionTestUtils.setField(leaf,"id",11L);ReflectionTestUtils.setField(leaf,"parentHub",root);
+        when(entityManager.find(vn.iotstar.entity.Hub.class,11L)).thenReturn(leaf);
         when(entityManager.createQuery(contains("from User u"), eq(User.class))).thenReturn(supervisors);
         when(supervisors.setParameter(anyString(), any())).thenReturn(supervisors);
         when(supervisors.getResultList()).thenReturn(List.of(manager, admin));
@@ -49,5 +52,7 @@ class OperationalRealtimePublisherTest {
                 new OperationalActionEventResponse("BLOCKED_ROUTE", "routing-exception:77"));
         Method listener = OperationalRealtimePublisher.class.getDeclaredMethod("publishAfterCommit", OperationalActionNotification.class);
         assertThat(listener.getAnnotation(TransactionalEventListener.class).phase()).isEqualTo(TransactionPhase.AFTER_COMMIT);
+        verify(supervisors).setParameter("hubIds",new java.util.LinkedHashSet<>(List.of(11L,1L)));
+        verify(entityManager).createQuery(contains("u.status = 'ACTIVE'"),eq(User.class));
     }
 }

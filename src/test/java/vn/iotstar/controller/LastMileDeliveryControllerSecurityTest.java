@@ -93,5 +93,16 @@ class LastMileDeliveryControllerSecurityTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/shipper/delivery-tasks"));
     }
+    @Test @WithMockUser(roles="SHIPPER")
+    void collectionFormBindsActualAmountsAndIndependentMethods() throws Exception {
+        mockMvc.perform(post("/shipper/delivery-tasks/collect").with(csrf()).param("shipmentId","1")
+                .param("codAmountCollected","100000").param("shippingFeeCollected","35000")
+                .param("codPaymentMethod","TRANSFER").param("shippingFeePaymentMethod","CASH"))
+                .andExpect(redirectedUrl("/shipper/delivery-tasks"));
+        org.mockito.Mockito.verify(lastMileDeliveryService).recordCollection(org.mockito.ArgumentMatchers.argThat(r->
+                r.getShipmentId().equals(1L) && r.getCodAmountCollected().compareTo(new java.math.BigDecimal("100000"))==0
+                && r.getShippingFeeCollected().compareTo(new java.math.BigDecimal("35000"))==0
+                && r.getCodPaymentMethod().equals("TRANSFER") && r.getShippingFeePaymentMethod().equals("CASH")));
+    }
 }
 

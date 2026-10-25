@@ -36,6 +36,7 @@ public class Shipment implements Serializable {
     @Column(name = "receiver_address", nullable = false, length = 255, columnDefinition = "NVARCHAR(255)") private String receiverAddress;
     @Column(name = "receiver_province", length = 100, columnDefinition = "NVARCHAR(100)") private String receiverProvince;
     @Column(name = "receiver_district", length = 100, columnDefinition = "NVARCHAR(100)") private String receiverDistrict;
+    @Column(name = "service_code", length = 50, columnDefinition = "NVARCHAR(50)") private String serviceCode;
     @Column(name = "weight") private Integer weight;
     @Column(name = "length") private Integer length;
     @Column(name = "width") private Integer width;
@@ -64,6 +65,7 @@ public class Shipment implements Serializable {
     @Column(name = "on_hold", nullable = false) private boolean onHold;
     @Column(name = "delivered_at", columnDefinition = "DATETIME2(0)") private LocalDateTime deliveredAt;
     @Column(name = "returned_at", columnDefinition = "DATETIME2(0)") private LocalDateTime returnedAt;
+    @Column(name = "return_arrived_at_origin_at", columnDefinition = "DATETIME2(0)") private LocalDateTime returnArrivedAtOriginAt;
     @Version @Column(name = "version", nullable = false) private Long version;
     @Column(name = "created_at", nullable = false, columnDefinition = "DATETIME2(0)") private LocalDateTime createdAt;
     @Column(name = "waiting_for_handover_at", columnDefinition = "DATETIME2(0)") private LocalDateTime waitingForHandoverAt;
@@ -122,8 +124,17 @@ public class Shipment implements Serializable {
         this.destinationRegion = destinationRegion; this.destinationProvince = destinationProvince;
     }
     public void receiveAt(Hub hub) {
-        currentHub = hub; currentHubId = hub == null ? null : hub.getId(); currentStatus = ShipmentStatus.AT_HUB;
+        currentHub = hub; currentHubId = hub == null ? null : hub.getId();
+        currentStatus = "RETURN".equals(direction) ? ShipmentStatus.RETURN_TO_SENDER : ShipmentStatus.AT_HUB;
+        recordReturnOriginArrival(LocalDateTime.now());
     }
+    public void recordReturnOriginArrival(LocalDateTime at) {
+        if (returnArrivedAtOriginAt == null && "RETURN".equals(direction)
+                && currentStatus == ShipmentStatus.RETURN_TO_SENDER && originHubId != null && originHubId.equals(currentHubId))
+            returnArrivedAtOriginAt = at;
+    }
+    public LocalDateTime getReturnArrivedAtOriginAt() { return returnArrivedAtOriginAt; }
+    public String routeDecisionKey(Long hubId) { return "shipment:" + id + ":hub:" + hubId + ":" + direction; }
     @PrePersist void assignCreatedAt() { if (createdAt == null) createdAt = LocalDateTime.now(); }
 
     public Long getId() { return id; }
@@ -168,6 +179,15 @@ public class Shipment implements Serializable {
     public void setCurrentHubId(Long currentHubId) { this.currentHubId = currentHubId; this.currentHub = null; }
     public void setOriginHubId(Long originHubId) { this.originHubId = originHubId; }
     public void setDestinationHubId(Long destinationHubId) { this.destinationHubId = destinationHubId; }
+    public String getServiceCode() { return serviceCode; }
+    public void setServiceCode(String serviceCode) { this.serviceCode = serviceCode; }
+    public Integer getWeight() { return weight; }
+    public Integer getLength() { return length; }
+    public Integer getWidth() { return width; }
+    public Integer getHeight() { return height; }
+    public void recordMeasurements(int weight, int length, int width, int height) {
+        this.weight = weight; this.length = length; this.width = width; this.height = height;
+    }
     public void setDirection(String direction) { this.direction = direction; }
     public void setShippingFee(BigDecimal shippingFee) { this.shippingFee = shippingFee; }
     public void setCodAmount(BigDecimal codAmount) { this.codAmount = codAmount; }

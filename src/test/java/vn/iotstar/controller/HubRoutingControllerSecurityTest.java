@@ -82,4 +82,20 @@ class HubRoutingControllerSecurityTest {
 
         verify(hubOperationsService).sortAtHub(any());
     }
+
+    @Test @WithMockUser(roles = "HUB_STAFF")
+    void physicalDropoffInputsBindAndReachServiceWithCsrf() throws Exception {
+        mockMvc.perform(post("/hub/inbound").with(csrf()).param("shipmentId", "101")
+                .param("trackingNumber", "UTX-101").param("actualWeightGrams", "500")
+                .param("actualLengthCm", "10").param("actualWidthCm", "11").param("actualHeightCm", "12")
+                .param("cashReceived", "20000").param("surchargeDecision", "ACCEPT"))
+                .andExpect(status().is3xxRedirection()).andExpect(redirectedUrl("/hub/sorter"));
+        verify(hubOperationsService).receiveAtHub(new vn.iotstar.dto.hub.InboundShipmentCommand(101L, "UTX-101", 500,
+                10, 11, 12, new java.math.BigDecimal("20000"), "ACCEPT"));
+    }
+    @Test @WithMockUser(roles = "HUB_STAFF")
+    void physicalDropoffWithoutCsrfIsDenied() throws Exception {
+        mockMvc.perform(post("/hub/inbound").param("shipmentId", "101")).andExpect(status().isForbidden());
+        verify(hubOperationsService, never()).receiveAtHub(any());
+    }
 }
