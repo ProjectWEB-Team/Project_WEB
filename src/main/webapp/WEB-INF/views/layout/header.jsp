@@ -32,12 +32,12 @@
         <div class="container-fluid px-lg-4">
             <!-- Brand Logo -->
             <a class="navbar-brand d-flex align-items-center gap-2" href="${pageContext.request.contextPath}/">
-                <div class="bg-ute-accent text-white rounded-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                <div class="bg-ute-accent text-white rounded-2 d-flex align-items-center justify-content-center ute-brand-mark">
                     <i class="bi bi-box-seam-fill fs-5"></i>
                 </div>
                 <div>
                     <span class="fw-bold fs-5 tracking-wide text-white">UTE<span class="text-ute-accent">EXPRESS</span></span>
-                    <span class="d-block small text-light opacity-75" style="font-size: 0.68rem; margin-top: -3px;">HCMUTE LOGISTICS SYSTEM</span>
+                    <span class="d-block small text-light opacity-75 ute-brand-caption">HCMUTE LOGISTICS SYSTEM</span>
                 </div>
             </a>
 

@@ -13,12 +13,8 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**
- * Canonical shared incident record from the ERD/Workflow.
- *
- * <p>Operational incident provenance remains owned by Phase 03: drivers may
- * record only {@code TRIP_DELAY}; {@code MISSING_PARCEL} comes only from a
- * destination receipt. Financial incident types belong to Phase 04, but use
- * this same table rather than a parallel operational schema.</p>
+ * Canonical shared incident record from the Workflow and SQL Server schema.
+ * Operational and financial incident types use this one aggregate/table.
  */
 @Entity
 @Table(name = "incidents")
@@ -28,38 +24,26 @@ public class Incident implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(name = "shipment_id")
-    private Long shipmentId;
-
-    @Column(name = "trip_id")
-    private Long tripId;
-
-    @Column(name = "hub_id")
-    private Long hubId;
-
-    @Column(name = "type", nullable = false, length = 50, columnDefinition = "NVARCHAR(50)")
-    private String type;
-
-    @Column(name = "description", length = 500, columnDefinition = "NVARCHAR(500)")
-    private String description;
-
-    @Column(name = "reported_by", nullable = false)
-    private Long reportedBy;
-
-    @Column(name = "status", nullable = false, length = 50, columnDefinition = "NVARCHAR(50)")
-    private String status;
-
-    @Column(name = "created_at", nullable = false, columnDefinition = "DATETIME2(0)")
-    private LocalDateTime createdAt;
-
-    @Column(name = "resolved_at", columnDefinition = "DATETIME2(0)")
-    private LocalDateTime resolvedAt;
+    @Column(name = "shipment_id") private Long shipmentId;
+    @Column(name = "trip_id") private Long tripId;
+    @Column(name = "hub_id") private Long hubId;
+    @Column(name = "type", nullable = false, length = 50, columnDefinition = "NVARCHAR(50)") private String type;
+    @Column(name = "description", length = 500, columnDefinition = "NVARCHAR(500)") private String description;
+    @Column(name = "reported_by", nullable = false) private Long reportedBy;
+    @Column(name = "status", nullable = false, length = 50, columnDefinition = "NVARCHAR(50)") private String status;
+    @Column(name = "created_at", nullable = false, columnDefinition = "DATETIME2(0)") private LocalDateTime createdAt;
+    @Column(name = "resolved_at", columnDefinition = "DATETIME2(0)") private LocalDateTime resolvedAt;
 
     protected Incident() {
     }
 
-    /** Driver-only, bounded delay evidence for the driver's currently assigned trip. */
+    /** Generic factory for the canonical schema; financial incidents use this entry point. */
+    public static Incident create(Long shipmentId, Long tripId, Long hubId, String type,
+                                  String description, Long reportedBy) {
+        return create(shipmentId, tripId, hubId, type, description, reportedBy, "OPEN");
+    }
+
+    /** Driver-only, bounded delay evidence for the currently assigned trip. */
     public static Incident tripDelay(TransportTrip trip, User actor, String note, String evidenceReference) {
         Objects.requireNonNull(trip, "trip");
         Objects.requireNonNull(actor, "actor");
@@ -78,8 +62,8 @@ public class Incident implements Serializable {
                 appendEvidence("Destination receipt discrepancy", receiptReference), actor.getId(), "INVESTIGATING");
     }
 
-    private static Incident create(Long shipmentId, Long tripId, Long hubId, String type, String description,
-                                   Long reportedBy, String status) {
+    private static Incident create(Long shipmentId, Long tripId, Long hubId, String type,
+                                   String description, Long reportedBy, String status) {
         Incident incident = new Incident();
         incident.shipmentId = shipmentId;
         incident.tripId = tripId;
@@ -101,9 +85,8 @@ public class Incident implements Serializable {
 
     @PrePersist
     void assignCreatedAt() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
+        if (createdAt == null) createdAt = LocalDateTime.now();
+        if (status == null) status = "OPEN";
     }
 
     public Long getId() { return id; }
@@ -116,4 +99,7 @@ public class Incident implements Serializable {
     public String getStatus() { return status; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getResolvedAt() { return resolvedAt; }
+    public void setId(Long id) { this.id = id; }
+    public void setStatus(String status) { this.status = status; }
+    public void setResolvedAt(LocalDateTime resolvedAt) { this.resolvedAt = resolvedAt; }
 }

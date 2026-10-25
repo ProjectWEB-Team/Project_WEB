@@ -1,6 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
-<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -32,14 +31,8 @@
                         <summary class="text-ute-primary">Đăng nhập bằng mật khẩu</summary>
                         <form method="post" action="${pageContext.request.contextPath}/login" class="mt-3">
                             <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
-                            <div class="mb-3">
-                                <label class="form-label" for="username">Tên đăng nhập</label>
-                                <input class="form-control" id="username" name="username" type="text" autocomplete="username" required>
-                            </div>
-                            <div class="mb-4">
-                                <label class="form-label" for="password">Mật khẩu</label>
-                                <input class="form-control" id="password" name="password" type="password" autocomplete="current-password" required>
-                            </div>
+                            <div class="mb-3"><label class="form-label" for="username">Tên đăng nhập</label><input class="form-control" id="username" name="username" type="text" autocomplete="username" required></div>
+                            <div class="mb-4"><label class="form-label" for="password">Mật khẩu</label><input class="form-control" id="password" name="password" type="password" autocomplete="current-password" required></div>
                             <button class="btn btn-outline-primary w-100" type="submit">Đăng nhập</button>
                         </form>
                     </details>
