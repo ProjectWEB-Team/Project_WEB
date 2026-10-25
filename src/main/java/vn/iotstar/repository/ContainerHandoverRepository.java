@@ -32,7 +32,7 @@ public class ContainerHandoverRepository {
     }
     public Optional<ShipmentRoute> findPendingRouteForShipmentAtHub(Long shipmentId, Long currentHubId) {
         return entityManager.createQuery("select r from ShipmentRoute r join fetch r.hub where r.shipment.id = :shipmentId " +
-                        "and r.currentHub.id = :currentHubId and r.status = 'PENDING' order by r.id desc", ShipmentRoute.class)
+                        "and r.currentHub.id = :currentHubId and r.status = 'PENDING' and r.routeDecisionKey = concat('shipment:', cast(r.shipment.id as string), ':hub:', cast(r.currentHub.id as string), ':', r.shipment.direction) order by r.id desc", ShipmentRoute.class)
                 .setParameter("shipmentId", shipmentId).setParameter("currentHubId", currentHubId)
                 .setMaxResults(1).getResultStream().findFirst();
     }
@@ -46,11 +46,18 @@ public class ContainerHandoverRepository {
                 .setParameter("handoverId", handoverId).setParameter("containerId", containerId).getResultStream().findFirst();
     }
     public List<HandoverContainer> findActiveCustodyForContainer(Long containerId) {
-        return entityManager.createQuery("select hc from HandoverContainer hc join fetch hc.handover h where hc.container.id = :id and h.status in ('PENDING_ACCEPTANCE','ACCEPTED')", HandoverContainer.class).setParameter("id", containerId).getResultList();
+        return entityManager.createQuery("select hc from HandoverContainer hc join fetch hc.handover h where hc.container.id = :id and h.status in ('PENDING_ACCEPTANCE','ACCEPTED','IN_TRANSIT')", HandoverContainer.class).setParameter("id", containerId).getResultList();
     }
     public boolean containerAlreadyContains(Long containerId, Long shipmentId) {
         return !entityManager.createQuery("select ci from ContainerItem ci where ci.container.id = :containerId and ci.shipment.id = :shipmentId", ContainerItem.class)
                 .setParameter("containerId", containerId).setParameter("shipmentId", shipmentId).setMaxResults(1).getResultList().isEmpty();
+    }
+    public boolean hasOtherActiveContainerCustody(Long containerId, Long shipmentId) {
+        return !entityManager.createQuery("select ci from ContainerItem ci where ci.shipment.id = :shipmentId " +
+                        "and ci.container.id <> :containerId and ci.status = 'IN_CONTAINER' " +
+                        "and ci.container.status in ('OPEN','SEALED','LOADED')", ContainerItem.class)
+                .setParameter("containerId", containerId).setParameter("shipmentId", shipmentId)
+                .setMaxResults(1).getResultList().isEmpty();
     }
     public <T> T save(T entity) { return entityManager.merge(entity); }
     public void persist(Object entity) { entityManager.persist(entity); }

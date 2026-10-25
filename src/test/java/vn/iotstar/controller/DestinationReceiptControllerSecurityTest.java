@@ -46,4 +46,15 @@ class DestinationReceiptControllerSecurityTest {
                 .andExpect(redirectedUrl("/hub/inbound"));
         verify(destinationReceiptService).receiveItem(any());
     }
+    @Test @WithMockUser(roles = "HUB_STAFF") void unpackingBindsActualScansAndEmptyReceiptRequiresExplicitConfirmation() throws Exception {
+        mockMvc.perform(post("/hub/inbound/reconcile").with(csrf()).param("handoverId","20").param("containerId","30").param("receivedShipmentIds","40,41"))
+                .andExpect(redirectedUrl("/hub/inbound"));
+        verify(destinationReceiptService).reconcileContainer(new vn.iotstar.dto.hub.DestinationReconciliationCommand(20L,30L,java.util.List.of(40L,41L)));
+        mockMvc.perform(post("/hub/inbound/reconcile-empty").with(csrf()).param("handoverId","20").param("containerId","30"))
+                .andExpect(redirectedUrl("/hub/inbound"));
+        verify(destinationReceiptService,never()).reconcileContainer(new vn.iotstar.dto.hub.DestinationReconciliationCommand(20L,30L,java.util.List.of()));
+        mockMvc.perform(post("/hub/inbound/reconcile-empty").with(csrf()).param("handoverId","20").param("containerId","30").param("confirmAllMissing","true"))
+                .andExpect(redirectedUrl("/hub/inbound"));
+        verify(destinationReceiptService).reconcileContainer(new vn.iotstar.dto.hub.DestinationReconciliationCommand(20L,30L,java.util.List.of()));
+    }
 }

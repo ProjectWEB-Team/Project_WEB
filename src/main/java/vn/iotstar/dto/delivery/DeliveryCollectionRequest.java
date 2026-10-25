@@ -15,6 +15,8 @@ public class DeliveryCollectionRequest implements Serializable {
     private BigDecimal shippingFeeCollected;
 
     private String paymentMethod = "CASH";
+    private String codPaymentMethod;
+    private String shippingFeePaymentMethod;
 
     public DeliveryCollectionRequest() {
     }
@@ -34,5 +36,9 @@ public class DeliveryCollectionRequest implements Serializable {
     public void setShippingFeeCollected(BigDecimal shippingFeeCollected) { this.shippingFeeCollected = shippingFeeCollected; }
     public String getPaymentMethod() { return paymentMethod; }
     public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
+    public String getCodPaymentMethod() { return codPaymentMethod==null ? paymentMethod : codPaymentMethod; }
+    public void setCodPaymentMethod(String method) { codPaymentMethod=method; }
+    public String getShippingFeePaymentMethod() { return shippingFeePaymentMethod==null ? paymentMethod : shippingFeePaymentMethod; }
+    public void setShippingFeePaymentMethod(String method) { shippingFeePaymentMethod=method; }
 }
 

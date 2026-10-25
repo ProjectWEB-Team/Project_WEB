@@ -1,173 +1,50 @@
 package vn.iotstar.service;
-
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.junit.jupiter.api.*;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import vn.iotstar.config.LogisticsProperties;
-import vn.iotstar.entity.Shipment;
-import vn.iotstar.entity.ShipmentEvent;
-import vn.iotstar.entity.ShipmentStatus;
-import vn.iotstar.entity.User;
-import vn.iotstar.entity.UserRole;
-import vn.iotstar.repository.ShipmentEventRepository;
-import vn.iotstar.repository.ShipmentRepository;
-import vn.iotstar.repository.UserRepository;
+import org.springframework.test.util.ReflectionTestUtils;
+import vn.iotstar.entity.*;
+import vn.iotstar.repository.ManagerOperationsRepository;
 import vn.iotstar.service.impl.ShipmentReturnServiceImpl;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
+import java.time.*;
+import java.util.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
 class ShipmentReturnServiceImplTest {
-
-    @Mock
-    private ShipmentRepository shipmentRepository;
-    @Mock
-    private ShipmentEventRepository shipmentEventRepository;
-    @Mock
-    private UserRepository userRepository;
-
-    private LogisticsProperties logisticsProperties;
-    private ShipmentReturnServiceImpl returnService;
-
-    private User manager;
-    private User sender;
-    private Shipment shipment;
-
-    @BeforeEach
-    void setUp() {
-        logisticsProperties = new LogisticsProperties();
-        returnService = new ShipmentReturnServiceImpl(
-                shipmentRepository, shipmentEventRepository, userRepository, logisticsProperties);
-
-        manager = new User(100L, "manager_test", "hash", UserRole.ROLE_MANAGER, "ACTIVE");
-        sender = new User(1L, "sender_test", "hash", UserRole.ROLE_USER, "ACTIVE");
-
-        shipment = Shipment.create("TRK777888", sender, "Sender", "0901", "Address 1", "Receiver", "0902", "Address 2");
-        shipment.setId(1L);
-        shipment.transitionTo(ShipmentStatus.RETURN_TO_SENDER);
-
-        SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken(manager, null, manager.getAuthorities()));
+    LastMileTestFixture f;ShipmentReturnServiceImpl service;ManagerOperationsRepository managers;
+    final LocalDateTime now=LocalDateTime.of(2026,10,25,12,0);
+    final User manager=new User(20L,"manager","hash",UserRole.ROLE_MANAGER,"ACTIVE");
+    @BeforeEach void setup(){
+        f=new LastMileTestFixture();f.returnAtOrigin();managers=mock(ManagerOperationsRepository.class);
+        when(managers.findActiveProfileByUserId(20L)).thenReturn(Optional.of(EmployeeProfile.active(manager,f.hub,"MANAGER")));
+        when(managers.findHubSubtreeIds(100L)).thenReturn(List.of(100L));
+        service=new ShipmentReturnServiceImpl(f.shipments,f.events,f.users,f.config,f.assignments,managers,f.access,Clock.fixed(now.atZone(ZoneId.systemDefault()).toInstant(),ZoneOffset.UTC));
+        LastMileTestFixture.login(manager);when(f.shipments.findByCurrentStatus(ShipmentStatus.RETURN_TO_SENDER)).thenReturn(List.of(f.shipment));
     }
-
-    @AfterEach
-    void tearDown() {
-        SecurityContextHolder.clearContext();
+    @AfterEach void clear(){SecurityContextHolder.clearContext();}
+    void arrived(LocalDateTime t){ReflectionTestUtils.setField(f.shipment,"returnArrivedAtOriginAt",t);}
+    @Test void userCannotReceiveOrDispose(){LastMileTestFixture.login(f.sender);assertThatThrownBy(()->service.markReturnArrivedAtOriginHub(10L)).isInstanceOf(AccessDeniedException.class);assertThatThrownBy(()->service.disposeOverdueReturn(10L,"x")).isInstanceOf(AccessDeniedException.class);}
+    @Test void realArrivalEventIsIdempotent(){arrived(now);service.markReturnArrivedAtOriginHub(10L);service.markReturnArrivedAtOriginHub(10L);assertThat(f.history).hasSize(1);assertThat(f.shipment.getReturnArrivedAtOriginAt()).isEqualTo(now);}
+    @Test void wrongStatusCannotClaimOriginArrival(){f.shipment.transitionTo(ShipmentStatus.OUT_FOR_DELIVERY);assertThatThrownBy(()->service.markReturnArrivedAtOriginHub(10L)).isInstanceOf(IllegalStateException.class);}
+    @Test void oldCreationWithoutReceiptNeverOverdue(){arrived(null);ReflectionTestUtils.setField(f.shipment,"createdAt",now.minusYears(1));assertThat(service.findOverdueReturnedShipments(now)).isEmpty();}
+    @Test void actualOldArrivalIsOverdue(){arrived(now.minusDays(10));assertThat(service.findOverdueReturnedShipments(now)).containsExactly(f.shipment);}
+    @Test void recentReceiptIsNotOverdue(){arrived(now.minusHours(2));assertThat(service.findOverdueReturnedShipments(now)).isEmpty();assertThatThrownBy(()->service.disposeOverdueReturn(10L,"Too early")).isInstanceOf(IllegalStateException.class);}
+    @Test void configuredDemoGraceWorks(){arrived(now.minusMinutes(5));f.config.getTimeout().setDisposedGraceMinutes(2);assertThat(service.findOverdueReturnedShipments(now)).containsExactly(f.shipment);}
+    @Test void overdueDisposalIsScopedAndIdempotent(){arrived(now.minusDays(10));service.disposeOverdueReturn(10L,"Uncollected");service.disposeOverdueReturn(10L,"Uncollected");assertThat(f.shipment.getCurrentStatus()).isEqualTo(ShipmentStatus.CLOSED_EXCEPTION);assertThat(f.shipment.getClosureReason()).isEqualTo("DISPOSED");assertThat(f.history).hasSize(1);}
+    @Test void longestAcceptedDisposalReasonFitsAuditColumnWithoutTruncation(){
+        arrived(now.minusDays(10));String reason="R".repeat(255);
+        service.disposeOverdueReturn(10L,reason);
+        assertThat(f.history).hasSize(1);
+        assertThat(f.history.getFirst().getDescription()).hasSize(255).isEqualTo(reason);
+        assertThat(f.history.getFirst().getEventType()).isEqualTo("RETURN_DISPOSED");
     }
-
-    @Test
-    @DisplayName("Role check: a regular user cannot receive a return at the hub")
-    void regularUserCannotReceiveReturn() {
-        User regularUser = new User(2L, "user_reg", "hash", UserRole.ROLE_USER, "ACTIVE");
-        SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken(regularUser, null, regularUser.getAuthorities()));
-
-        assertThatThrownBy(() -> returnService.markReturnArrivedAtOriginHub(1L))
-                .isInstanceOf(AccessDeniedException.class);
-    }
-
-    @Test
-    @DisplayName("Origin hub receipt: records the arrival event that starts the grace period")
-    void markReturnArrivedAtOriginHubRecordsEvent() {
-        when(shipmentRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(shipment));
-        when(userRepository.findById(100L)).thenReturn(Optional.of(manager));
-
-        returnService.markReturnArrivedAtOriginHub(1L);
-
-        verify(shipmentEventRepository).save(any(ShipmentEvent.class));
-    }
-
-    @Test
-    @DisplayName("Origin hub receipt: rejects a shipment that is not on its way back")
-    void markReturnArrivedRejectsWrongStatus() {
-        shipment.transitionTo(ShipmentStatus.OUT_FOR_DELIVERY);
-        when(shipmentRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(shipment));
-
-        assertThatThrownBy(() -> returnService.markReturnArrivedAtOriginHub(1L))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("must be RETURN_TO_SENDER");
-    }
-
-    @Test
-    @DisplayName("Grace period: a parcel that arrived long ago is overdue")
-    void overdueReturnedShipmentIsDetected() {
-        ShipmentEvent arrival = mock(ShipmentEvent.class);
-        when(arrival.getCreatedAt()).thenReturn(LocalDateTime.now().minusDays(10));
-        when(shipmentEventRepository.findFirstByShipmentIdAndEventTypeOrderByCreatedAtDesc(
-                1L, ShipmentReturnServiceImpl.EVENT_RETURNED_AT_ORIGIN_HUB)).thenReturn(Optional.of(arrival));
-        when(shipmentRepository.findByCurrentStatus(ShipmentStatus.RETURN_TO_SENDER))
-                .thenReturn(List.of(shipment));
-
-        List<Shipment> overdue = returnService.findOverdueReturnedShipments(LocalDateTime.now());
-
-        assertThat(overdue).containsExactly(shipment);
-    }
-
-    @Test
-    @DisplayName("Grace period: a recently arrived parcel is not overdue")
-    void recentReturnIsNotOverdue() {
-        ShipmentEvent arrival = mock(ShipmentEvent.class);
-        when(arrival.getCreatedAt()).thenReturn(LocalDateTime.now().minusHours(2));
-        when(shipmentEventRepository.findFirstByShipmentIdAndEventTypeOrderByCreatedAtDesc(
-                1L, ShipmentReturnServiceImpl.EVENT_RETURNED_AT_ORIGIN_HUB)).thenReturn(Optional.of(arrival));
-        when(shipmentRepository.findByCurrentStatus(ShipmentStatus.RETURN_TO_SENDER))
-                .thenReturn(List.of(shipment));
-
-        assertThat(returnService.findOverdueReturnedShipments(LocalDateTime.now())).isEmpty();
-    }
-
-    @Test
-    @DisplayName("Grace period: the demo profile shortens the grace period to minutes")
-    void demoProfileShortensGracePeriod() {
-        logisticsProperties.getTimeout().setDisposedGraceDays(7);
-        logisticsProperties.getTimeout().setDisposedGraceMinutes(2);
-
-        ShipmentEvent arrival = mock(ShipmentEvent.class);
-        when(arrival.getCreatedAt()).thenReturn(LocalDateTime.now().minusMinutes(5));
-        when(shipmentEventRepository.findFirstByShipmentIdAndEventTypeOrderByCreatedAtDesc(
-                1L, ShipmentReturnServiceImpl.EVENT_RETURNED_AT_ORIGIN_HUB)).thenReturn(Optional.of(arrival));
-        when(shipmentRepository.findByCurrentStatus(ShipmentStatus.RETURN_TO_SENDER))
-                .thenReturn(List.of(shipment));
-
-        assertThat(returnService.findOverdueReturnedShipments(LocalDateTime.now())).containsExactly(shipment);
-    }
-
-    @Test
-    @DisplayName("Disposal: a manager closes an overdue return as a disposed exception")
-    void disposeOverdueReturnClosesShipment() {
-        when(shipmentRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(shipment));
-        when(userRepository.findById(100L)).thenReturn(Optional.of(manager));
-        when(shipmentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-
-        Shipment result = returnService.disposeOverdueReturn(1L, "Sender never collected the parcel");
-
-        assertThat(result.getCurrentStatus()).isEqualTo(ShipmentStatus.CLOSED_EXCEPTION);
-        assertThat(result.getClosureReason()).isEqualTo("DISPOSED");
-        verify(shipmentEventRepository).save(any(ShipmentEvent.class));
-    }
-
-    @Test
-    @DisplayName("Disposal: a regular user cannot dispose a returned parcel")
-    void regularUserCannotDispose() {
-        User regularUser = new User(2L, "user_reg", "hash", UserRole.ROLE_USER, "ACTIVE");
-        SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken(regularUser, null, regularUser.getAuthorities()));
-
-        assertThatThrownBy(() -> returnService.disposeOverdueReturn(1L, "Not allowed"))
-                .isInstanceOf(AccessDeniedException.class);
+    @Test void crossHubHeldAndOutboundCannotDispose(){arrived(now.minusDays(10));when(managers.findHubSubtreeIds(100L)).thenReturn(List.of(999L));assertThatThrownBy(()->service.disposeOverdueReturn(10L,"x")).isInstanceOf(AccessDeniedException.class);when(managers.findHubSubtreeIds(100L)).thenReturn(List.of(100L));f.shipment.setOnHold(true);assertThatThrownBy(()->service.disposeOverdueReturn(10L,"x")).isInstanceOf(IllegalStateException.class);f.shipment.setOnHold(false);f.shipment.setCurrentHubId(null);assertThatThrownBy(()->service.disposeOverdueReturn(10L,"x")).isInstanceOf(IllegalStateException.class);}
+    @Test void assignedOutboundTaskPreventsDisposal(){arrived(now.minusDays(10));f.tasks.add(ShipmentAssignment.create(f.shipment,f.shipper,"RETURN_DELIVERY"));assertThat(service.findOverdueReturnedShipments(now)).isEmpty();}
+    @Test void sealedContainerCustodyPreventsDisposalEvenIfLocationIsOrigin(){arrived(now.minusDays(10));when(f.shipments.hasActiveContainerCustody(10L)).thenReturn(true);assertThat(service.findOverdueReturnedShipments(now)).isEmpty();assertThatThrownBy(()->service.disposeOverdueReturn(10L,"x")).isInstanceOf(IllegalStateException.class);}
+    @Test void schedulerReportsWithoutDisposalOrAuthentication(){
+        ShipmentReturnServiceImpl reporting=mock(ShipmentReturnServiceImpl.class);when(reporting.findOverdueReturnedShipments(now)).thenReturn(List.of(f.shipment));SecurityContextHolder.clearContext();
+        new vn.iotstar.service.impl.ReturnGracePeriodScheduler(reporting,Clock.fixed(now.atZone(ZoneId.systemDefault()).toInstant(),ZoneOffset.UTC)).reportOverdueReturns();
+        verify(reporting).findOverdueReturnedShipments(now);verify(reporting,never()).disposeOverdueReturn(anyLong(),anyString());
     }
 }

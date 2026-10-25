@@ -33,4 +33,14 @@ class ManagerOperationsControllerSecurityTest {
         verify(managerOperationsService).getDashboard();
     }
     @Test @WithMockUser(roles = "HUB_STAFF") void nonManagerCannotOpenDashboard() throws Exception { mockMvc.perform(get("/manager/operations")).andExpect(status().isForbidden()); verifyNoInteractions(managerOperationsService); }
+    @Test @WithMockUser(roles = "MANAGER") void workItemDetailsAreLoadedThroughScopedService() throws Exception {
+        when(managerOperationsService.getWorkItem("MISSING", 4L)).thenReturn(new vn.iotstar.dto.operations.OperationalWorkItemResponse("MISSING", 4L, 101L, 11L, "Investigation required"));
+        mockMvc.perform(get("/manager/operations/work/MISSING/4")).andExpect(status().isOk())
+                .andExpect(view().name("manager/operation-work-item")).andExpect(model().attributeExists("item"));
+        verify(managerOperationsService).getWorkItem("MISSING", 4L);
+    }
+    @Test @WithMockUser(roles = "USER") void nonManagerCannotOpenWorkItemDetails() throws Exception {
+        mockMvc.perform(get("/manager/operations/work/MISSING/4")).andExpect(status().isForbidden());
+        verifyNoInteractions(managerOperationsService);
+    }
 }

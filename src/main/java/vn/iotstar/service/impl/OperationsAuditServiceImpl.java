@@ -56,10 +56,8 @@ public class OperationsAuditServiceImpl implements OperationsAuditService {
 
     private boolean mayReadShipment(AuthenticatedActor actor, Hub currentHub, List<AuditCustodyReference> references) {
         if (actor.hasRole(UserRole.ROLE_ADMIN)) return true;
+        if (actor.hasRole(UserRole.ROLE_LINEHAUL_DRIVER)) return !references.isEmpty();
         if (currentHub == null) return false;
-        if (actor.hasRole(UserRole.ROLE_LINEHAUL_DRIVER)) {
-            return !references.isEmpty();
-        }
         EmployeeProfile profile = operationsAuditRepository.findActiveProfileByUserId(actor.userId()).orElse(null);
         if (profile == null) return false;
         if (actor.hasRole(UserRole.ROLE_MANAGER)) {
@@ -75,7 +73,7 @@ public class OperationsAuditServiceImpl implements OperationsAuditService {
 
     private OperationsAuditTimelineEntry entry(ShipmentEvent event, AuditCustodyReference reference) {
         return new OperationsAuditTimelineEntry(event.getEventType(), event.getCreatedAt(),
-                event.getHub() == null ? null : event.getHub().getCode(), event.getActor().getRole().name(),
+                event.getHub() == null ? null : event.getHub().getCode(), event.getActor() == null ? "SYSTEM" : event.getActor().getRole().name(),
                 reference.containerId(), reference.handoverId(), reference.tripId());
     }
 }

@@ -53,6 +53,7 @@ class ShipmentSqlServerIntegrationTest {
     @Autowired private JdbcTemplate jdbcTemplate;
     @Autowired private DataSource dataSource;
     @Autowired private PlatformTransactionManager transactions;
+    @Autowired private vn.iotstar.repository.ShipmentEventRepository shipmentEvents;
     private final String suffix = UUID.randomUUID().toString().replace("-", "");
     private final String username = "shipment-it-" + suffix;
     private final String email = username + "@example.test";
@@ -62,15 +63,20 @@ class ShipmentSqlServerIntegrationTest {
     private User actor;
     private String senderPhone;
     private String receiverPhone;
+    private final String deliveryDistrict = "SHIP_IT_" + suffix;
+    private final String deliveryHubCode = "SIT_" + suffix.substring(0, 12);
 
     @BeforeEach
-    void createIsolatedSenderAndPricingPolicy() {
+    void createIsolatedSenderAndPricingPolicy() throws Exception {
+        applyCurrentForwardMigrations();
         senderPhone = unusedPhone();
         jdbcTemplate.update("INSERT INTO dbo.users (username, password, full_name, phone, email, role, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
                 username, "test-hash", "Shipment Test User", senderPhone, email, "ROLE_USER", "ACTIVE");
         testUserId = jdbcTemplate.queryForObject("SELECT id FROM dbo.users WHERE username = ? AND email = ?",
                 Long.class, username, email);
         receiverPhone = unusedPhone();
+        jdbcTemplate.update("INSERT INTO dbo.hubs (code, name, level, type, region, province, district, status) "
+                + "VALUES (?, ?, 1, 'DELIVERY_HUB', 'SOUTH', 'HCM', ?, 'ACTIVE')", deliveryHubCode, "Intake verification hub", deliveryDistrict);
         // Direct service tests use a unique service code so no customer's ACTIVE price row is changed.
         jdbcTemplate.update("INSERT INTO dbo.pricing_policies (service_code, from_region, to_region, base_weight_g, "
                         + "base_price, extra_weight_step_g, extra_weight_price, insurance_rate_percent, cod_fee_percent, status) "
@@ -79,11 +85,10 @@ class ShipmentSqlServerIntegrationTest {
         authenticate();
     }
 
-    @BeforeEach
     void applyCurrentForwardMigrations() throws Exception {
         SqlServerMigrationSupport.apply(dataSource,
                 "db/phase-01-shipment-events-event-type.sql",
-                "db/phase-03-hub-routing-schema.sql");
+                "db/phase-03-hub-routing-schema.sql", "db/phase-05-intake-service-code.sql");
     }
 
     @AfterEach
@@ -102,6 +107,7 @@ class ShipmentSqlServerIntegrationTest {
             }
             jdbcTemplate.update("DELETE FROM dbo.pricing_policies WHERE service_code = ? AND from_region = 'SOUTH' AND to_region = 'SOUTH'",
                     serviceCode);
+            jdbcTemplate.update("DELETE FROM dbo.hubs WHERE code = ? AND district = ?", deliveryHubCode, deliveryDistrict);
         });
     }
 
@@ -241,6 +247,20 @@ class ShipmentSqlServerIntegrationTest {
         }
     }
 
+    @Test
+    void sameSecondPersistedEventsRetainTheirInsertionOrder() {
+        testShipmentId = shipmentService.create(request());
+        shipmentService.confirmPayment(testShipmentId);
+        // Deliberately exercise SQL Server DATETIME2(0) ties without manufacturing journey state.
+        jdbcTemplate.update("UPDATE dbo.shipment_events SET created_at = ? WHERE shipment_id = ?",
+                LocalDateTime.of(2026, 1, 1, 12, 0, 0), testShipmentId);
+        List<Long> expected = jdbcTemplate.queryForList("SELECT id FROM dbo.shipment_events WHERE shipment_id = ? ORDER BY id", Long.class, testShipmentId);
+        List<Long> actual = new TransactionTemplate(transactions).execute(status -> shipmentEvents
+                .findByShipmentIdOrderByCreatedAtAsc(testShipmentId).stream().map(vn.iotstar.entity.ShipmentEvent::getId).toList());
+        assertThat(expected).hasSizeGreaterThanOrEqualTo(2);
+        assertThat(actual).containsExactlyElementsOf(expected);
+    }
+
     private PaymentSnapshot payment() {
         // queryForObject also fails if creation accidentally inserted more than one shipping-fee row.
         return jdbcTemplate.queryForObject("SELECT payer_type, method, status, amount, transaction_ref, paid_at FROM dbo.payments "
@@ -290,7 +310,7 @@ class ShipmentSqlServerIntegrationTest {
         request.setReceiverPhone(receiverPhone);
         request.setReceiverAddress("2 Verification Street");
         request.setReceiverProvince("HCM");
-        request.setReceiverDistrict("Q1");
+        request.setReceiverDistrict(deliveryDistrict);
         request.setServiceCode(serviceCode);
         request.setFromRegion("SOUTH");
         request.setToRegion("SOUTH");

@@ -163,7 +163,7 @@ public class FirstMileServiceImpl implements FirstMileService {
         LocalDateTime now = ServerTime.now(clock);
         // Sender cash is collected exactly once, for the server-computed amount; a retry finds it PAID already.
         boolean cashCollected = cashToCollect(shipment).map(p -> {
-            p.markPaid("PICKUP-CASH-" + assignmentId);
+            p.collect("CASH", shipper.getUser().getId(), "PICKUP-CASH-" + assignmentId);
             return true;
         }).orElse(false);
         if (shipper.getHub() != null) {

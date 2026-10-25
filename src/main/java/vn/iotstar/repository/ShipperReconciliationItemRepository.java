@@ -11,6 +11,7 @@ import java.util.Optional;
 public interface ShipperReconciliationItemRepository extends JpaRepository<ShipperReconciliationItem, Long> {
 
     List<ShipperReconciliationItem> findByReconciliationId(Long reconciliationId);
+    List<ShipperReconciliationItem> findTop100ByReconciliationIdOrderByIdAsc(Long reconciliationId);
 
     Optional<ShipperReconciliationItem> findBySourceTypeAndSourceId(String sourceType, Long sourceId);
 }

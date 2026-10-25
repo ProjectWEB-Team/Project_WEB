@@ -95,7 +95,7 @@ class Phase03RoutingSqlServerIntegrationTest {
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM dbo.shipment_events WHERE shipment_id = ? AND event_type = 'SORTING_COMPLETED'", Integer.class, shipmentId)).isEqualTo(1);
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM dbo.shipment_routes WHERE shipment_id = ? AND current_hub_id = ?", Integer.class, shipmentId, hubAId)).isEqualTo(1);
         assertThatThrownBy(() -> jdbcTemplate.update("INSERT INTO dbo.shipment_routes (shipment_id, hub_id, current_hub_id, sequence_number, status, route_decision_key, created_at) VALUES (?, ?, ?, ?, ?, ?, SYSDATETIME())",
-                shipmentId, hubBId, hubAId, 1, "PENDING", "shipment:" + shipmentId + ":hub:" + hubAId))
+                shipmentId, hubBId, hubAId, 1, "PENDING", "shipment:" + shipmentId + ":hub:" + hubAId + ":FORWARD"))
                 .isInstanceOf(DataIntegrityViolationException.class);
         assertThat(foreignKeyExists("FK_shipments_current_hub")).isTrue();
         assertThat(foreignKeyExists("FK_shipment_events_hub")).isTrue();

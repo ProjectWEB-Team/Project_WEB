@@ -47,10 +47,12 @@ public class ShipmentCancellation {
             notify(assignment.getAssignee().getUsername(), shipment, now);
         });
         // Only a sender-paid fee creates an obligation; unpaid cash or receiver-paid fees were never collected.
-        paymentRepository.findFirstByShipmentIdAndPaymentType(shipment.getId(), "SHIPPING_FEE")
+        paymentRepository.findByShipmentIdForUpdate(shipment.getId()).stream()
+                .filter(p -> java.util.Set.of("SHIPPING_FEE", "WEIGHT_SURCHARGE").contains(p.getPaymentType()))
                 .filter(p -> "PAID".equals(p.getStatus()) && "SENDER".equals(p.getPayerType()))
+                .filter(p -> p.getAmount() != null && p.getAmount().signum() > 0)
                 .filter(p -> !outboxRepository.existsByPaymentId(p.getId()))
-                .ifPresent(p -> outboxRepository.save(RefundSettlementOutbox.pending(shipment, p, reason, now)));
+                .forEach(p -> outboxRepository.save(RefundSettlementOutbox.pending(shipment, p, reason, now)));
         eventRepository.save(ShipmentEvent.of(shipment, actor, "SHIPMENT_CANCELLED", "Cancelled: " + reason));
         notify(shipment.getSender().getUsername(), shipment, now);
     }

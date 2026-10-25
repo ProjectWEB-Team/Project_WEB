@@ -106,6 +106,14 @@ public class LastMileDeliveryController {
         return "shipper/return-tasks";
     }
 
+    @PostMapping("/shipper/return-tasks/scan")
+    public String scanReturn(@RequestParam Long shipmentId) {
+        lastMileDeliveryService.scanReturnDelivery(shipmentId);return "redirect:/shipper/return-tasks";
+    }
+    @PostMapping("/hub/delivery-returns/receive")
+    public String receiveFailed(@RequestParam Long shipmentId,@RequestParam String trackingNumber) {
+        lastMileDeliveryService.receiveFailedDelivery(shipmentId,trackingNumber);return "redirect:/hub/inbound";
+    }
     @PostMapping("/shipper/return-tasks/confirm")
     public String confirmReturnDelivery(@RequestParam("shipmentId") Long shipmentId,
                                         RedirectAttributes redirectAttributes) {
@@ -118,13 +126,13 @@ public class LastMileDeliveryController {
         return "redirect:/shipper/return-tasks";
     }
 
-    @PostMapping("/user/return-collection")
+    @PostMapping("/hub/return-collection")
     public String processReturnHandover(@Valid @ModelAttribute("returnRequest") ReturnHandoverRequest request,
                                         BindingResult bindingResult,
                                         RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             redirectAttributes.addFlashAttribute("errorMessage", "Validation error on return pickup");
-            return "redirect:/user/return-collection";
+            return "redirect:/hub/return-collection";
         }
         try {
             lastMileDeliveryService.processReturnHandover(request);
@@ -132,10 +140,10 @@ public class LastMileDeliveryController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
-        return "redirect:/user/return-collection";
+        return "redirect:/hub/return-collection";
     }
 
-    @GetMapping("/user/return-collection")
+    @GetMapping("/hub/return-collection")
     public String returnCollectionPage(Model model) {
         return "user/return-collection";
     }

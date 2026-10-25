@@ -38,4 +38,11 @@ class LinehaulTripRouteSecurityTest {
         mockMvc.perform(post("/api/driver/trips/40/delay").contentType("application/json").content("{\"note\":\"delay\"}"))
                 .andExpect(status().isUnauthorized());
     }
+    @Test @WithMockUser(roles = "LINEHAUL_DRIVER") void acceptsExplicitVehicleWithCsrf() throws Exception {
+        mockMvc.perform(post("/driver/handovers/accept").with(csrf()).param("handoverId", "30").param("vehicleId", "50"))
+                .andExpect(redirectedUrl("/driver"));
+        verify(linehaulTripService).acceptHandover(30L, 50L);
+        mockMvc.perform(post("/driver/handovers/accept").param("handoverId", "30").param("vehicleId", "50"))
+                .andExpect(status().isForbidden());
+    }
 }

@@ -20,7 +20,7 @@
             <c:forEach items="${timeline.entries}" var="entry">
                 <tr>
                     <td><c:out value="${entry.eventType}"/></td>
-                    <td><fmt:formatDate value="${entry.occurredAt}" pattern="yyyy-MM-dd HH:mm:ss"/></td>
+                    <td><c:out value="${entry.occurredAt}"/></td>
                     <td><c:out value="${entry.hubCode}"/></td>
                     <td><c:out value="${entry.actorRole}"/></td>
                     <td>Container <c:out value="${entry.containerId}"/> / Handover <c:out value="${entry.handoverId}"/> / Trip <c:out value="${entry.tripId}"/></td>

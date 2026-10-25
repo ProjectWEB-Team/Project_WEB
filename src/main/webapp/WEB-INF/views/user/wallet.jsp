@@ -1,7 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ taglib prefix="c" uri="https://jakarta.ee/tags/jstl/core" %>
-<%@ taglib prefix="fmt" uri="https://jakarta.ee/tags/jstl/fmt" %>
-<%@ taglib prefix="fn" uri="https://jakarta.ee/tags/jstl/functions" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
 <jsp:include page="../layout/header.jsp" />
 
@@ -139,7 +139,7 @@
                                     <c:forEach var="tx" items="${transactions}">
                                         <tr>
                                             <td class="small text-ute-muted">
-                                                <fmt:formatDate value="${tx.createdAt}" pattern="dd/MM/yyyy HH:mm"/>
+                                                <c:out value="${tx.createdAt}"/>
                                             </td>
                                             <td><code class="small"><c:out value="${tx.transactionType}"/></code></td>
                                             <td class="text-end fw-bold">
@@ -200,7 +200,7 @@
                                                 </c:if>
                                             </td>
                                             <td class="small text-ute-muted">
-                                                <fmt:formatDate value="${request.requestedAt}" pattern="dd/MM/yyyy HH:mm"/>
+                                                <c:out value="${request.requestedAt}"/>
                                             </td>
                                         </tr>
                                     </c:forEach>

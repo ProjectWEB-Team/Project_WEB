@@ -1,242 +1,154 @@
 package vn.iotstar.service;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.util.ReflectionTestUtils;
 import vn.iotstar.dto.finance.ReconciliationSubmissionRequest;
-import vn.iotstar.entity.CodTransaction;
-import vn.iotstar.entity.Incident;
-import vn.iotstar.entity.Payment;
-import vn.iotstar.entity.Shipment;
-import vn.iotstar.entity.ShipmentEvent;
-import vn.iotstar.entity.ShipperReconciliation;
-import vn.iotstar.entity.ShipperReconciliationItem;
-import vn.iotstar.entity.User;
-import vn.iotstar.entity.UserRole;
-import vn.iotstar.entity.Wallet;
-import vn.iotstar.entity.WalletTransaction;
+import vn.iotstar.entity.*;
+import vn.iotstar.repository.*;
 import vn.iotstar.realtime.NotificationEventPublisher;
-import vn.iotstar.repository.CodTransactionRepository;
-import vn.iotstar.repository.FinanceReconciliationRepository;
-import vn.iotstar.repository.IncidentRepository;
-import vn.iotstar.repository.PaymentRepository;
-import vn.iotstar.repository.ShipmentEventRepository;
-import vn.iotstar.repository.ShipmentRepository;
-import vn.iotstar.repository.ShipperReconciliationItemRepository;
-import vn.iotstar.repository.UserRepository;
-import vn.iotstar.repository.WalletRepository;
-import vn.iotstar.repository.WalletTransactionRepository;
-import vn.iotstar.service.impl.FinanceReconciliationServiceImpl;
-
+import vn.iotstar.service.impl.*;
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
+import java.time.*;
+import java.util.*;
 import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.*;
 
-@ExtendWith(MockitoExtension.class)
 class FinanceReconciliationServiceImplTest {
-
-    @Mock
-    private FinanceReconciliationRepository reconciliationRepository;
-    @Mock
-    private ShipperReconciliationItemRepository itemRepository;
-    @Mock
-    private CodTransactionRepository codTransactionRepository;
-    @Mock
-    private PaymentRepository paymentRepository;
-    @Mock
-    private WalletRepository walletRepository;
-    @Mock
-    private WalletTransactionRepository walletTransactionRepository;
-    @Mock
-    private IncidentRepository incidentRepository;
-    @Mock
-    private ShipmentRepository shipmentRepository;
-    @Mock
-    private UserRepository userRepository;
-    @Mock
-    private ShipmentEventRepository shipmentEventRepository;
-    @Mock
-    private NotificationEventPublisher notificationEventPublisher;
-
-    private FinanceReconciliationServiceImpl reconciliationService;
-
-    private User manager;
-    private User shipper;
-    private User sender;
-    private Shipment shipment;
-
-    @BeforeEach
-    void setUp() {
-        reconciliationService = new FinanceReconciliationServiceImpl(
-                reconciliationRepository,
-                itemRepository,
-                codTransactionRepository,
-                paymentRepository,
-                walletRepository,
-                walletTransactionRepository,
-                incidentRepository,
-                shipmentRepository,
-                userRepository,
-                shipmentEventRepository,
-                notificationEventPublisher
-        );
-
-        manager = new User(100L, "manager_test", "hash", UserRole.ROLE_MANAGER, "ACTIVE");
-        shipper = new User(10L, "shipper_test", "hash", UserRole.ROLE_SHIPPER, "ACTIVE");
-        sender = new User(1L, "sender_test", "hash", UserRole.ROLE_USER, "ACTIVE");
-
-        shipment = Shipment.create("TRK111222", sender, "Sender", "0901", "Address 1", "Receiver", "0902", "Address 2");
-        shipment.setId(1L);
-
-        UsernamePasswordAuthenticationToken auth =
-                new UsernamePasswordAuthenticationToken(manager, null, manager.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(auth);
+    FinanceReconciliationRepository recs=mock(FinanceReconciliationRepository.class);
+    ShipperReconciliationItemRepository items=mock(ShipperReconciliationItemRepository.class);
+    CodTransactionRepository cods=mock(CodTransactionRepository.class);
+    PaymentRepository payments=mock(PaymentRepository.class);
+    WalletRepository wallets=mock(WalletRepository.class);
+    WalletTransactionRepository transactions=mock(WalletTransactionRepository.class);
+    IncidentRepository incidents=mock(IncidentRepository.class);
+    ShipmentRepository shipments=mock(ShipmentRepository.class);
+    UserRepository users=mock(UserRepository.class);
+    ShipmentEventRepository events=mock(ShipmentEventRepository.class);
+    NotificationEventPublisher notifications=mock(NotificationEventPublisher.class);
+    ManagerOperationsRepository managers=mock(ManagerOperationsRepository.class);
+    EmployeeProfileRepository employees=mock(EmployeeProfileRepository.class);
+    Clock clock=Clock.systemDefaultZone();
+    FinanceReconciliationServiceImpl service=new FinanceReconciliationServiceImpl(recs,items,cods,payments,wallets,transactions,incidents,shipments,users,events,notifications,new FinanceAccess(managers,employees),clock);
+    User admin=new User(100L,"admin","hash",UserRole.ROLE_ADMIN,"ACTIVE"), shipper=new User(10L,"shipper","hash",UserRole.ROLE_SHIPPER,"ACTIVE"), sender=new User(1L,"sender","hash",UserRole.ROLE_USER,"ACTIVE");
+    Shipment shipment; Hub hub; CodTransaction cod;
+    List<ShipperReconciliationItem> saved=new ArrayList<>();
+    @BeforeEach void setup() {
+        login(admin);hub=Hub.active("H","Hub",1,"HUB","R","P");ReflectionTestUtils.setField(hub,"id",5L);
+        when(employees.findFirstByUserId(10L)).thenReturn(Optional.of(EmployeeProfile.active(shipper,hub,"SHIPPER")));
+        when(users.getReferenceById(100L)).thenReturn(admin);
+        shipment=Shipment.create("TRACK",sender,"S","01","A","R","02","B");shipment.setId(1L);shipment.setCodAmount(new BigDecimal("500000"));shipment.transitionTo(ShipmentStatus.DELIVERED);
+        when(shipments.findByIdForUpdate(1L)).thenReturn(Optional.of(shipment));
+        cod=CodTransaction.createCollected(shipment,shipper,new BigDecimal("500000"),"CASH");ReflectionTestUtils.setField(cod,"id",50L);
+        when(cods.findByIdForUpdate(50L)).thenReturn(Optional.of(cod));when(cods.findById(50L)).thenReturn(Optional.of(cod));
+        when(recs.save(any())).thenAnswer(a->{ShipperReconciliation r=a.getArgument(0);ReflectionTestUtils.setField(r,"id",7L);return r;});
+        when(items.save(any())).thenAnswer(a->{ShipperReconciliationItem i=a.getArgument(0);saved.add(i);return i;});
     }
-
-    @AfterEach
-    void tearDown() {
-        SecurityContextHolder.clearContext();
+    @AfterEach void clear(){SecurityContextHolder.clearContext();}
+    void login(User user){SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(user,null,user.getAuthorities()));}
+    ReconciliationSubmissionRequest.ItemRequest row(String type,long id,BigDecimal expected,BigDecimal actual){return new ReconciliationSubmissionRequest.ItemRequest(1L,type,id,expected,actual,"note");}
+    ReconciliationSubmissionRequest request(ReconciliationSubmissionRequest.ItemRequest... rows){return new ReconciliationSubmissionRequest(10L,LocalDate.now(clock),List.of(rows));}
+    ReconciliationSubmissionRequest.ItemRequest codRow(){return row(FinanceReconciliationServiceImpl.COD,50L,null,new BigDecimal("500000"));}
+    Payment payment(String payer,String type,long id,BigDecimal amount) {
+        var p=Payment.create(shipment,payer,type,amount,"CASH","PENDING");p.setId(id);p.collect("CASH",10L,"collection");when(payments.findByIdForUpdate(id)).thenReturn(Optional.of(p));return p;
     }
-
-    @Test
-    @DisplayName("Role check: Non-manager / non-admin cannot reconcile")
-    void nonManagerIsDenied() {
-        User regularUser = new User(2L, "user_reg", "hash", UserRole.ROLE_USER, "ACTIVE");
-        SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken(regularUser, null, regularUser.getAuthorities()));
-
-        ReconciliationSubmissionRequest request = new ReconciliationSubmissionRequest(10L, LocalDate.now(), List.of());
-        assertThatThrownBy(() -> reconciliationService.reconcile(request))
-                .isInstanceOf(AccessDeniedException.class)
-                .hasMessageContaining("ROLE_MANAGER or ROLE_ADMIN required");
+    @Test void matchedCodRequiresSeparatePayoutAndReplayProvesLedger() {
+        var rec=service.reconcile(request(codRow()));assertThat(rec.getStatus()).isEqualTo("COMPLETED");assertThat(cod.getStatus()).isEqualTo("READY_FOR_PAYOUT");verifyNoInteractions(wallets,transactions);
+        when(items.findBySourceTypeAndSourceId(FinanceReconciliationServiceImpl.COD,50L)).thenReturn(Optional.of(saved.getFirst()));
+        Wallet wallet=Wallet.createForUser(1L);when(wallets.findByUserIdForUpdate(1L)).thenReturn(Optional.of(wallet));
+        service.payoutReadyCod(50L);assertThat(wallet.getBalance()).isEqualByComparingTo("500000");assertThat(cod.getStatus()).isEqualTo("PAID_TO_SENDER");
+        verify(notifications).publishToUserAfterCommit(eq("sender"),any());
+        when(transactions.findFirstByTransactionTypeAndReferenceTypeAndReferenceId("COD_PAYOUT","SHIPMENT",1L)).thenReturn(Optional.of(WalletTransaction.create(1L,"COD_PAYOUT",new BigDecimal("500000"),BigDecimal.ZERO,new BigDecimal("500000"),1L,"SHIPMENT","payout")));
+        service.payoutReadyCod(50L);verify(transactions,times(1)).save(any());assertThat(wallet.getBalance()).isEqualByComparingTo("500000");
     }
-
-    @Test
-    @DisplayName("Matched COD: Reconciles to READY_FOR_PAYOUT, then pays out to the sender wallet")
-    void matchedCodPayoutSuccess() {
-        when(userRepository.findById(100L)).thenReturn(Optional.of(manager));
-        when(userRepository.findById(10L)).thenReturn(Optional.of(shipper));
-        when(reconciliationRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-        when(shipmentRepository.findById(1L)).thenReturn(Optional.of(shipment));
-        when(itemRepository.findBySourceTypeAndSourceId("COD_TRANSACTION", 50L)).thenReturn(Optional.empty());
-
-        CodTransaction cod = CodTransaction.createCollected(shipment, shipper, new BigDecimal("500000.00"), "CASH");
-        when(codTransactionRepository.findByIdForUpdate(50L)).thenReturn(Optional.of(cod));
-
-        Wallet senderWallet = Wallet.createForUser(sender.getId());
-        when(walletRepository.findByUserIdForUpdate(sender.getId())).thenReturn(Optional.of(senderWallet));
-
-        ReconciliationSubmissionRequest.ItemRequest item = new ReconciliationSubmissionRequest.ItemRequest(
-                1L, "COD_TRANSACTION", 50L, new BigDecimal("500000.00"), new BigDecimal("500000.00"), "Matched COD");
-        ReconciliationSubmissionRequest request = new ReconciliationSubmissionRequest(
-                10L, LocalDate.now(), List.of(item));
-
-        ShipperReconciliation result = reconciliationService.reconcile(request);
-
-        assertThat(result.getStatus()).isEqualTo("COMPLETED");
-        // The reconciliation only makes the COD ready; the wallet credit is a
-        // separate payout step of the Workflow.
-        assertThat(cod.getStatus()).isEqualTo("READY_FOR_PAYOUT");
-        assertThat(senderWallet.getBalance()).isEqualByComparingTo(BigDecimal.ZERO);
-
-        when(codTransactionRepository.findByIdForUpdate(50L)).thenReturn(Optional.of(cod));
-        ShipperReconciliationItem reconciledItem = mock(ShipperReconciliationItem.class);
-        when(itemRepository.findBySourceTypeAndSourceId("COD_TRANSACTION", 50L))
-                .thenReturn(Optional.of(reconciledItem));
-
-        reconciliationService.payoutReadyCod(50L);
-
-        assertThat(cod.getStatus()).isEqualTo("PAID_TO_SENDER");
-        assertThat(cod.getPayoutAt()).isNotNull();
-        assertThat(senderWallet.getBalance()).isEqualByComparingTo(new BigDecimal("500000.00"));
-
-        verify(walletRepository).save(senderWallet);
-        verify(walletTransactionRepository).save(any(WalletTransaction.class));
-        verify(incidentRepository, never()).save(any());
+    @Test void receiverFeeReconcilesWithoutWalletCredit() {
+        payment("RECEIVER","SHIPPING_FEE",60L,new BigDecimal("35000"));service.reconcile(request(row(FinanceReconciliationServiceImpl.RECEIVER_FEE,60L,null,new BigDecimal("35000"))));
+        assertThat(saved.getFirst().getExpectedAmount()).isEqualByComparingTo("35000");verifyNoInteractions(wallets,transactions,notifications);
     }
-
-    @Test
-    @DisplayName("Matched receiver cash fee: Reconciles accountability but NEVER credits wallet or creates COD_PAYOUT")
-    void matchedReceiverCashFeeNoPayout() {
-        when(userRepository.findById(100L)).thenReturn(Optional.of(manager));
-        when(userRepository.findById(10L)).thenReturn(Optional.of(shipper));
-        when(reconciliationRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-        when(shipmentRepository.findById(1L)).thenReturn(Optional.of(shipment));
-        when(itemRepository.findBySourceTypeAndSourceId("RECEIVER_CASH_SHIPPING_FEE_PAYMENT", 60L)).thenReturn(Optional.empty());
-
-        Payment feePayment = Payment.create(shipment, "RECEIVER", "SHIPPING_FEE", new BigDecimal("35000.00"), "CASH", "PAID");
-        when(paymentRepository.findByIdForUpdate(60L)).thenReturn(Optional.of(feePayment));
-
-        ReconciliationSubmissionRequest.ItemRequest item = new ReconciliationSubmissionRequest.ItemRequest(
-                1L, "RECEIVER_CASH_SHIPPING_FEE_PAYMENT", 60L, new BigDecimal("35000.00"), new BigDecimal("35000.00"), "Fee match");
-        ReconciliationSubmissionRequest request = new ReconciliationSubmissionRequest(
-                10L, LocalDate.now(), List.of(item));
-
-        ShipperReconciliation result = reconciliationService.reconcile(request);
-
-        assertThat(result.getStatus()).isEqualTo("COMPLETED");
-        verify(walletRepository, never()).findByUserIdForUpdate(any());
-        verify(walletTransactionRepository, never()).save(any());
-        verify(incidentRepository, never()).save(any());
+    @Test void senderPickupAndReturnFeeAreIncludedAsCashAccountability() {
+        payment("SENDER","SHIPPING_FEE",60L,BigDecimal.TEN);payment("SENDER","RETURN_FEE",61L,BigDecimal.TEN);
+        service.reconcile(request(row(FinanceReconciliationServiceImpl.OTHER_FEE,60L,null,BigDecimal.TEN),row(FinanceReconciliationServiceImpl.OTHER_FEE,61L,null,BigDecimal.TEN)));
+        assertThat(saved).hasSize(2);verifyNoInteractions(wallets,transactions);
     }
-
-    @Test
-    @DisplayName("Discrepant COD: Item shortage holds in HOLD_DISPUTE and creates MONEY_SHORTAGE incident")
-    void discrepantCodCreatesFinancialIncident() {
-        when(userRepository.findById(100L)).thenReturn(Optional.of(manager));
-        when(userRepository.findById(10L)).thenReturn(Optional.of(shipper));
-        when(reconciliationRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-        when(shipmentRepository.findById(1L)).thenReturn(Optional.of(shipment));
-        when(itemRepository.findBySourceTypeAndSourceId("COD_TRANSACTION", 50L)).thenReturn(Optional.empty());
-
-        CodTransaction cod = CodTransaction.createCollected(shipment, shipper, new BigDecimal("500000.00"), "CASH");
-        when(codTransactionRepository.findByIdForUpdate(50L)).thenReturn(Optional.of(cod));
-
-        // Actual is 450,000 instead of 500,000 -> SHORTAGE
-        ReconciliationSubmissionRequest.ItemRequest item = new ReconciliationSubmissionRequest.ItemRequest(
-                1L, "COD_TRANSACTION", 50L, new BigDecimal("500000.00"), new BigDecimal("450000.00"), "Shortage 50k");
-        ReconciliationSubmissionRequest request = new ReconciliationSubmissionRequest(
-                10L, LocalDate.now(), List.of(item));
-
-        ShipperReconciliation result = reconciliationService.reconcile(request);
-
-        assertThat(result.getStatus()).isEqualTo("COMPLETED_WITH_DISCREPANCY");
-        assertThat(cod.getStatus()).isEqualTo("HOLD_DISPUTE");
-        verify(walletRepository, never()).findByUserIdForUpdate(any());
-        verify(incidentRepository).save(any(Incident.class));
+    @Test void shortageAndOverageCannotNetAway() {
+        payment("RECEIVER","SHIPPING_FEE",60L,new BigDecimal("35000"));
+        var rec=service.reconcile(request(row(FinanceReconciliationServiceImpl.COD,50L,null,new BigDecimal("490000")),row(FinanceReconciliationServiceImpl.RECEIVER_FEE,60L,null,new BigDecimal("45000"))));
+        assertThat(rec.getDifferenceAmount()).isEqualByComparingTo("0");assertThat(rec.getStatus()).isEqualTo("COMPLETED_WITH_DISCREPANCY");assertThat(cod.getStatus()).isEqualTo("HOLD_DISPUTE");
+        assertThat(saved).extracting(ShipperReconciliationItem::getStatus).containsExactlyInAnyOrder("SHORTAGE","OVERAGE");verify(incidents,times(2)).save(any());verifyNoInteractions(wallets,transactions);
     }
-
-    @Test
-    @DisplayName("Reconciliation uniqueness: Reconciling already-reconciled source throws IllegalStateException")
-    void duplicateSourceReconciledFails() {
-        when(userRepository.findById(100L)).thenReturn(Optional.of(manager));
-        when(userRepository.findById(10L)).thenReturn(Optional.of(shipper));
-        when(reconciliationRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-
-        ShipperReconciliationItem existing = mock(ShipperReconciliationItem.class);
-        when(itemRepository.findBySourceTypeAndSourceId("COD_TRANSACTION", 50L)).thenReturn(Optional.of(existing));
-
-        ReconciliationSubmissionRequest.ItemRequest item = new ReconciliationSubmissionRequest.ItemRequest(
-                1L, "COD_TRANSACTION", 50L, new BigDecimal("500000.00"), new BigDecimal("500000.00"), "Duplicate");
-        ReconciliationSubmissionRequest request = new ReconciliationSubmissionRequest(
-                10L, LocalDate.now(), List.of(item));
-
-        assertThatThrownBy(() -> reconciliationService.reconcile(request))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Source already reconciled");
+    @ParameterizedTest @ValueSource(strings={"collector","method","date","amount","shipment","status","expected"})
+    void forgedCodSourceRejectedBeforePersistence(String invalid) {
+        var row=codRow();
+        switch(invalid) {
+            case "collector" -> ReflectionTestUtils.setField(cod,"collectedByShipper",sender);
+            case "method" -> ReflectionTestUtils.setField(cod,"method","VNPAY");
+            case "date" -> ReflectionTestUtils.setField(cod,"collectedAt",LocalDateTime.now().minusDays(1));
+            case "amount" -> ReflectionTestUtils.setField(cod,"amount",BigDecimal.ONE);
+            case "shipment" -> {Shipment wrong=Shipment.create("OTHER",sender,"S","01","A","R","02","B");wrong.setId(2L);wrong.setCodAmount(new BigDecimal("500000"));wrong.transitionTo(ShipmentStatus.DELIVERED);ReflectionTestUtils.setField(cod,"shipment",wrong);}
+            case "status" -> cod.setStatus("WAITING_COLLECTION");
+            case "expected" -> row=row(FinanceReconciliationServiceImpl.COD,50L,BigDecimal.ONE,new BigDecimal("500000"));
+        }
+        var request=request(row);assertThatThrownBy(()->service.reconcile(request)).isInstanceOf(IllegalArgumentException.class);verify(recs,never()).save(any());verify(items,never()).save(any());verifyNoInteractions(wallets,transactions,events,notifications);
+    }
+    @ParameterizedTest @ValueSource(strings={"collector","method","date","payer","type","status","alias"})
+    void ineligiblePaymentRejectedBeforePersistence(String invalid) {
+        var p=payment("RECEIVER","SHIPPING_FEE",60L,BigDecimal.TEN);String type=FinanceReconciliationServiceImpl.RECEIVER_FEE;
+        switch(invalid) {
+            case "collector" -> ReflectionTestUtils.setField(p,"collectedByUserId",99L);
+            case "method" -> ReflectionTestUtils.setField(p,"method","VNPAY");
+            case "date" -> ReflectionTestUtils.setField(p,"paidAt",LocalDateTime.now().minusDays(1));
+            case "payer" -> ReflectionTestUtils.setField(p,"payerType","OTHER");
+            case "type" -> ReflectionTestUtils.setField(p,"paymentType","OTHER");
+            case "status" -> p.setStatus("REFUNDED");
+            case "alias" -> type=FinanceReconciliationServiceImpl.OTHER_FEE;
+        }
+        var request=request(row(type,60L,null,BigDecimal.TEN));assertThatThrownBy(()->service.reconcile(request)).isInstanceOf(IllegalArgumentException.class);verify(recs,never()).save(any());
+    }
+    @Test void duplicateAndInvalidRowsAreRejectedBeforeReadingSources() {
+        assertThatThrownBy(()->service.reconcile(request(codRow(),codRow()))).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(()->service.reconcile(request(row(null,50L,null,BigDecimal.TEN)))).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(()->service.reconcile(request(row("OTHER",50L,null,BigDecimal.TEN)))).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(()->service.reconcile(request(row(FinanceReconciliationServiceImpl.COD,50L,null,BigDecimal.ONE.negate())))).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(()->service.reconcile(request(row(FinanceReconciliationServiceImpl.COD,50L,null,null)))).isInstanceOf(IllegalArgumentException.class);
+        verifyNoInteractions(cods);verify(recs,never()).save(any());
+    }
+    @Test void previouslyReconciledSourceCannotBeReused() {
+        when(items.findBySourceTypeAndSourceId(FinanceReconciliationServiceImpl.COD,50L)).thenReturn(Optional.of(mock(ShipperReconciliationItem.class)));
+        assertThatThrownBy(()->service.reconcile(request(codRow()))).isInstanceOf(IllegalStateException.class);verify(recs,never()).save(any());
+    }
+    @Test void managerScopeAppliesBeforeListDetailAndReplay() {
+        User manager=new User(2L,"manager","hash",UserRole.ROLE_MANAGER,"ACTIVE");Hub other=Hub.active("O","Other",1,"HUB","R","P");ReflectionTestUtils.setField(other,"id",99L);
+        when(managers.findActiveProfileByUserId(2L)).thenReturn(Optional.of(EmployeeProfile.active(manager,other,"MANAGER")));when(managers.findHubSubtreeIds(99L)).thenReturn(List.of(99L));
+        var rec=service.reconcile(request(codRow()));when(recs.findById(7L)).thenReturn(Optional.of(rec));when(items.findBySourceTypeAndSourceId(FinanceReconciliationServiceImpl.COD,50L)).thenReturn(Optional.of(saved.getFirst()));cod.setStatus("PAID_TO_SENDER");login(manager);
+        assertThatThrownBy(()->service.getShiftExpectedItems(10L,null)).isInstanceOf(AccessDeniedException.class);
+        assertThatThrownBy(()->service.getReconciliationItems(7L)).isInstanceOf(AccessDeniedException.class);
+        assertThatThrownBy(()->service.payoutReadyCod(50L)).isInstanceOf(AccessDeniedException.class);verifyNoInteractions(wallets,transactions);
+    }
+    @Test void userCannotEnterFinanceServices(){login(sender);assertThatThrownBy(()->service.reconcile(request(codRow()))).isInstanceOf(AccessDeniedException.class);}
+    @Test void expectedItemsExcludeAlreadyReconciledAndNoncashSources() {
+        when(cods.findByCollectedByShipperIdAndStatus(10L,"COLLECTED")).thenReturn(List.of(cod));
+        when(items.findBySourceTypeAndSourceId(FinanceReconciliationServiceImpl.COD,50L)).thenReturn(Optional.of(mock(ShipperReconciliationItem.class)));
+        assertThat(service.getShiftExpectedItems(10L,null)).isEmpty();
+        ReflectionTestUtils.setField(cod,"method","VNPAY");assertThat(service.getShiftExpectedItems(10L,null)).isEmpty();
+    }
+    @ParameterizedTest @ValueSource(strings={"VNPAY","TRANSFER"})
+    void electronicCodRequiresSeparateVerifiedSettlementBeforePayout(String method) {
+        ReflectionTestUtils.setField(cod,"method",method);var request=request(codRow());request.setCollectionMethod(method);
+        assertThatThrownBy(()->service.reconcile(request)).isInstanceOf(IllegalArgumentException.class);verify(recs,never()).save(any());assertThat(cod.getStatus()).isEqualTo("COLLECTED");
+        request.setSettlementEvidence("Statement reference VERIFIED-101 reviewed by manager");var rec=service.reconcile(request);
+        assertThat(rec.getCollectionMethod()).isEqualTo(method);assertThat(rec.getSettlementEvidence()).contains("VERIFIED-101");verifyNoInteractions(wallets,transactions);
+        when(items.findBySourceTypeAndSourceId(FinanceReconciliationServiceImpl.COD,50L)).thenReturn(Optional.of(saved.getFirst()));Wallet wallet=Wallet.createForUser(1L);when(wallets.findByUserIdForUpdate(1L)).thenReturn(Optional.of(wallet));
+        service.payoutReadyCod(50L);assertThat(wallet.getBalance()).isEqualByComparingTo("500000");
+        when(transactions.findFirstByTransactionTypeAndReferenceTypeAndReferenceId("COD_PAYOUT","SHIPMENT",1L)).thenReturn(Optional.of(WalletTransaction.create(1L,"COD_PAYOUT",new BigDecimal("500000"),BigDecimal.ZERO,new BigDecimal("500000"),1L,"SHIPMENT","payout")));
+        service.payoutReadyCod(50L);verify(transactions,times(1)).save(any());
+        ReflectionTestUtils.setField(rec,"settlementEvidence",null);assertThatThrownBy(()->service.payoutReadyCod(50L)).isInstanceOf(IllegalStateException.class);
+    }
+    @Test void electronicAndCashSourcesCannotShareOneReconciliation() {
+        var request=request(codRow());request.setCollectionMethod("VNPAY");request.setSettlementEvidence("statement");
+        assertThatThrownBy(()->service.reconcile(request)).isInstanceOf(IllegalArgumentException.class);verify(recs,never()).save(any());
     }
 }
-

@@ -11,4 +11,13 @@ public record OperationsAuditTimelineEntry(
         Long containerId,
         Long handoverId,
         Long tripId) {
+
+    // JavaBean accessors for the configured Jasper/EL 5 runtime.
+    public String getEventType() { return eventType; }
+    public LocalDateTime getOccurredAt() { return occurredAt; }
+    public String getHubCode() { return hubCode; }
+    public String getActorRole() { return actorRole; }
+    public Long getContainerId() { return containerId; }
+    public Long getHandoverId() { return handoverId; }
+    public Long getTripId() { return tripId; }
 }

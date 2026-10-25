@@ -105,4 +105,26 @@ class TrackingServiceImplTest {
     private static void login(User user) {
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities()));
     }
+
+    @Test
+    void journeyHistoryUsesPersistedOrderAndSafeLabelsForPublicAndRecipientViews() {
+        when(shipmentRepository.findByTrackingNumber("UTX-ABCDEF1234")).thenReturn(Optional.of(shipment));
+        when(shipmentRepository.findById(42L)).thenReturn(Optional.of(shipment));
+        when(eventRepository.findByShipmentIdOrderByCreatedAtAsc(42L)).thenReturn(List.of(
+                ShipmentEvent.of(shipment, sender, "ARRIVED_AT_HUB", "private address and COD 12345"),
+                ShipmentEvent.of(shipment, sender, "LINEHAUL_TRIP_STARTED", "driver phone"),
+                ShipmentEvent.of(shipment, sender, "OUT_FOR_DELIVERY", "private assignment"),
+                ShipmentEvent.of(shipment, sender, "DELIVERED", "private recipient signature"),
+                ShipmentEvent.of(shipment, sender, "MISSING_PARCEL", "internal incident"),
+                ShipmentEvent.of(shipment, sender, "UNKNOWN_INTERNAL_NOTE", "sensitive investigation")));
+        var publicView = trackingService.track("UTX-ABCDEF1234");
+        assertThat(publicView.events()).hasSize(5);
+        assertThat(publicView.events()).extracting("label").containsExactly(
+                "Kiện hàng đã đến bưu cục", "Kiện hàng đang được vận chuyển", "Shipper đang giao hàng", "Giao hàng thành công",
+                "Đơn hàng đang được kiểm tra hành trình");
+        assertThat(publicView.toString()).doesNotContain("private", "12345", "phone", "incident", "sensitive", "UNKNOWN_INTERNAL_NOTE");
+        login(receiver);
+        assertThat(trackingService.incomingDetail(42L, false).events()).isEqualTo(publicView.events());
+        assertThat(trackingService.incomingDetail(42L, true).events()).isEqualTo(publicView.events());
+    }
 }

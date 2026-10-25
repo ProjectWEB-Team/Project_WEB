@@ -37,6 +37,9 @@ public interface HubOperationsRepository extends JpaRepository<ShipmentRoute, Lo
     List<HubRoutingRule> findActiveRules(@Param("currentHubId") Long currentHubId,
                                          @Param("region") String region, @Param("province") String province);
 
+    @Query("select h from Hub h where h.id = :id and h.status = 'ACTIVE'")
+    Optional<vn.iotstar.entity.Hub> findActiveHub(@Param("id") Long id);
+
     Optional<ShipmentRoute> findByRouteDecisionKey(String routeDecisionKey);
 
     default ShipmentRoute saveRoute(ShipmentRoute route) { return save(route); }

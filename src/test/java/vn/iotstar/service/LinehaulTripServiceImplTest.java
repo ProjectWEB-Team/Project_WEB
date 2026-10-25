@@ -20,6 +20,12 @@ import vn.iotstar.entity.Incident;
 import vn.iotstar.entity.TransportTrip;
 import vn.iotstar.entity.User;
 import vn.iotstar.entity.UserRole;
+import vn.iotstar.entity.Shipment;
+import vn.iotstar.entity.ShipmentStatus;
+import vn.iotstar.entity.Vehicle;
+import vn.iotstar.entity.ParcelContainer;
+import vn.iotstar.entity.HandoverContainer;
+import vn.iotstar.entity.ContainerItem;
 import vn.iotstar.exception.HubOperationAccessDeniedException;
 import vn.iotstar.repository.HubOperationsRepository;
 import vn.iotstar.repository.LinehaulOperationsRepository;
@@ -51,15 +57,29 @@ class LinehaulTripServiceImplTest {
         Handover handover = acceptedHandover(origin, destination, driver); authenticate(driver);
         when(hubOperationsRepository.findActiveProfileByUserId(9L)).thenReturn(Optional.of(EmployeeProfile.active(driver, origin, "LINEHAUL_DRIVER")));
         when(operationsRepository.findHandoverForUpdate(30L)).thenReturn(Optional.of(handover));
+        Vehicle vehicle = vehicle();
+        when(operationsRepository.findVehicleForUpdate(50L)).thenReturn(Optional.of(vehicle));
         when(userRepository.getReferenceById(9L)).thenReturn(driver);
+        Shipment parcel = Shipment.create("T-DEPART", driver, "S", "1", "A", "R", "2", "B");
+        ReflectionTestUtils.setField(parcel, "id", 70L);
+        parcel.receiveAt(origin);
+        when(operationsRepository.findShipmentsForHandover(30L)).thenReturn(java.util.List.of(parcel));
+        ParcelContainer container = ParcelContainer.open("BAG", origin, destination, driver); container.seal();
+        HandoverContainer membership = HandoverContainer.expected(handover, container); membership.markScanned();
+        when(operationsRepository.findContainersForUpdate(30L)).thenReturn(java.util.List.of(membership));
+        when(operationsRepository.findManifestItemsForUpdate(30L)).thenReturn(java.util.List.of(ContainerItem.scanned(container, parcel)));
         doAnswer(invocation -> { ReflectionTestUtils.setField(invocation.<Object>getArgument(0), "id", 40L); return null; }).when(operationsRepository).persist(any());
 
-        assertThat(service.acceptHandover(30L).status()).isEqualTo("ACCEPTED");
+        assertThat(service.acceptHandover(30L, 50L).status()).isEqualTo("SCHEDULED");
         TransportTrip trip = handover.getTransportTrip();
         when(operationsRepository.findTripForUpdate(40L)).thenReturn(Optional.of(trip));
-        assertThat(service.startTrip(40L).status()).isEqualTo("STARTED");
+        assertThat(service.startTrip(40L).status()).isEqualTo("IN_TRANSIT");
+        assertThat(parcel.getCurrentStatus()).isEqualTo(ShipmentStatus.IN_TRANSIT);
+        assertThat(parcel.getCurrentHubId()).isNull();
+        assertThat(vehicle.getStatus()).isEqualTo("IN_USE");
+        assertThat(service.startTrip(40L).status()).isEqualTo("IN_TRANSIT");
         assertThat(service.arriveTrip(40L).status()).isEqualTo("ARRIVED");
-        assertThat(handover.getStatus()).isEqualTo("ACCEPTED");
+        assertThat(handover.getStatus()).isEqualTo("IN_TRANSIT");
         ArgumentCaptor<OperationalActionNotification> notifications = ArgumentCaptor.forClass(OperationalActionNotification.class);
         verify(applicationEventPublisher, times(2)).publishEvent(notifications.capture());
         assertThat(notifications.getAllValues()).extracting(OperationalActionNotification::type)
@@ -69,7 +89,7 @@ class LinehaulTripServiceImplTest {
     @Test void otherDriverCannotStartAssignedTripAndDelayIsBoundedToActiveTrip() {
         User driver = user(9L, "driver"); User other = user(10L, "other"); Hub origin = hub(1L); Hub destination = hub(2L);
         Handover handover = acceptedHandover(origin, destination, driver); ReflectionTestUtils.setField(handover, "id", 30L);
-        TransportTrip trip = TransportTrip.accepted(handover, driver); ReflectionTestUtils.setField(trip, "id", 40L); handover.linkTransportTrip(trip);
+        TransportTrip trip = TransportTrip.accepted(handover, driver, vehicle()); ReflectionTestUtils.setField(trip, "id", 40L); handover.linkTransportTrip(trip);
         authenticate(other);
         when(hubOperationsRepository.findActiveProfileByUserId(10L)).thenReturn(Optional.of(EmployeeProfile.active(other, origin, "LINEHAUL_DRIVER")));
         when(operationsRepository.findTripForUpdate(40L)).thenReturn(Optional.of(trip));
@@ -93,6 +113,7 @@ class LinehaulTripServiceImplTest {
         assertThatThrownBy(() -> service.reportTripDelay(new TripDelayCommand(40L, " ", null))).isInstanceOf(HubOperationAccessDeniedException.class);
     }
     private static User user(Long id, String name) { return new User(id, name, "hash", UserRole.ROLE_LINEHAUL_DRIVER, "ACTIVE"); }
+    private static Vehicle vehicle() { Vehicle v = Vehicle.available("51C-123", "TRUCK", 1000); ReflectionTestUtils.setField(v, "id", 50L); return v; }
     private static Hub hub(Long id) { Hub hub = Hub.active("H" + id, "H" + id, 1, "HUB", "SOUTH", "Can Tho"); ReflectionTestUtils.setField(hub, "id", id); return hub; }
     private static Handover acceptedHandover(Hub origin, Hub destination, User driver) { Handover h = Handover.pending(origin, destination, EmployeeProfile.active(driver, origin, "OUTBOUND"), driver, 1, null); ReflectionTestUtils.setField(h, "id", 30L); h.recordContainerScan(); return h; }
     private static void authenticate(User user) { SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities())); }

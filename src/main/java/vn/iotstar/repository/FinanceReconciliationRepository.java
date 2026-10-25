@@ -20,6 +20,7 @@ public interface FinanceReconciliationRepository extends JpaRepository<ShipperRe
     Optional<ShipperReconciliation> findByIdForUpdate(@Param("id") Long id);
 
     List<ShipperReconciliation> findByShipperId(Long shipperId);
+    List<ShipperReconciliation> findTop100ByShipperIdOrderByIdDesc(Long shipperId);
 
     List<ShipperReconciliation> findByManagerId(Long managerId);
 

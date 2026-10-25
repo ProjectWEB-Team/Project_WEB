@@ -21,13 +21,19 @@ public class StompNotificationEventPublisher implements NotificationEventPublish
 
     @Override
     public void publishAfterCommit(AuthenticatedActor actor, NotificationEventResponse event) {
+        publishToUserAfterCommit(actor.username(), event);
+    }
+
+    @Override
+    public void publishToUserAfterCommit(String username, NotificationEventResponse event) {
+        if (username == null || username.isBlank()) throw new IllegalArgumentException("Notification recipient required");
         if (!TransactionSynchronizationManager.isSynchronizationActive()) {
             throw new IllegalStateException("Notification publication requires an active transaction");
         }
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                messagingTemplate.convertAndSendToUser(actor.username(), USER_NOTIFICATION_DESTINATION, event);
+                messagingTemplate.convertAndSendToUser(username, USER_NOTIFICATION_DESTINATION, event);
             }
         });
     }

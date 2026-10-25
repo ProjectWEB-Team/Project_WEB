@@ -73,9 +73,17 @@ class OperationalAuditServiceImplTest {
         assertThatThrownBy(() -> service.getTimeline(503L)).isInstanceOf(HubOperationAccessDeniedException.class);
         verifyNoInteractions(operationsAuditRepository);
     }
+    @Test void automatedRefundAndTimeoutRemainVisibleAsSystemEvents() {
+        authenticate(user(1L,UserRole.ROLE_ADMIN));Shipment shipment=shipment(506L,hub(5L,"H"));shipment.setCurrentHubId(null);
+        when(operationsAuditRepository.findShipmentWithCurrentHub(506L)).thenReturn(Optional.of(shipment));
+        when(operationsAuditRepository.findEventsForShipment(506L)).thenReturn(List.of(ShipmentEvent.of(shipment,null,"SHIPMENT_CANCELLED","timeout"),ShipmentEvent.of(shipment,null,"REFUND_COMPLETED","settled")));
+        assertThat(service.getTimeline(506L).entries()).extracting(vn.iotstar.dto.operations.OperationsAuditTimelineEntry::eventType).containsExactly("SHIPMENT_CANCELLED","REFUND_COMPLETED");
+        assertThat(service.getTimeline(506L).entries()).allSatisfy(e->assertThat(e.actorRole()).isEqualTo("SYSTEM"));
+    }
 
     @Test void assignedDriverCanReadOnlyOwnCustodyTimeline() {
         User driver = user(40L, UserRole.ROLE_LINEHAUL_DRIVER); Shipment shipment = shipment(504L, hub(4L, "DEST")); authenticate(driver);
+        shipment.setCurrentHubId(null); shipment.transitionTo(vn.iotstar.entity.ShipmentStatus.IN_TRANSIT);
         when(operationsAuditRepository.findShipmentWithCurrentHub(504L)).thenReturn(Optional.of(shipment));
         when(operationsAuditRepository.findActiveCustodyReferencesForDriver(504L, 40L)).thenReturn(List.of(new AuditCustodyReference(7L, 8L, 9L, 40L)));
         when(operationsAuditRepository.findEventsForShipment(504L)).thenReturn(List.of());
@@ -85,6 +93,7 @@ class OperationalAuditServiceImplTest {
     @Test void historicalDriverCannotReadTimelineAfterASecondDriverOwnsTheCurrentCustody() {
         User historicalDriver = user(40L, UserRole.ROLE_LINEHAUL_DRIVER);
         Shipment shipment = shipment(505L, hub(5L, "SECOND-LEG-HUB"));
+        shipment.setCurrentHubId(null); shipment.transitionTo(vn.iotstar.entity.ShipmentStatus.IN_TRANSIT);
         authenticate(historicalDriver);
         when(operationsAuditRepository.findShipmentWithCurrentHub(505L)).thenReturn(Optional.of(shipment));
         when(operationsAuditRepository.findActiveCustodyReferencesForDriver(505L, 40L)).thenReturn(List.of());

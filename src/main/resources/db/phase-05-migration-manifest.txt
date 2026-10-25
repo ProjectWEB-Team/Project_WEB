@@ -1,0 +1,18 @@
+# Canonical docs/schema.sql table definitions must exist first.
+# Ordering is intentional. Seed policies are not schema and are excluded.
+db/phase-01-shipment-events-event-type.sql
+db/phase-02-account-otp.sql
+db/phase-02-handover-wait.sql
+db/phase-02-refund-outbox.sql
+db/phase-03-hub-routing-schema.sql
+db/phase-03-container-handover-schema.sql
+db/phase-03-linehaul-trip-schema.sql
+db/phase-03-destination-receipt-schema.sql
+db/phase-04-delivery-schema.sql
+db/phase-04-return-schema.sql
+db/phase-04-finance-reconciliation-schema.sql
+db/phase-04-withdrawal-schema.sql
+db/phase-05-intake-service-code.sql
+db/phase-05-route-key-alignment.sql
+db/phase-05-custody-alignment.sql
+db/phase-05-finance-alignment.sql

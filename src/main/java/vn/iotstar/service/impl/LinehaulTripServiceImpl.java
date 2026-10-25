@@ -14,6 +14,10 @@ import vn.iotstar.entity.ShipmentEvent;
 import vn.iotstar.entity.TransportTrip;
 import vn.iotstar.entity.User;
 import vn.iotstar.entity.UserRole;
+import vn.iotstar.entity.Vehicle;
+import vn.iotstar.entity.ShipmentStatus;
+import vn.iotstar.entity.ContainerItem;
+import vn.iotstar.dto.driver.VehicleOptionResponse;
 import vn.iotstar.exception.HubOperationAccessDeniedException;
 import vn.iotstar.exception.ResourceNotFoundException;
 import vn.iotstar.repository.HubOperationsRepository;
@@ -25,6 +29,7 @@ import vn.iotstar.security.AuthenticatedActor;
 import vn.iotstar.service.LinehaulTripService;
 
 import java.util.Objects;
+import java.util.List;
 
 /** Transaction, sequencing and contextual-scope boundary for the driver workspace. */
 @Service
@@ -53,16 +58,37 @@ public class LinehaulTripServiceImpl implements LinehaulTripService {
     @Override
     @Transactional
     public TripActionResponse acceptHandover(Long handoverId) {
+        return acceptHandover(handoverId, null);
+    }
+
+    @Override @Transactional(readOnly = true)
+    public List<VehicleOptionResponse> availableVehicles() {
+        requireActiveDriver(AuthenticatedActor.requireCurrent());
+        return operationsRepository.findAvailableVehicles().stream()
+                .map(v -> new VehicleOptionResponse(v.getId(), v.getPlateNumber(), v.getVehicleType())).toList();
+    }
+
+    @Override @Transactional
+    public TripActionResponse acceptHandover(Long handoverId, Long vehicleId) {
         AuthenticatedActor actor = AuthenticatedActor.requireCurrent();
         requireActiveDriver(actor);
         Handover handover = operationsRepository.findHandoverForUpdate(handoverId)
                 .orElseThrow(() -> new ResourceNotFoundException("Handover"));
         requireAssigned(actor, handover);
-        if (!"ACCEPTED".equals(handover.getStatus())) throw new HubOperationAccessDeniedException();
         TransportTrip existing = handover.getTransportTrip();
-        if (existing != null) return response(existing);
+        if (existing != null) {
+            if (existing.getVehicle() == null || (vehicleId != null && !vehicleId.equals(existing.getVehicle().getId())))
+                throw new HubOperationAccessDeniedException();
+            return response(existing);
+        }
+        if (!"ACCEPTED".equals(handover.getStatus())) throw new HubOperationAccessDeniedException();
+        if (vehicleId == null) throw new IllegalArgumentException("Select an available vehicle for the trip");
+        Vehicle vehicle = operationsRepository.findVehicleForUpdate(vehicleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle"));
+        if (!"AVAILABLE".equals(vehicle.getStatus())) throw new HubOperationAccessDeniedException();
         User driver = userRepository.getReferenceById(actor.userId());
-        TransportTrip trip = TransportTrip.accepted(handover, driver);
+        vehicle.reserve();
+        TransportTrip trip = TransportTrip.accepted(handover, driver, vehicle);
         handover.linkTransportTrip(trip);
         operationsRepository.persist(trip);
         appendShipmentEvents(handover, driver, "ACCEPT");
@@ -76,9 +102,35 @@ public class LinehaulTripServiceImpl implements LinehaulTripService {
         requireActiveDriver(actor);
         TransportTrip trip = requiredAssignedTrip(tripId, actor);
         requireAcceptedRoute(trip);
-        boolean transition = "ACCEPTED".equals(trip.getStatus());
-        trip.start(userRepository.getReferenceById(actor.userId()));
-        if (transition) appendShipmentEvents(trip.getHandover(), userRepository.getReferenceById(actor.userId()), "START");
+        if ("IN_TRANSIT".equals(trip.getStatus()) || "ARRIVED".equals(trip.getStatus()) || trip.isCompleted()) return response(trip);
+        if (!"SCHEDULED".equals(trip.getStatus()) || trip.getVehicle() == null || !"IN_USE".equals(trip.getVehicle().getStatus()))
+            throw new HubOperationAccessDeniedException();
+        var containers = operationsRepository.findContainersForUpdate(trip.getHandover().getId());
+        var items = operationsRepository.findManifestItemsForUpdate(trip.getHandover().getId());
+        if (containers.size() != trip.getHandover().getExpectedContainers() || containers.isEmpty() || items.isEmpty()
+                || containers.stream().anyMatch(hc -> !hc.isScanned() || !"SEALED".equals(hc.getContainer().getStatus())
+                || !sameHub(hc.getContainer().getOriginHub(), trip.getOriginHub()) || !sameHub(hc.getContainer().getDestinationHub(), trip.getDestinationHub()))
+                || items.stream().map(i -> i.getShipment().getId()).distinct().count() != items.size()
+                || containers.stream().anyMatch(hc -> items.stream().noneMatch(i -> Objects.equals(i.getContainer().getId(), hc.getContainer().getId()))))
+            throw new HubOperationAccessDeniedException();
+        for (ContainerItem item : items) {
+            Shipment shipment = item.getShipment();
+            boolean forward = "FORWARD".equals(shipment.getDirection()) && shipment.getCurrentStatus() == ShipmentStatus.AT_HUB;
+            boolean returning = "RETURN".equals(shipment.getDirection()) && shipment.getCurrentStatus() == ShipmentStatus.RETURN_TO_SENDER;
+            if (!"IN_CONTAINER".equals(item.getStatus()) || shipment.isOnHold() || !(forward || returning)
+                    || !Objects.equals(shipment.getCurrentHubId(), trip.getOriginHub().getId())) throw new HubOperationAccessDeniedException();
+        }
+        User driver = userRepository.getReferenceById(actor.userId());
+        // Validate the complete locked manifest before any mutation.
+        trip.start(driver);
+        trip.getHandover().depart();
+        containers.forEach(hc -> hc.getContainer().loadForDeparture());
+        for (ContainerItem item : items) {
+            Shipment shipment = item.getShipment();
+            if ("FORWARD".equals(shipment.getDirection())) shipment.transitionTo(ShipmentStatus.IN_TRANSIT);
+            shipment.setCurrentHubId(null);
+            shipmentEventRepository.save(ShipmentEvent.linehaulTripStarted(shipment, driver, trip.getOriginHub()));
+        }
         return response(trip);
     }
 
@@ -89,7 +141,7 @@ public class LinehaulTripServiceImpl implements LinehaulTripService {
         requireActiveDriver(actor);
         TransportTrip trip = requiredAssignedTrip(tripId, actor);
         requireAcceptedRoute(trip);
-        boolean transition = "STARTED".equals(trip.getStatus());
+        boolean transition = "IN_TRANSIT".equals(trip.getStatus());
         trip.arrive(userRepository.getReferenceById(actor.userId()));
         if (transition) {
             User driver = userRepository.getReferenceById(actor.userId());
@@ -107,7 +159,7 @@ public class LinehaulTripServiceImpl implements LinehaulTripService {
         AuthenticatedActor actor = AuthenticatedActor.requireCurrent();
         requireActiveDriver(actor);
         TransportTrip trip = requiredAssignedTrip(command.tripId(), actor);
-        if (!"STARTED".equals(trip.getStatus())) throw new HubOperationAccessDeniedException();
+        if (!"IN_TRANSIT".equals(trip.getStatus())) throw new HubOperationAccessDeniedException();
         String note = command.note() == null ? "" : command.note().trim();
         if (note.isBlank() || note.length() > 500 || (command.evidenceReference() != null && command.evidenceReference().trim().length() > 120)) {
             throw new HubOperationAccessDeniedException();
@@ -136,7 +188,8 @@ public class LinehaulTripServiceImpl implements LinehaulTripService {
     }
     private void requireAcceptedRoute(TransportTrip trip) {
         Handover handover = trip.getHandover();
-        if (!"ACCEPTED".equals(handover.getStatus())
+        if (!("ACCEPTED".equals(handover.getStatus()) || "IN_TRANSIT".equals(handover.getStatus())
+                || "COMPLETED".equals(handover.getStatus()) || "COMPLETED_WITH_DISCREPANCY".equals(handover.getStatus()))
                 || !sameHub(trip.getOriginHub(), handover.getFromHub())
                 || !sameHub(trip.getDestinationHub(), handover.getToHub())) throw new HubOperationAccessDeniedException();
     }

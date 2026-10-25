@@ -53,6 +53,15 @@ public class ParcelContainer {
         status = "SEALED";
     }
     public Long getId() { return id; }
+    public void loadForDeparture() {
+        if (!"SEALED".equals(status)) throw new IllegalStateException("Container is not sealed");
+        status = "LOADED";
+    }
+    public void completeUnpacking(boolean discrepancy) {
+        if (status.startsWith("UNPACKED_")) return;
+        if (!"LOADED".equals(status)) throw new IllegalStateException("Container was not loaded");
+        status = discrepancy ? "UNPACKED_WITH_DISCREPANCY" : "UNPACKED_FULL";
+    }
     public String getContainerCode() { return containerCode; }
     public Hub getOriginHub() { return originHub; }
     public Hub getDestinationHub() { return destinationHub; }

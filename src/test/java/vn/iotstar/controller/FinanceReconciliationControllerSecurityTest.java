@@ -29,6 +29,7 @@ class FinanceReconciliationControllerSecurityTest {
 
     @MockBean
     private FinanceReconciliationService reconciliationService;
+    @MockBean private vn.iotstar.service.ShipmentFinanceService shipmentFinance;
 
     @MockBean
     private JwtService jwtService;
@@ -78,6 +79,33 @@ class FinanceReconciliationControllerSecurityTest {
                         .param("shipperId", "10"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrlPattern("/manager/reconciliation*"));
+    }
+
+    @Test @WithMockUser(roles="MANAGER")
+    void refundAndCompensationRequireCsrf() throws Exception {
+        mockMvc.perform(post("/manager/reconciliation/refund").param("paymentId","1")).andExpect(status().isForbidden());
+        mockMvc.perform(post("/manager/reconciliation/compensate").param("shipmentId","1").param("incidentId","2").param("reason","Confirmed")).andExpect(status().isForbidden());
+    }
+
+    @Test @WithMockUser(roles="MANAGER")
+    void compensationUsesOnlyValidatedReferences() throws Exception {
+        mockMvc.perform(post("/manager/reconciliation/compensate").with(csrf()).param("shipmentId","1").param("incidentId","2").param("reason","Confirmed"))
+                .andExpect(status().is3xxRedirection());
+        org.mockito.Mockito.verify(shipmentFinance).compensateLostShipment(1L,2L,"Confirmed");
+    }
+
+    @Test @WithMockUser(roles="MANAGER")
+    void invalidCompensationDoesNotReachService() throws Exception {
+        mockMvc.perform(post("/manager/reconciliation/compensate").with(csrf()).param("shipmentId","-1").param("reason",""))
+                .andExpect(status().is3xxRedirection());
+        org.mockito.Mockito.verifyNoInteractions(shipmentFinance);
+    }
+
+    @Test @WithMockUser(roles="MANAGER")
+    void outOfScopeRefundRemainsForbidden() throws Exception {
+        org.mockito.Mockito.when(shipmentFinance.refundShipmentPayment(org.mockito.ArgumentMatchers.eq(1L),org.mockito.ArgumentMatchers.anyString()))
+                .thenThrow(new org.springframework.security.access.AccessDeniedException("outside scope"));
+        mockMvc.perform(post("/manager/reconciliation/refund").with(csrf()).param("paymentId","1")).andExpect(status().isForbidden());
     }
 }
 

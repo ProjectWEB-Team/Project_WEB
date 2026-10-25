@@ -84,6 +84,18 @@ public class CodTransaction implements Serializable {
     public LocalDateTime getPayoutAt() { return payoutAt; }
 
     public void setStatus(String status) { this.status = status; }
+    public void collect(String method, User collector) {
+        if (method == null || !java.util.Set.of("CASH", "VNPAY", "TRANSFER").contains(method)) throw new IllegalArgumentException("Unsupported COD method");
+        if (!"WAITING_COLLECTION".equals(status)) throw new IllegalStateException("COD is not awaiting collection");
+        this.method = method;
+        this.collectedByShipper = collector;
+        this.status = "COLLECTED";
+        this.collectedAt = LocalDateTime.now();
+    }
+    public void assignWaitingCollector(User shipper) {
+        if (!"WAITING_COLLECTION".equals(status)) throw new IllegalStateException("Collected COD is immutable");
+        this.collectedByShipper = shipper;
+    }
     public void setCollectedAt(LocalDateTime collectedAt) { this.collectedAt = collectedAt; }
     public void setReconciledAt(LocalDateTime reconciledAt) { this.reconciledAt = reconciledAt; }
     public void setPayoutAt(LocalDateTime payoutAt) { this.payoutAt = payoutAt; }

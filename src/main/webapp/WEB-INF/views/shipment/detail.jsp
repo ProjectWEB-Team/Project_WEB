@@ -62,6 +62,7 @@
             </c:forEach>
         </ul>
     </section>
+<p><a href="${pageContext.request.contextPath}/user/shipment-fees/${shipment.id}">Thanh toán phụ thu / phí hoàn</a></p>
 </main>
 </body>
 </html>

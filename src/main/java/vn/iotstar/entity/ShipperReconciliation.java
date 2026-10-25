@@ -35,6 +35,9 @@ public class ShipperReconciliation implements Serializable {
 
     @Column(name = "reconciliation_date", nullable = false)
     private LocalDate reconciliationDate;
+    @Column(name="hub_id") private Long hubId;
+    @Column(name="collection_method", length=20) private String collectionMethod;
+    @Column(name="settlement_evidence", length=255, columnDefinition="NVARCHAR(255)") private String settlementEvidence;
 
     @Column(name = "expected_amount", nullable = false, precision = 15, scale = 2)
     private BigDecimal expectedAmount = BigDecimal.ZERO;
@@ -90,6 +93,19 @@ public class ShipperReconciliation implements Serializable {
     }
 
     public Long getId() { return id; }
+    public Long getHubId() { return hubId; }
+    public String getCollectionMethod() { return collectionMethod; }
+    public String getSettlementEvidence() { return settlementEvidence; }
+    public void recordSettlement(String method, String evidence) {
+        if (collectionMethod!=null || method==null || !java.util.Set.of("CASH","VNPAY","TRANSFER").contains(method)
+                || (evidence!=null && evidence.length()>255) || (!"CASH".equals(method) && (evidence==null || evidence.isBlank())))
+            throw new IllegalArgumentException("Method and verified settlement evidence are required");
+        collectionMethod=method;settlementEvidence=evidence==null ? null : evidence.trim();
+    }
+    public void assignHub(Long hubId) {
+        if (this.hubId!=null || hubId==null) throw new IllegalStateException("Reconciliation hub must be set once");
+        this.hubId=hubId;
+    }
     public User getShipper() { return shipper; }
     public User getManager() { return manager; }
     public LocalDate getReconciliationDate() { return reconciliationDate; }

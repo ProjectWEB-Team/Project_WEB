@@ -17,6 +17,7 @@ public class RefundSettlementOutbox {
     @Column(name = "cancel_reason", nullable = false) private String cancelReason;
     @Column(nullable = false) private String status;
     @Column(name = "created_at", nullable = false, columnDefinition = "DATETIME2(0)") private LocalDateTime createdAt;
+    @Column(name = "settled_at", columnDefinition = "DATETIME2(0)") private LocalDateTime settledAt;
 
     protected RefundSettlementOutbox() { }
 
@@ -27,6 +28,16 @@ public class RefundSettlementOutbox {
         return o;
     }
 
+    public Long getId() { return id; }
+    public Long getShipmentId() { return shipmentId; }
+    public Long getSenderUserId() { return senderUserId; }
+    public LocalDateTime getSettledAt() { return settledAt; }
+    public void settle(LocalDateTime at) {
+        if ("SETTLED".equals(status)) return;
+        if (!"PENDING_WALLET_CREDIT".equals(status)) throw new IllegalStateException("Refund obligation is not pending");
+        status = "SETTLED";
+        settledAt = at;
+    }
     public Long getPaymentId() { return paymentId; }
     public BigDecimal getAmount() { return amount; }
     public String getCancelReason() { return cancelReason; }

@@ -22,14 +22,16 @@ public class ReturnGracePeriodScheduler {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReturnGracePeriodScheduler.class);
 
     private final ShipmentReturnServiceImpl shipmentReturnService;
+    private final java.time.Clock clock;
 
-    public ReturnGracePeriodScheduler(ShipmentReturnServiceImpl shipmentReturnService) {
+    public ReturnGracePeriodScheduler(ShipmentReturnServiceImpl shipmentReturnService, java.time.Clock clock) {
         this.shipmentReturnService = shipmentReturnService;
+        this.clock=clock;
     }
 
     @Scheduled(fixedDelayString = "${uteexpress.scheduler.timeout-check-interval-ms:30000}")
     public void reportOverdueReturns() {
-        List<Shipment> overdue = shipmentReturnService.findOverdueReturnedShipments(LocalDateTime.now());
+        List<Shipment> overdue = shipmentReturnService.findOverdueReturnedShipments(ServerTime.now(clock));
         for (Shipment shipment : overdue) {
             LOGGER.warn("Returned shipment {} exceeded the grace period and waits for the manager decision",
                     shipment.getTrackingNumber());

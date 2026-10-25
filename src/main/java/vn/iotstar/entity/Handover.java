@@ -28,6 +28,7 @@ public class Handover {
     @Column(nullable = false, length = 30, columnDefinition = "NVARCHAR(30)") private String status;
     @Column(name = "created_at", nullable = false, columnDefinition = "DATETIME2(0)") private LocalDateTime createdAt;
     @Column(name = "accepted_at", columnDefinition = "DATETIME2(0)") private LocalDateTime acceptedAt;
+    @Column(name = "completed_at", columnDefinition = "DATETIME2(0)") private LocalDateTime completedAt;
     @Column(name = "cancelled_at", columnDefinition = "DATETIME2(0)") private LocalDateTime cancelledAt;
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "replaces_handover_id") private Handover replacesHandover;
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "replacement_handover_id") private Handover replacementHandover;
@@ -38,7 +39,7 @@ public class Handover {
         handover.receiverDriver = driver; handover.expectedContainers = expected; handover.acceptedContainers = 0;
         handover.status = "PENDING_ACCEPTANCE"; handover.createdAt = LocalDateTime.now(); handover.replacesHandover = replaced; return handover;
     }
-    public boolean isActive() { return "PENDING_ACCEPTANCE".equals(status) || "ACCEPTED".equals(status); }
+    public boolean isActive() { return "PENDING_ACCEPTANCE".equals(status) || "ACCEPTED".equals(status) || "IN_TRANSIT".equals(status); }
     public boolean isPending() { return "PENDING_ACCEPTANCE".equals(status); }
     public boolean acceptsDriver(Long userId) { return receiverDriver.getId().equals(userId); }
     public void recordContainerScan() {
@@ -46,11 +47,16 @@ public class Handover {
         acceptedContainers++;
         if (acceptedContainers == expectedContainers) { status = "ACCEPTED"; acceptedAt = LocalDateTime.now(); }
     }
-    public void cancelForCorrection() { if (!isActive()) throw new IllegalStateException("Only active custody can be cancelled"); status = "CANCELLED"; cancelledAt = LocalDateTime.now(); }
+    public void cancelForCorrection() { if (!isActive() || transportTrip != null) throw new IllegalStateException("Only custody without a trip can be corrected"); status = "CANCELLED"; cancelledAt = LocalDateTime.now(); }
+    public void depart() {
+        if (!"ACCEPTED".equals(status)) throw new IllegalStateException("Custody has not been accepted");
+        status = "IN_TRANSIT";
+    }
     /** Destination physical reconciliation, never driver arrival, settles the custody outcome. */
     public void completeDestinationReceipt(boolean discrepancy) {
-        if (!"ACCEPTED".equals(status)) throw new IllegalStateException("Only accepted custody can be received at destination");
-        status = discrepancy ? "DISCREPANCY" : "COMPLETED";
+        if (!"IN_TRANSIT".equals(status)) throw new IllegalStateException("Only departed custody can be received at destination");
+        status = discrepancy ? "COMPLETED_WITH_DISCREPANCY" : "COMPLETED";
+        completedAt = LocalDateTime.now();
     }
     public void linkReplacement(Handover replacement) { this.replacementHandover = replacement; }
     public void linkTransportTrip(TransportTrip trip) { this.transportTrip = trip; }

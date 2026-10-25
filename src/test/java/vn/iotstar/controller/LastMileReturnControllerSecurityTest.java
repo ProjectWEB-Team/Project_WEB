@@ -87,16 +87,30 @@ class LastMileReturnControllerSecurityTest {
     }
 
     @Test
-    @WithMockUser(username = "user_sender", roles = {"USER"})
-    @DisplayName("User POST /user/return-collection with CSRF succeeds (302 PRG)")
+    @WithMockUser(username = "inbound", roles = {"HUB_STAFF"})
+    @DisplayName("Inbound staff POST /hub/return-collection binds verified identity")
     void userReturnCollectionWithCsrfSucceeds() throws Exception {
-        mockMvc.perform(post("/user/return-collection")
+        mockMvc.perform(post("/hub/return-collection")
                         .with(csrf())
                         .param("shipmentId", "1")
                         .param("handoverType", "SELF_PICKUP")
                         .param("identityProof", "CITIZEN_123"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/user/return-collection"));
+                .andExpect(redirectedUrl("/hub/return-collection"));
+        org.mockito.Mockito.verify(lastMileDeliveryService).processReturnHandover(org.mockito.ArgumentMatchers.argThat(r->r.getShipmentId()==1L && "CITIZEN_123".equals(r.getIdentityProof())));
+    }
+    @Test @WithMockUser(roles="USER") void senderCannotReleaseParcelAtHub() throws Exception {
+        mockMvc.perform(post("/hub/return-collection").with(csrf()).param("shipmentId","1").param("handoverType","SELF_PICKUP").param("identityProof","x")).andExpect(status().isForbidden());
+        org.mockito.Mockito.verifyNoInteractions(lastMileDeliveryService);
+    }
+    @Test @WithMockUser(roles="SHIPPER") void returnScanBindsAndRequiresCsrf() throws Exception {
+        mockMvc.perform(post("/shipper/return-tasks/scan").param("shipmentId","1")).andExpect(status().isForbidden());
+        mockMvc.perform(post("/shipper/return-tasks/scan").with(csrf()).param("shipmentId","1")).andExpect(redirectedUrl("/shipper/return-tasks"));
+        org.mockito.Mockito.verify(lastMileDeliveryService).scanReturnDelivery(1L);
+    }
+    @Test @WithMockUser(roles="HUB_STAFF") void physicalFailureReceiptBindsTrackingNumber() throws Exception {
+        mockMvc.perform(post("/hub/delivery-returns/receive").with(csrf()).param("shipmentId","1").param("trackingNumber","TRACK")).andExpect(redirectedUrl("/hub/inbound"));
+        org.mockito.Mockito.verify(lastMileDeliveryService).receiveFailedDelivery(1L,"TRACK");
     }
 }
 

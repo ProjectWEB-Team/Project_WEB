@@ -40,7 +40,7 @@
                         <th>Tracking #</th>
                         <th>Sender</th>
                         <th>Status</th>
-                        <th>Return Fee</th>
+                        <th>Remaining forward + return fees</th>
                         <th>Actions</th>
                     </tr>
                     </thead>
@@ -55,8 +55,10 @@
                                     <td><strong><c:out value="${task.trackingNumber}"/></strong></td>
                                     <td><c:out value="${task.senderName}"/><br><small class="text-muted"><c:out value="${task.senderPhone}"/></small></td>
                                     <td><span class="badge text-bg-warning"><c:out value="${task.currentStatus}"/></span></td>
-                                    <td><c:out value="${task.returnFee}"/> (<c:out value="${task.feeSettled ? 'Settled' : 'Unpaid'}"/>)</td>
+                                    <td><c:out value="${task.outstandingFee}"/> (<c:out value="${task.feeSettled ? 'Settled' : 'Unpaid'}"/>)</td>
                                     <td>
+                                        <form method="post" action="${pageContext.request.contextPath}/shipper/return-tasks/scan"><input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"><input name="shipmentId" type="hidden" value="${task.shipmentId}"><button>Quét xuất kho</button></form>
+                                        <form method="post" action="${pageContext.request.contextPath}/shipper/return-tasks/cash"><input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"><input name="shipmentId" type="hidden" value="${task.shipmentId}"><button>Xác nhận thu đủ phí tiền mặt</button></form>
                                         <form action="${pageContext.request.contextPath}/shipper/return-tasks/confirm" method="post">
                                             <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
                                             <input type="hidden" name="shipmentId" value="${task.shipmentId}"/>

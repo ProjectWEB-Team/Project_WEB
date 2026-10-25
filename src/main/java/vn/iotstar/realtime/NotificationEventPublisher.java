@@ -10,4 +10,5 @@ import vn.iotstar.security.AuthenticatedActor;
 public interface NotificationEventPublisher {
 
     void publishAfterCommit(AuthenticatedActor actor, NotificationEventResponse event);
+    void publishToUserAfterCommit(String username, NotificationEventResponse event);
 }
