@@ -1,20 +1,20 @@
 ---
 gsd_state_version: "1.0"
-current_phase: "05.1"
-current_phase_name: manual-functional-test-guide
-status: Phase01–05 implementation complete; guide delivered; TV3 review and TV2 Phase06 pending in parallel.
+current_phase: "06"
+current_phase_name: security-uat-demo-hardening
+status: Phase06 plans 06-01..06-07 executed on feature/phase-06-hardening (automated evidence green, SQL run and manual checks pending); TV3 Phase05.1 review pending.
 last_updated: "2026-10-26"
 last_activity: 2026-10-26
-last_activity_desc: Correct planning branch and completed implementation statuses per project owner; synchronize project-plans from main.
+last_activity_desc: Execute Phase 06 plans; regression 1682 tests, 0 failures, 45 SQL cases skipped (BLOCKED_BY_ENVIRONMENT); report in phases/06-security-uat-demo-hardening/06-REPORT.md.
 progress:
   total_phases: 7
   completed_phases: 5
-  total_plans: 33
-  completed_plans: 32
+  total_plans: 40
+  completed_plans: 39
   percent: 71
   summary_files: 15
 needs_replan: false
-stopped_at: Guide delivered; TV3 manual assessment and TV2 Phase06 remain to be performed.
+stopped_at: Phase06 automated work done; owner decisions (06-REPORT section 5), SQL-enabled regression, manual browser/multi-session checks and TV3 review remain.
 ---
 
 # Project State

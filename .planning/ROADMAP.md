@@ -190,19 +190,19 @@ Implementation summaries (checked items mean source repairs are implemented; the
 Plans:
 **Wave 1**
 
-- [ ] 06-01-PLAN.md — Route-level permission matrix: role x CSRF x anonymous over every controller route, API chain (D-03), completeness guard, findings (HARD-01).
-- [ ] 06-02-PLAN.md — Service-layer matrix, ownership/finance/last-mile slice: shipment/tracking/fee/wallet/withdrawal/reconciliation/refund/delivery cells and findings (HARD-01).
-- [ ] 06-03-PLAN.md — Maven-only multi-session STOMP delivery, rollback, payload and interceptor matrix; closes the technical part of 05-UAT item 3 (HARD-01, HARD-02).
-- [ ] 06-04-PLAN.md — Demo flags `uteexpress.demo.fast-track-route-bypass` and `uteexpress.demo.auto-linehaul-transit-simulation`, inert outside the demo profile, with naming map (HARD-03).
+- [x] 06-01-PLAN.md — Route-level permission matrix: role x CSRF x anonymous over every controller route, API chain (D-03), completeness guard, findings (HARD-01).
+- [x] 06-02-PLAN.md — Service-layer matrix, ownership/finance/last-mile slice: shipment/tracking/fee/wallet/withdrawal/reconciliation/refund/delivery cells and findings (HARD-01).
+- [x] 06-03-PLAN.md — Maven-only multi-session STOMP delivery, rollback, payload and interceptor matrix; closes the technical part of 05-UAT item 3 (HARD-01, HARD-02).
+- [x] 06-04-PLAN.md — Demo flags `uteexpress.demo.fast-track-route-bypass` and `uteexpress.demo.auto-linehaul-transit-simulation`, inert outside the demo profile, with naming map (HARD-03).
 
 **Wave 2** *(after 06-01 / 06-04)*
 
-- [ ] 06-05-PLAN.md — Service-layer matrix, hub/custody/linehaul/manager/audit/first-mile slice, hub scope, position, assignment, location (HARD-01).
-- [ ] 06-06-PLAN.md — Demo scenario script and checklist for Workflow sections 106 and 107 (HARD-03).
+- [x] 06-05-PLAN.md — Service-layer matrix, hub/custody/linehaul/manager/audit/first-mile slice, hub scope, position, assignment, location (HARD-01).
+- [x] 06-06-PLAN.md — Demo scenario script and checklist for Workflow sections 106 and 107 (HARD-03).
 
 **Wave 3** *(after all)*
 
-- [ ] 06-07-PLAN.md — Full regression, UAT coverage map and manual checklist (results NOT_RUN), findings gate, owner report and branch hand-off (HARD-01, HARD-02, HARD-03).
+- [x] 06-07-PLAN.md — Full regression, UAT coverage map and manual checklist (results NOT_RUN), findings gate, owner report and branch hand-off (HARD-01, HARD-02, HARD-03).
 
 ## Progress
 
