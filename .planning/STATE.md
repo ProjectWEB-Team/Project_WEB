@@ -2,10 +2,10 @@
 gsd_state_version: "1.0"
 current_phase: "06"
 current_phase_name: security-uat-demo-hardening
-status: Phase06 plans 06-01..06-07 executed on feature/phase-06-hardening (automated evidence green, SQL run and manual checks pending); TV3 Phase05.1 review pending.
+status: Phase06 plans 06-01..06-07 executed on feature/phase-06-hardening (1699 tests, 0 failures/errors/skips incl. 50 real SQL cases; manual checks pending); TV3 Phase05.1 review pending.
 last_updated: "2026-10-26"
 last_activity: 2026-10-26
-last_activity_desc: Execute Phase 06 plans; regression 1682 tests, 0 failures, 45 SQL cases skipped (BLOCKED_BY_ENVIRONMENT); report in phases/06-security-uat-demo-hardening/06-REPORT.md.
+last_activity_desc: Execute Phase 06 plans; regression 1699 tests, 0 failures/errors/skips, 50 real SQL cases on uteexpress_phase05_test_tv2; report in phases/06-security-uat-demo-hardening/06-REPORT.md.
 progress:
   total_phases: 7
   completed_phases: 5
@@ -14,7 +14,7 @@ progress:
   percent: 71
   summary_files: 15
 needs_replan: false
-stopped_at: Phase06 automated work done; owner decisions (06-REPORT section 5), SQL-enabled regression, manual browser/multi-session checks and TV3 review remain.
+stopped_at: Phase06 automated work done; LOW findings (06-REPORT section 5), manual browser/multi-session checks and TV3 review remain.
 ---
 
 # Project State

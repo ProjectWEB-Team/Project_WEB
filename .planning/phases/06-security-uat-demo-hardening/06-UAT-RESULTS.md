@@ -2,6 +2,8 @@
 
 Nhánh mã nguồn: `feature/phase-06-hardening`. Tổng số regression và commit: xem mục 2 và `06-REPORT.md`.
 
+**Lần chạy tự động gần nhất (2026-10-26 23:35 +07:00):** `mvn -B clean test`, Oracle JDK 22 (build 22+36-2370), Windows 11 Home 10.0.26200, SQL Server 2025 Developer cục bộ, database kiểm thử riêng `uteexpress_phase05_test_tv2` (schema + 16 migration áp bằng `sqlcmd`). Kết quả: **1699 test chạy, 1699 đạt, 0 failure, 0 error, 0 skip**; trong đó **50 case SQL Server thật chạy, 0 skip**. Kết quả thủ công ở mục 4 vẫn `NOT_RUN`.
+
 ## 1. Ranh giới bằng chứng
 
 - **Tự động (Maven):** test unit, slice MVC và test tích hợp chạy trong `mvn test`. Đây là bằng chứng cho phần kỹ thuật.
