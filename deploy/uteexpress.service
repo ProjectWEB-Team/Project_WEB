@@ -7,8 +7,10 @@ Wants=network-online.target
 [Service]
 User=uteexpress
 WorkingDirectory=/opt/uteexpress
+# Memory default fits t3.micro (1 GB + swap); override JAVA_OPTS in /etc/uteexpress.env (t3.small: -Xmx768m).
+Environment="JAVA_OPTS=-Xms256m -Xmx512m -XX:MaxMetaspaceSize=192m -XX:+UseSerialGC"
 EnvironmentFile=/etc/uteexpress.env
-ExecStart=/usr/bin/java -Xms256m -Xmx768m -jar /opt/uteexpress/app.war --server.address=127.0.0.1
+ExecStart=/usr/bin/java $JAVA_OPTS -jar /opt/uteexpress/app.war --server.address=127.0.0.1
 SuccessExitStatus=143
 Restart=always
 RestartSec=10

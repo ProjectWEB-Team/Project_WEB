@@ -29,19 +29,19 @@ docker exec -it project_web-sqlserver-1 /opt/mssql-tools18/bin/sqlcmd -S localho
 
 ## 2. Tạo máy chủ EC2
 
-AWS Console → chọn region **Asia Pacific (Singapore) ap-southeast-1** (góc trên bên phải). Tạo EC2 và RDS **cùng region**.
+AWS Console → chọn một region (góc trên bên phải), ví dụ Singapore `ap-southeast-1` hoặc Sydney `ap-southeast-2`. Tạo RDS **cùng region với EC2**.
 
 1. **EC2 → Launch instance**
    - Name: `uteexpress-web`
    - AMI: **Ubuntu Server 24.04 LTS**
-   - Instance type: **t3.small** (2 GB RAM; t3.micro 1 GB dễ thiếu bộ nhớ)
+   - Instance type: **t3.small** (2 GB RAM) hoặc **t3.micro** (1 GB, miễn phí; bắt buộc tạo swap ở mục 5 và không build trên server)
    - Key pair: **Create new key pair** → tải file `.pem`, giữ kỹ
    - Network settings → **Create security group** `uteexpress-web-sg`:
      - SSH (22): **My IP**
      - HTTP (80): Anywhere
      - HTTPS (443): Anywhere
    - Storage: 12 GB gp3
-2. **Elastic IP**: EC2 → Elastic IPs → Allocate → Associate với `uteexpress-web`. Ghi lại IP này (IP cố định, không đổi khi khởi động lại).
+2. **Elastic IP**: EC2 → Elastic IPs → Allocate → Associate với `uteexpress-web`. Ghi lại IP này. Bắt buộc: IP public mặc định **đổi mỗi lần stop/start** máy, domain sẽ trỏ sai nếu không có Elastic IP.
 
 ## 3. Tạo database RDS for SQL Server
 
@@ -52,10 +52,10 @@ AWS Console → chọn region **Asia Pacific (Singapore) ap-southeast-1** (góc 
    - DB instance identifier: `uteexpress-db`
    - Master username: `admin`, đặt mật khẩu mạnh và lưu lại
    - Instance class: `db.t3.micro`, Storage: 20 GB gp3 (mức tối thiểu của SQL Server), bỏ tick storage autoscaling
-   - Connectivity: **Public access: No**. VPC: Default VPC
-   - VPC security group: **Create new**, tên `uteexpress-db-sg`
-2. Bấm **Create database**, chờ trạng thái **Available** (10–20 phút). Ghi lại **Endpoint** (dạng `uteexpress-db.xxxx.ap-southeast-1.rds.amazonaws.com`).
-3. Security group chỉ cho EC2 vào: **EC2 → Security Groups → uteexpress-db-sg → Edit inbound rules** → xoá rule cũ, thêm: Type **MSSQL** (1433), Source: security group của EC2 (`uteexpress-web-sg`).
+   - Connectivity: chọn **Connect to an EC2 compute resource** → chọn `uteexpress-web`. AWS tự đặt Public access **No** và tự tạo security group cho phép EC2 vào cổng 1433 (khi đó bỏ qua bước 3).
+     (Cách thủ công: Don't connect, Public access **No**, VPC security group **Create new** `uteexpress-db-sg`, rồi làm bước 3.)
+2. Bấm **Create database**, chờ trạng thái **Available** (10–20 phút). Ghi lại **Endpoint** (dạng `uteexpress-db.xxxx.<region>.rds.amazonaws.com`).
+3. Chỉ với cách thủ công: **EC2 → Security Groups → uteexpress-db-sg → Edit inbound rules** → xoá rule cũ, thêm Type **MSSQL** (1433), Source: security group của EC2.
 
 ## 4. Trỏ domain ở TenTen về EC2
 
@@ -82,6 +82,15 @@ Trên EC2:
 sudo apt update && sudo apt -y upgrade
 sudo apt -y install openjdk-21-jre-headless nginx certbot python3-certbot-nginx apache2-utils git maven
 sudo useradd --system --create-home --home-dir /opt/uteexpress uteexpress
+```
+
+Máy **t3.micro (1 GB RAM)**: tạo swap 2 GB để Java không bị hết bộ nhớ (t3.small có thể bỏ qua):
+
+```bash
+sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile
+sudo mkswap /swapfile && sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+free -h        # dòng Swap hiện 2.0Gi là được
 ```
 
 Công cụ `sqlcmd` để tạo database trên RDS (một lần):
@@ -126,7 +135,7 @@ Trên EC2:
 sudo install -o uteexpress -g uteexpress -m 0644 /tmp/app.war /opt/uteexpress/app.war
 ```
 
-Cách B: clone repo trên EC2 (`git clone https://github.com/RVAN1102/Project_WEB.git`) và dùng `deploy/deploy.sh` mỗi lần cập nhật.
+Cách B (chỉ t3.small trở lên; t3.micro dễ treo khi build Maven): clone repo trên EC2 (`git clone https://github.com/RVAN1102/Project_WEB.git`) và dùng `deploy/deploy.sh` mỗi lần cập nhật.
 
 Cài service (file mẫu `deploy/uteexpress.service`):
 
