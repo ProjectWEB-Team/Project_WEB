@@ -8,7 +8,7 @@ Wants=network-online.target
 User=uteexpress
 WorkingDirectory=/opt/uteexpress
 EnvironmentFile=/etc/uteexpress.env
-ExecStart=/usr/bin/java -Xms256m -Xmx768m -jar /opt/uteexpress/app.war --spring.profiles.active=prod --server.address=127.0.0.1
+ExecStart=/usr/bin/java -Xms256m -Xmx768m -jar /opt/uteexpress/app.war --server.address=127.0.0.1
 SuccessExitStatus=143
 Restart=always
 RestartSec=10

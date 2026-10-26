@@ -107,7 +107,10 @@ sudo nano /etc/uteexpress.env
 sudo chmod 600 /etc/uteexpress.env
 ```
 
-Điền: `UTEEXPRESS_SQLSERVER_URL` (thay `<rds-endpoint>`), `UTEEXPRESS_SQLSERVER_PASSWORD` (= `<MAT_KHAU_APP>`), `UTEEXPRESS_JWT_SECRET` (tạo bằng `openssl rand -base64 48`). File này **không** nằm trong Git.
+Điền: `UTEEXPRESS_SQLSERVER_URL` (thay `<rds-endpoint>`), `UTEEXPRESS_SQLSERVER_PASSWORD` (= `<MAT_KHAU_APP>`), `UTEEXPRESS_JWT_SECRET` (tạo bằng `openssl rand -base64 48`), `SPRING_PROFILES_ACTIVE`. File này **không** nằm trong Git.
+
+- Giai đoạn test: `SPRING_PROFILES_ACTIVE=prod,demo` và làm thêm **mục 8b** (bắt buộc).
+- Chạy thật: `SPRING_PROFILES_ACTIVE=prod` (xem mục 11).
 
 ## 7. Đưa ứng dụng lên và chạy như dịch vụ
 
@@ -151,6 +154,30 @@ Certbot tự cấu hình HTTPS và tự gia hạn chứng chỉ. Cấu hình có
 
 Mở `https://tenmiencuaban.vn` để kiểm tra.
 
+## 8b. Giai đoạn test: bật demo (bắt buộc khoá site bằng mật khẩu)
+
+Profile `demo` nạp 38 hub mô phỏng, tài khoản `demo_*` cho mọi vai trò và rút thời gian chờ còn 2 phút. Mật khẩu mặc định của các tài khoản demo **nằm công khai trong repo**, nên khi bật demo trên Internet phải làm cả hai việc sau.
+
+1. **Mật khẩu demo riêng** (làm *trước lần khởi động đầu* với demo):
+
+   ```bash
+   sudo apt -y install apache2-utils
+   htpasswd -bnBC 10 "" 'MAT_KHAU_DEMO_CUA_BAN' | tr -d ':
+'; echo
+   ```
+
+   Dán chuỗi `$2y$10$...` vào `/etc/uteexpress.env`: `UTEEXPRESS_DEMO_PASSWORD_HASH=<chuỗi đó>`, đặt `SPRING_PROFILES_ACTIVE=prod,demo`, rồi `sudo systemctl restart uteexpress`. Mọi tài khoản `demo_*` dùng mật khẩu này.
+
+2. **Khoá toàn site bằng Nginx basic auth** (trình duyệt hỏi tên/mật khẩu trước khi vào web):
+
+   ```bash
+   sudo htpasswd -c /etc/nginx/.htpasswd tester      # đặt mật khẩu; thêm người: bỏ -c
+   ```
+
+   Trong `/etc/nginx/sites-available/uteexpress`, bỏ dấu `#` ở hai dòng `auth_basic` trong khối `server` (đã có sẵn trong file mẫu), rồi `sudo nginx -t && sudo systemctl reload nginx`. Không commit file `.htpasswd`. WebSocket `/ws` vẫn hoạt động: trình duyệt tự gửi lại thông tin basic auth và cookie đăng nhập cho cùng domain.
+
+OTP: profile `otp-local` ghi mã vào file trên server (`/opt/uteexpress/.local/otp-inbox`), chỉ người SSH vào máy đọc được. Chỉ thêm (`prod,demo,otp-local`) nếu cần thử đăng ký; bình thường dùng tài khoản demo.
+
 ## 9. Cập nhật phiên bản mới
 
 1. Kéo code mới / build WAR mới (cách A hoặc `./deploy/deploy.sh`).
@@ -158,10 +185,23 @@ Mở `https://tenmiencuaban.vn` để kiểm tra.
 
 ## 10. Lưu ý vận hành
 
-- Profile production là `prod`: không bật `otp-local`, `demo`. Đăng ký bằng OTP điện thoại cần nhà cung cấp SMS thật; trước đó dùng tài khoản tạo sẵn hoặc đăng nhập Google (profile `google`, cần client ID/secret).
+- Profile production là `prod`; `demo` chỉ dùng giai đoạn test (mục 8b), tắt theo mục 11. Đăng ký bằng OTP điện thoại cần nhà cung cấp SMS thật; trước đó dùng tài khoản tạo sẵn hoặc đăng nhập Google (profile `google`, cần client ID/secret).
 - Tài khoản nhân viên (shipper, hub, tài xế, quản lý, admin) cần được tạo trong DB; không có trang tự đăng ký cho các vai trò này.
 - File upload lưu ở `/opt/uteexpress/uploads`. Sao lưu RDS: bật **Automated backups** (mặc định 7 ngày).
 - Lỗi thường gặp:
   - `Login failed` / timeout tới RDS: kiểm tra security group bước 2.3 và URL trong `/etc/uteexpress.env`.
   - `502 Bad Gateway`: app chưa chạy xong hoặc lỗi, xem `journalctl -u uteexpress -n 200`.
   - Certbot lỗi: domain chưa trỏ đúng IP (bước 4).
+
+## 11. Chuyển sang chạy thật (tắt demo)
+
+1. `/etc/uteexpress.env`: `SPRING_PROFILES_ACTIVE=prod` (bỏ `demo`, `otp-local`); đổi `UTEEXPRESS_JWT_SECRET` mới (`openssl rand -base64 48`), mọi phiên đăng nhập cũ sẽ hết hiệu lực.
+2. Khoá các tài khoản demo trên RDS (chỉ chạy khi bạn quyết định; dữ liệu demo không tự mất khi tắt profile):
+
+   ```sql
+   UPDATE dbo.users SET status = N'LOCKED' WHERE username LIKE N'demo[_]%';
+   ```
+
+   Hub mô phỏng, bảng giá demo vẫn còn; thay bằng dữ liệu thật trước khi mở cho khách.
+3. Bỏ basic auth: thêm lại dấu `#` ở hai dòng `auth_basic`, `sudo nginx -t && sudo systemctl reload nginx`.
+4. `sudo systemctl restart uteexpress`.

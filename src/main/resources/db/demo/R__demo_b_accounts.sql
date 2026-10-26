@@ -1,6 +1,7 @@
-/* Demo-only accounts (demo profile; never in prod). Every account's password is Demo@12345 (BCrypt below).
+/* Demo-only accounts (demo profile). Every account's password is Demo@12345 unless the server sets
+   UTEEXPRESS_DEMO_PASSWORD_HASH (a BCrypt hash, see docs/DEPLOY_AWS.md) before the first demo start.
    Inserts missing rows only; existing users, profiles, wallets and vehicles are left unchanged. */
-DECLARE @password NVARCHAR(255) = N'$2a$10$hVKRAkvCfZqYoGSi/dK5ded1.LUAb7Qgw6V1zCAWfMQSeC17IygbW';
+DECLARE @password NVARCHAR(255) = N'${demo_password_hash}';
 DECLARE @accounts TABLE (username NVARCHAR(50), full_name NVARCHAR(100), phone NVARCHAR(20), role NVARCHAR(50),
                          hub_code NVARCHAR(50), position NVARCHAR(50));
 INSERT @accounts VALUES
