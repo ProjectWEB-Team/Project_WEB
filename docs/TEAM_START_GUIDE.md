@@ -2,7 +2,7 @@
 
 ## 1. Mục tiêu và điểm xuất phát chung
 
-`main` đang chứa **Phase 01 — Shared Walking Skeleton** đã triển khai: xác thực phiên/JWT, sáu vai trò chuẩn, tạo và đọc vận đơn tối thiểu, JSP/JSTL, SQL Server, xử lý lỗi an toàn và STOMP riêng tư. Đây là nền tảng chung; không tự thay đổi hợp đồng nền tảng trước khi trao đổi với trưởng nhóm.
+`main` đã hoàn thành triển khai **Phase 01–05**, gồm account/intake, hub/linehaul, giao/hoàn hàng, tài chính và cross-slice integration. Phần nền tảng dùng: xác thực phiên/JWT, sáu vai trò chuẩn, tạo và đọc vận đơn tối thiểu, JSP/JSTL, SQL Server, xử lý lỗi an toàn và STOMP riêng tư. Đây là nền tảng chung; không tự thay đổi hợp đồng nền tảng trước khi trao đổi với trưởng nhóm.
 
 Stack đã xác nhận trong mã nguồn:
 
@@ -11,7 +11,9 @@ Stack đã xác nhận trong mã nguồn:
 - SQL Server là cơ sở dữ liệu duy nhất.
 - JSP/JSTL + Bootstrap cho giao diện trình duyệt.
 
-Phân công theo lát cắt dọc:
+**Cập nhật 26/10/2026:** Phase 01–05 hoàn thành triển khai. TV3 rà soát thủ công theo [một hướng dẫn Spring Tools trên project-plans](https://github.com/RVAN1102/Project_WEB/blob/project-plans/.planning/phases/05.1-full-functional-acceptance/05.1-01-PLAN.md); TV2 làm Phase 06 song song; người dùng duyệt cuối. `.planning/`, requirements, roadmap và các plan chỉ được commit/push lên `project-plans`. Đồng bộ mã theo chiều `main → project-plans`, không merge nhánh planning về `main`.
+
+Phân công triển khai Phase 02–04 đã hoàn tất theo lát cắt dọc:
 
 | Người phụ trách | Phần việc | Tài liệu cần đọc trên nhánh `project-plans` |
 |---|---|---|
@@ -43,12 +45,7 @@ $env:UTEEXPRESS_JWT_SECRET = "<BASE64_JWT_SECRET_AT_LEAST_32_DECODED_BYTES>"
 
 Không tự đặt tên database, URL, user hay mật khẩu theo suy đoán. `spring.jpa.hibernate.ddl-auto=none`, vì vậy Hibernate không tự tạo schema. Chuẩn bị SQL Server và áp dụng schema chuẩn theo `docs/schema.sql` cùng các tài liệu canonical trước khi chạy ứng dụng.
 
-Chạy kiểm thử và ứng dụng sau khi môi trường đã sẵn sàng:
-
-```powershell
-mvn test
-mvn spring-boot:run
-```
+Chạy ứng dụng bằng **Spring Tools Suite**: Import → Maven → Existing Maven Projects; Maven → Update Project; chọn JDK 21 trở lên phù hợp. Run Configurations → Spring Boot App, main class `vn.iotstar.UteExpressApplication`, Profiles `local,otp-local`, working directory là checkout source, Apply → Run. Có thể dùng cấu hình `UTEExpress-local-otp.launch` đã có. Đọc hướng dẫn TV3 trên `project-plans` để thao tác các ca kiểm thử; không chạy reset/migration chỉ để thực hiện hướng dẫn.
 
 ## 3. Quy trình làm việc an toàn
 
@@ -60,13 +57,15 @@ mvn spring-boot:run
    git pull --ff-only origin main
    ```
 
-2. Chuyển sang nhánh `project-plans` để đọc đầy đủ bộ tài liệu của Phase được phân công. Không viết mã trên nhánh này.
+2. Đọc đầy đủ tài liệu trên nhánh `project-plans` bằng GitHub hoặc checkout tài liệu riêng. Nếu dùng cùng thư mục, dừng ứng dụng STS trước khi chuyển nhánh. Không viết mã trên nhánh này.
 
    ```powershell
    git fetch origin
    git switch project-plans
    git pull --ff-only origin project-plans
    ```
+
+Chỉ khi cần cập nhật ngữ cảnh source của nhánh tài liệu: ở `project-plans`, chạy `git fetch origin`, rồi `git merge origin/main`; giữ lại planning của nhánh và review xung đột nếu có. Push kết quả lên `origin project-plans`. Không làm thao tác merge ngược planning vào `main`.
 
 3. Quay về `main`, cập nhật lại, rồi tạo nhánh chức năng cá nhân.
 

@@ -1,5 +1,8 @@
 # Dependencies & local tools
 node_modules/
+.agents/
+.gsd/
+.planning/
 .local/
 .local-backups/
 

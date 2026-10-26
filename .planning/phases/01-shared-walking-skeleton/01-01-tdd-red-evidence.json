@@ -1,7 +1,0 @@
-{
-  "command": "mvn -Dtest=AuthApiControllerTest test",
-  "exit_code": 1,
-  "failing_test": "vn.iotstar.controller.api.AuthApiControllerTest.validApiCredentialsReceiveABearerToken",
-  "expected_result": "POST /api/auth/login returns HTTP 200 with a Bearer accessToken",
-  "actual_result": "HTTP 404 because no AuthApiController exists"
-}
