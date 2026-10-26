@@ -57,7 +57,7 @@ Source branch: `feature/phase-06-hardening`. Pattern verified, not replaced (D-0
 
 | ID | Severity | Surface | Description | Disposition | Evidence |
 |---|---|---|---|---|---|
-| F-06-H-01 | MEDIUM | `FirstMileServiceImpl.pendingPickups`, `ShipmentRepository.findPendingPickups` | Unclaimed HOME_PICKUP shipments (sender name, phone, address) are visible to, and claimable by, coordinators of every hub because no origin hub is set at creation. Owner decision needed: restrict to the sender's area or keep as a shared national queue. | RECORDED (owner decision) | hypothesis (a) |
+| F-06-H-01 | MEDIUM | `FirstMileServiceImpl.pendingPickups`, `ShipmentRepository.findPendingPickups` | Unclaimed HOME_PICKUP shipments (sender name, phone, address) are visible to, and claimable by, coordinators of every hub because no origin hub is set at creation. Owner decision needed: restrict to the sender's area or keep as a shared national queue. | FIXED (`88a40e4`: origin hub set at creation when the sender's province has exactly one delivery hub; otherwise previous shared queue; ShipmentServiceImplTest#homePickupIsScopedToTheSendersAreaHubOnlyWhenThatHubIsUnique) | hypothesis (a) |
 | F-06-H-02 | LOW | `ContainerHandoverServiceImpl.createHandover` | Receiver driver checked by role only; inactive or mispositioned drivers are rejected later at acceptance. | RECORDED | hypothesis (b) |
 | F-06-H-03 | LOW | `OperationsAuditServiceImpl.mayReadShipment` | Any hub-staff position at the parcel's current hub may read its timeline. | RECORDED | hypothesis (c) |
 

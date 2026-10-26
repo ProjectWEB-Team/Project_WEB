@@ -43,7 +43,7 @@ Thực hiện theo `docs/PHASE_05_VERIFICATION.md` (bảng "Bounded live browser
 |---|---|---|---|---|---|
 | M1 | Người gửi đăng nhập, tạo đơn, CSRF hoạt động | Tạo đơn thành công, không lỗi 403 | NOT_RUN | | |
 | M2 | Nhân viên hub gốc nhận, phân loại, đóng bao, bàn giao | Đúng trạng thái và sự kiện | NOT_RUN | | |
-| M3 | Tài xế quét bao, chọn xe, khởi hành | Bàn giao ACCEPTED; xe IN_USE (lưu ý GAP F-06-U-01: thiếu form quét bao) | NOT_RUN | | |
+| M3 | Tài xế quét bao, chọn xe, khởi hành | Bàn giao ACCEPTED; xe IN_USE | NOT_RUN | | |
 | M4 | Hub đích nhận kiện; điều phối giao; shipper thu COD | Thu đúng số tiền; DELIVERED | NOT_RUN | | |
 | M5 | Manager đối soát CASH rồi VNPAY/TRANSFER, chi trả COD riêng | Ví chỉ đổi khi chi trả | NOT_RUN | | |
 | M6 | Đối soát thiếu toàn bộ; hai Manager, tài xế, một phiên không liên quan đang mở | Tài xế và Manager có quyền nhận đúng một cảnh báo; phiên không liên quan không nhận | NOT_RUN | | |

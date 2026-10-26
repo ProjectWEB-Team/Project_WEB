@@ -80,7 +80,7 @@ Ghi mã vận đơn (UTX-…) và id đơn hiển thị ở trang chi tiết và
 | 5.6 | HUB_STAFF INBOUND hub gốc | `/hub/sorter`: form nhận hàng (POST `/hub/inbound`) với id đơn | — | Trạng thái `AT_HUB`; sự kiện `ARRIVED_AT_HUB` | NOT_RUN | | |
 | 5.7 | HUB_STAFF SORTER | `/hub/sorter`: phân loại (POST `/hub/sorter`) | `uteexpress.demo.fast-track-route-bypass` nếu thiếu quy tắc tĩnh | Hiện mã hub kế tiếp; sự kiện `SORTING_COMPLETED`; không có lỗi "Sorting is temporarily unavailable" | NOT_RUN | | |
 | 5.8 | HUB_STAFF OUTBOUND | `/hub/outbound`: tạo bao (containerCode, destinationHubId), nạp đơn vào bao (load), tạo bàn giao (destinationHubId, receiverDriverId, containerIds) | — | Bao `SEALED`; bàn giao `PENDING_ACCEPTANCE` | NOT_RUN | | |
-| 5.9 | LINEHAUL_DRIVER (Tab 4) | Quét bao cho bàn giao: **GAP** — trang `/driver` không có form cho POST `/driver/handovers/scan` (controller có). Chỉ làm được bằng công cụ gửi POST kèm CSRF; ghi rõ cách đã dùng | — | Bàn giao `ACCEPTED` sau khi quét đủ bao | NOT_RUN | | |
+| 5.9 | LINEHAUL_DRIVER (Tab 4) | `/driver`: form Scan container (handoverId, containerId), mỗi bao một lần | — | Bàn giao `ACCEPTED` sau khi quét đủ bao | NOT_RUN | | |
 | 5.10 | LINEHAUL_DRIVER | `/driver`: Accept handover (handoverId, chọn xe) | — | Trip `SCHEDULED`; xe `IN_USE` | NOT_RUN | | |
 | 5.11 | LINEHAUL_DRIVER | `/driver`: Start trip (tripId) | `uteexpress.demo.auto-linehaul-transit-simulation` | Trip `ARRIVED` ngay; đơn `IN_TRANSIT`; sự kiện `LINEHAUL_TRIP_STARTED` rồi `LINEHAUL_ARRIVED`; nhân viên INBOUND hub đích nhận thông báo | NOT_RUN | | |
 | 5.12 | HUB_STAFF INBOUND hub đích (Tab 5) | `/hub/inbound`: nhận từng kiện (POST `/hub/inbound/receive`) rồi đối soát bao (POST `/hub/inbound/reconcile`) | — | Đơn `AT_HUB` ở Cần Thơ; bàn giao/trip hoàn tất | NOT_RUN | | |
@@ -182,7 +182,7 @@ Tiền điều kiện: một đơn đã ở `OUT_FOR_DELIVERY` (làm như 5.1–
 - Cờ demo là cấu hình của người vận hành; biến môi trường cũng bật được (F-06-D-02).
 - Chỉ khóa `uteexpress.*` có tác dụng; khóa `app.*` trong Workflow bị bỏ qua (F-06-D-03).
 - Hoàn tiền VNPay thật và chi trả ngân hàng thật nằm ngoài phạm vi; VNPay/TRANSFER chỉ là bằng chứng demo/thủ công do Manager ghi.
-- Trang `/driver` không có form quét bao cho bàn giao (bước 5.9, GAP) và không liệt kê handover/trip được giao, nên phải nhập id tay.
+- Trang `/driver` không liệt kê handover/trip được giao, nên phải nhập id tay (form quét bao đã được thêm ở `0b9b1f9`).
 - Sau khi tiêu hủy hàng hoàn hoặc thu phí hoàn tiền mặt, trang chuyển về `/` thay vì quay lại trang thao tác.
 
 ## 8. Mẫu ghi phát hiện
