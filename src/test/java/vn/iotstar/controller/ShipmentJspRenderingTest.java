@@ -91,9 +91,23 @@ class ShipmentJspRenderingTest {
                 "id=\"shipment-step-1\"", "id=\"shipment-step-2\"", "id=\"shipment-step-3\"",
                 "id=\"shipment-step-4\"", "id=\"shipment-quote-button\"", "/assets/js/shipment-wizard.js")
                 .doesNotContain("id=\"shipment-create-button\"", "name=\"quoteReference\"");
+        assertThat(form).contains("id=\"senderProvinceCode\"", "id=\"senderWardCode\"", "id=\"receiverProvinceCode\"", "id=\"receiverWardCode\"",
+                "value=\"79\"", "value=\"01\"", "/assets/js/shipment-address.js")
+                .doesNotContain("name=\"fromRegion\"", "name=\"toRegion\"", "name=\"receiverDistrict\"");
         hiddenValue(form, "_csrf");
         Files.writeString(Path.of("target/shipment-wizard-empty.html"), form);
         verifyNoInteractions(shipments);
+    }
+
+    @Test
+    void addressCatalogServesAllProvincesAndWardsFromTheBundledSource() throws Exception {
+        var response = browser.send(HttpRequest.newBuilder(uri("/user/shipments/address-catalog")).GET().build(), HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+        assertThat(response.statusCode()).isEqualTo(200);
+        var catalog = new com.fasterxml.jackson.databind.ObjectMapper().readTree(response.body());
+        assertThat(catalog.size()).isEqualTo(34);
+        int wards = 0;
+        for (var province : catalog) wards += province.get("wards").size();
+        assertThat(wards).isEqualTo(3321);
     }
 
     @Test
@@ -110,7 +124,9 @@ class ShipmentJspRenderingTest {
                 "id=\"shipment-create-button\"", "Owner &lt;b&gt;example&lt;/b&gt;",
                 "2 Receiver Street &amp; Annex")
                 .doesNotContain("Owner <b>example</b>");
-        assertThat(quote.body()).containsPattern("35[,.\\s\\u00a0]?000 VND");
+        assertThat(quote.body()).contains("35.000đ");
+        assertThat(quote.body()).containsPattern("<option[^>]*value=\"79\"[^>]*selected=\"selected\"")
+                .containsPattern("<option[^>]*value=\"26740\"[^>]*selected=\"selected\"");
         fields.put("quoteReference", hiddenValue(quote.body(), "quoteReference"));
         Files.writeString(Path.of("target/shipment-wizard-quote.html"), quote.body());
 
@@ -174,6 +190,10 @@ class ShipmentJspRenderingTest {
 
     private Map<String, String> validFields() {
         Map<String, String> fields = new LinkedHashMap<>();
+        fields.put("senderProvinceCode", "79");
+        fields.put("senderWardCode", "26740");
+        fields.put("receiverProvinceCode", "79");
+        fields.put("receiverWardCode", "26740");
         fields.put("senderName", "Owner");
         fields.put("senderPhone", "0900000001");
         fields.put("senderAddress", "1 Owner Street");

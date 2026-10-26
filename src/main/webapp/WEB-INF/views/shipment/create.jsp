@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 <!DOCTYPE html>
@@ -12,6 +13,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="${pageContext.request.contextPath}/assets/css/ute-express.css" rel="stylesheet">
     <script src="${pageContext.request.contextPath}/assets/js/shipment-wizard.js" defer></script>
+    <script src="${pageContext.request.contextPath}/assets/js/shipment-address.js" defer></script>
 </head>
 <body class="bg-ute-canvas">
 <main class="container shipment-form-container py-4">
@@ -31,27 +33,67 @@
             <div id="shipment-form-errors" class="alert alert-danger" role="alert" tabindex="-1"><c:forEach items="${errors.globalErrors}" var="e"><div><c:out value="${e.defaultMessage}"/></div></c:forEach></div>
         </c:if>
     </spring:hasBindErrors>
-    <form:form id="shipment-create-form" method="post" action="${pageContext.request.contextPath}/user/shipments" modelAttribute="createShipmentRequest" data-has-quote="${not empty quote}">
+    <form:form id="shipment-create-form" method="post" action="${pageContext.request.contextPath}/user/shipments" modelAttribute="createShipmentRequest" data-has-quote="${not empty quote}" data-address-catalog-url="${pageContext.request.contextPath}/user/shipments/address-catalog">
         <c:if test="${not empty quote}"><input type="hidden" name="quoteReference" value="<c:out value='${quoteReference}'/>"></c:if>
         <section id="shipment-step-1" data-shipment-step="0" class="card-ute p-4 mb-3" aria-labelledby="shipment-step-title-1">
             <h2 id="shipment-step-title-1" class="h5 text-ute-primary" tabindex="-1">1. Người gửi và người nhận</h2>
-            <div class="row g-3">
-                        <div class="col-md-6"><label class="form-label" for="senderName">Người gửi</label><form:input id="senderName" path="senderName" type="text" cssClass="form-control" cssErrorClass="form-control is-invalid" htmlEscape="true" required="required" maxlength="100"/><form:errors path="senderName" cssClass="invalid-feedback d-block" htmlEscape="true"/></div>
-                        <div class="col-md-6"><label class="form-label" for="senderPhone">Điện thoại người gửi</label><form:input id="senderPhone" path="senderPhone" type="tel" cssClass="form-control" cssErrorClass="form-control is-invalid" htmlEscape="true" required="required" maxlength="20"/><form:errors path="senderPhone" cssClass="invalid-feedback d-block" htmlEscape="true"/></div>
-                        <div class="col-12"><label class="form-label" for="senderAddress">Địa chỉ người gửi</label><form:input id="senderAddress" path="senderAddress" type="text" cssClass="form-control" cssErrorClass="form-control is-invalid" htmlEscape="true" required="required" maxlength="255"/><form:errors path="senderAddress" cssClass="invalid-feedback d-block" htmlEscape="true"/></div>
-                        <div class="col-md-6"><label class="form-label" for="receiverName">Người nhận</label><form:input id="receiverName" path="receiverName" type="text" cssClass="form-control" cssErrorClass="form-control is-invalid" htmlEscape="true" required="required" maxlength="100"/><form:errors path="receiverName" cssClass="invalid-feedback d-block" htmlEscape="true"/></div>
-                        <div class="col-md-6"><label class="form-label" for="receiverPhone">Điện thoại người nhận</label><form:input id="receiverPhone" path="receiverPhone" type="tel" cssClass="form-control" cssErrorClass="form-control is-invalid" htmlEscape="true" required="required" maxlength="20"/><form:errors path="receiverPhone" cssClass="invalid-feedback d-block" htmlEscape="true"/></div>
-                        <div class="col-12"><label class="form-label" for="receiverAddress">Địa chỉ người nhận</label><form:input id="receiverAddress" path="receiverAddress" type="text" cssClass="form-control" cssErrorClass="form-control is-invalid" htmlEscape="true" required="required" maxlength="255"/><form:errors path="receiverAddress" cssClass="invalid-feedback d-block" htmlEscape="true"/></div>
-                        <div class="col-md-6"><label class="form-label" for="receiverProvince">Tỉnh/thành người nhận</label><form:input id="receiverProvince" path="receiverProvince" type="text" cssClass="form-control" cssErrorClass="form-control is-invalid" htmlEscape="true" required="required" maxlength="100"/><form:errors path="receiverProvince" cssClass="invalid-feedback d-block" htmlEscape="true"/></div>
-                        <div class="col-md-6"><label class="form-label" for="receiverDistrict">Quận/huyện người nhận</label><form:input id="receiverDistrict" path="receiverDistrict" type="text" cssClass="form-control" cssErrorClass="form-control is-invalid" htmlEscape="true" required="required" maxlength="100"/><form:errors path="receiverDistrict" cssClass="invalid-feedback d-block" htmlEscape="true"/></div>
-            </div>
+            <p class="small text-ute-muted">Địa chỉ theo địa giới từ 01/07/2025: 34 tỉnh/thành và 3.321 phường/xã. Chọn tỉnh/thành, phường/xã rồi nhập số nhà, tên đường hoặc thôn/ấp.</p>
+            <fieldset class="row g-3 mb-4" data-address-group="sender">
+                <legend class="h6 mt-3">Thông tin người gửi</legend>
+                <div class="col-md-6"><label class="form-label" for="senderName">Họ tên người gửi</label><form:input id="senderName" path="senderName" cssClass="form-control" cssErrorClass="form-control is-invalid" htmlEscape="true" required="required" maxlength="100" autocomplete="name"/><form:errors path="senderName" cssClass="invalid-feedback d-block" htmlEscape="true"/></div>
+                <div class="col-md-6"><label class="form-label" for="senderPhone">Điện thoại người gửi</label><form:input id="senderPhone" path="senderPhone" type="tel" cssClass="form-control" cssErrorClass="form-control is-invalid" htmlEscape="true" required="required" maxlength="20" autocomplete="tel"/><form:errors path="senderPhone" cssClass="invalid-feedback d-block" htmlEscape="true"/></div>
+                <div class="col-md-6">
+                    <label class="form-label" for="senderProvinceCode">Tỉnh/thành người gửi</label>
+                    <form:select id="senderProvinceCode" path="senderProvinceCode" cssClass="form-select" cssErrorClass="form-select is-invalid" required="required" autocomplete="address-level1" aria-describedby="sender-area-status">
+                        <form:option value="" label="Chọn tỉnh/thành"/>
+                        <form:options items="${addressProvinces}" itemValue="code" itemLabel="name" htmlEscape="true"/>
+                    </form:select>
+                    <form:errors path="senderProvinceCode" cssClass="invalid-feedback d-block" htmlEscape="true"/>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="senderWardCode">Phường/xã/đặc khu người gửi</label>
+                    <input id="senderWardSearch" type="search" class="form-control mb-2" placeholder="Tìm phường/xã…" aria-label="Tìm phường/xã người gửi" aria-controls="senderWardCode" autocomplete="off">
+                    <form:select id="senderWardCode" path="senderWardCode" cssClass="form-select" cssErrorClass="form-select is-invalid" required="required" autocomplete="address-level2" aria-describedby="sender-area-status">
+                        <form:option value="" label="Chọn phường/xã/đặc khu"/>
+                        <form:options items="${senderWards}" itemValue="code" itemLabel="name" htmlEscape="true"/>
+                    </form:select>
+                    <form:errors path="senderWardCode" cssClass="invalid-feedback d-block" htmlEscape="true"/>
+                </div>
+                <div class="col-12"><p id="sender-area-status" class="small text-ute-muted mb-0" role="status" aria-live="polite">Chọn địa chỉ để tự xác định vùng tính cước.</p></div>
+                <div class="col-12"><label class="form-label" for="senderAddress">Số nhà, tên đường / thôn, ấp</label><form:input id="senderAddress" path="senderAddress" cssClass="form-control" cssErrorClass="form-control is-invalid" htmlEscape="true" required="required" maxlength="180" placeholder="Ví dụ: 12 Nguyễn Huệ, tòa nhà A, tầng 2" autocomplete="address-line1"/><form:errors path="senderAddress" cssClass="invalid-feedback d-block" htmlEscape="true"/><div class="form-text">Không nhập lại tỉnh/thành và phường/xã đã chọn.</div></div>
+            </fieldset>
+            <fieldset class="row g-3 mb-4" data-address-group="receiver">
+                <legend class="h6 mt-3">Thông tin người nhận</legend>
+                <div class="col-md-6"><label class="form-label" for="receiverName">Họ tên người nhận</label><form:input id="receiverName" path="receiverName" cssClass="form-control" cssErrorClass="form-control is-invalid" htmlEscape="true" required="required" maxlength="100" autocomplete="name"/><form:errors path="receiverName" cssClass="invalid-feedback d-block" htmlEscape="true"/></div>
+                <div class="col-md-6"><label class="form-label" for="receiverPhone">Điện thoại người nhận</label><form:input id="receiverPhone" path="receiverPhone" type="tel" cssClass="form-control" cssErrorClass="form-control is-invalid" htmlEscape="true" required="required" maxlength="20" autocomplete="tel"/><form:errors path="receiverPhone" cssClass="invalid-feedback d-block" htmlEscape="true"/></div>
+                <div class="col-md-6">
+                    <label class="form-label" for="receiverProvinceCode">Tỉnh/thành người nhận</label>
+                    <form:select id="receiverProvinceCode" path="receiverProvinceCode" cssClass="form-select" cssErrorClass="form-select is-invalid" required="required" autocomplete="address-level1" aria-describedby="receiver-area-status">
+                        <form:option value="" label="Chọn tỉnh/thành"/>
+                        <form:options items="${addressProvinces}" itemValue="code" itemLabel="name" htmlEscape="true"/>
+                    </form:select>
+                    <form:errors path="receiverProvinceCode" cssClass="invalid-feedback d-block" htmlEscape="true"/>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="receiverWardCode">Phường/xã/đặc khu người nhận</label>
+                    <input id="receiverWardSearch" type="search" class="form-control mb-2" placeholder="Tìm phường/xã…" aria-label="Tìm phường/xã người nhận" aria-controls="receiverWardCode" autocomplete="off">
+                    <form:select id="receiverWardCode" path="receiverWardCode" cssClass="form-select" cssErrorClass="form-select is-invalid" required="required" autocomplete="address-level2" aria-describedby="receiver-area-status">
+                        <form:option value="" label="Chọn phường/xã/đặc khu"/>
+                        <form:options items="${receiverWards}" itemValue="code" itemLabel="name" htmlEscape="true"/>
+                    </form:select>
+                    <form:errors path="receiverWardCode" cssClass="invalid-feedback d-block" htmlEscape="true"/>
+                </div>
+                <div class="col-12"><p id="receiver-area-status" class="small text-ute-muted mb-0" role="status" aria-live="polite">Chọn địa chỉ để tự xác định vùng tính cước.</p></div>
+                <div class="col-12"><label class="form-label" for="receiverAddress">Số nhà, tên đường / thôn, ấp</label><form:input id="receiverAddress" path="receiverAddress" cssClass="form-control" cssErrorClass="form-control is-invalid" htmlEscape="true" required="required" maxlength="180" placeholder="Ví dụ: 12 Nguyễn Huệ, tòa nhà A, tầng 2" autocomplete="address-line1"/><form:errors path="receiverAddress" cssClass="invalid-feedback d-block" htmlEscape="true"/><div class="form-text">Không nhập lại tỉnh/thành và phường/xã đã chọn.</div></div>
+            </fieldset>
+            <noscript><p class="alert alert-warning">Vui lòng bật JavaScript để chọn địa chỉ liên kết và xem từng bước tạo đơn.</p></noscript>
         </section>
         <section id="shipment-step-2" data-shipment-step="1" class="card-ute p-4 mb-3" aria-labelledby="shipment-step-title-2">
             <h2 id="shipment-step-title-2" class="h5 text-ute-primary" tabindex="-1">2. Kiện hàng và dịch vụ</h2>
             <div class="row g-3">
                         <div class="col-md-4"><label class="form-label" for="serviceCode">Dịch vụ</label><form:select id="serviceCode" path="serviceCode" required="required" cssClass="form-select" cssErrorClass="form-select is-invalid"><form:option value="STANDARD" label="Tiêu chuẩn"/><form:option value="FAST" label="Nhanh"/><form:option value="EXPRESS" label="Hỏa tốc"/></form:select><form:errors path="serviceCode" cssClass="invalid-feedback d-block" htmlEscape="true"/></div>
-                        <div class="col-md-4"><label class="form-label" for="fromRegion">Vùng gửi</label><form:select id="fromRegion" path="fromRegion" required="required" cssClass="form-select" cssErrorClass="form-select is-invalid"><form:option value="NORTH" label="Miền Bắc"/><form:option value="CENTRAL" label="Miền Trung"/><form:option value="SOUTH" label="Miền Nam"/></form:select><form:errors path="fromRegion" cssClass="invalid-feedback d-block" htmlEscape="true"/></div>
-                        <div class="col-md-4"><label class="form-label" for="toRegion">Vùng nhận</label><form:select id="toRegion" path="toRegion" required="required" cssClass="form-select" cssErrorClass="form-select is-invalid"><form:option value="NORTH" label="Miền Bắc"/><form:option value="CENTRAL" label="Miền Trung"/><form:option value="SOUTH" label="Miền Nam"/></form:select><form:errors path="toRegion" cssClass="invalid-feedback d-block" htmlEscape="true"/></div>
+
+
                         <div class="col-md-3"><label class="form-label" for="weightGrams">Khối lượng (gram)</label><form:input id="weightGrams" path="weightGrams" type="number" cssClass="form-control" cssErrorClass="form-control is-invalid" htmlEscape="true" required="required" min="1" max="1000000"/><form:errors path="weightGrams" cssClass="invalid-feedback d-block" htmlEscape="true"/></div>
                         <div class="col-md-3"><label class="form-label" for="lengthCm">Dài (cm)</label><form:input id="lengthCm" path="lengthCm" type="number" cssClass="form-control" cssErrorClass="form-control is-invalid" htmlEscape="true" required="required" min="1" max="1000"/><form:errors path="lengthCm" cssClass="invalid-feedback d-block" htmlEscape="true"/></div>
                         <div class="col-md-3"><label class="form-label" for="widthCm">Rộng (cm)</label><form:input id="widthCm" path="widthCm" type="number" cssClass="form-control" cssErrorClass="form-control is-invalid" htmlEscape="true" required="required" min="1" max="1000"/><form:errors path="widthCm" cssClass="invalid-feedback d-block" htmlEscape="true"/></div>
@@ -70,7 +112,7 @@
             <p class="small text-ute-muted mt-3 mb-0">Tiền mặt do người gửi trả được thu khi shipper lấy hàng hoặc khi bạn mang ra bưu cục. Người nhận trả cước thì thu khi giao hàng. Không thu tiền lúc tạo đơn.</p>
             <p class="small text-ute-muted mt-2">Nếu người nhận trả cước, chọn hình thức tiền mặt.</p>
             <c:if test="${not empty quote}">
-                <div id="shipment-quote" class="alert alert-info" role="status">Cước phí: <strong><fmt:formatNumber value="${quote.shippingFee}" pattern="#,##0"/> VND</strong>. Hệ thống sẽ kiểm tra lại bảng giá khi tạo đơn.</div>
+                <div id="shipment-quote" class="alert alert-info" role="status">Cước phí: <strong><fmt:formatNumber value="${quote.shippingFee}" pattern="#,##0" var="quoteFormatted"/>${fn:replace(quoteFormatted, ',', '.')}đ</strong>. Hệ thống sẽ kiểm tra lại bảng giá khi tạo đơn.</div>
             </c:if>
             <p id="shipment-quote-notice" class="small text-ute-muted" aria-live="polite">Xem báo giá trước khi chuyển sang xác nhận.</p>
             <button id="shipment-quote-button" type="submit" formaction="${pageContext.request.contextPath}/user/shipments/quote" class="btn btn-outline-primary">Xem báo giá</button>
@@ -86,9 +128,11 @@
                 <dl class="shipment-summary mb-3">
                     <dt>Người gửi</dt><dd data-summary="sender"></dd>
                     <dt>Người nhận</dt><dd data-summary="receiver"></dd>
+                    <dt>Tuyến vận chuyển</dt><dd data-summary="route"></dd>
                     <dt>Kiện hàng / dịch vụ</dt><dd data-summary="parcel"></dd>
                     <dt>Giá trị khai báo / COD</dt><dd data-summary="values"></dd>
                     <dt>Thanh toán cước</dt><dd data-summary="payment"></dd>
+                    <dt>Cách gửi hàng</dt><dd data-summary="pickup"></dd>
                     <dt>Cước phí đã báo</dt><dd data-summary="fee"></dd>
                 </dl>
             </div>

@@ -66,9 +66,9 @@ class Phase01WalkingSkeletonTest {
     @Test
     void authenticatedOwnerCreatesReadsAndPublishesTheMinimalShipmentTracer() throws Exception {
         when(clock.instant()).thenReturn(Instant.parse("2026-10-23T00:00:00Z"));
-        var destination=vn.iotstar.entity.Hub.active("DEST", "Destination", 1, "DELIVERY_HUB", "SOUTH", "HCM");
+        var destination=vn.iotstar.entity.Hub.active("DEST", "Destination", 1, "DELIVERY_HUB", "SOUTH", "Thành phố Hồ Chí Minh");
         ReflectionTestUtils.setField(destination,"id",99L);
-        when(hubRepository.findByStatusAndTypeAndProvinceAndDistrict("ACTIVE","DELIVERY_HUB","HCM","Q1"))
+        when(hubRepository.findByStatusAndTypeAndProvinceAndDistrict("ACTIVE","DELIVERY_HUB","Thành phố Hồ Chí Minh",null))
                 .thenReturn(List.of(destination));
         User owner = new User(7L, "owner", "hash", UserRole.ROLE_USER, "ACTIVE");
         Authentication actor = new UsernamePasswordAuthenticationToken(owner, null, owner.getAuthorities());
@@ -120,7 +120,9 @@ class Phase01WalkingSkeletonTest {
     }
 
     private MockHttpServletRequestBuilder validForm(String path) {
-        return post(path).param("senderName", "Owner").param("senderPhone", "0900000001")
+        return post(path).param("senderProvinceCode", "79").param("senderWardCode", "26740")
+                .param("receiverProvinceCode", "79").param("receiverWardCode", "26740")
+                .param("senderName", "Owner").param("senderPhone", "0900000001")
                 .param("senderAddress", "1 Owner Street").param("receiverName", "Receiver")
                 .param("receiverPhone", "0900000002").param("receiverAddress", "2 Receiver Street")
                 .param("receiverProvince", "HCM").param("receiverDistrict", "Q1")

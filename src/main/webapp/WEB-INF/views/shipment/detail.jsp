@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -18,7 +19,7 @@
     <section class="card-ute p-4 mb-3">
         <h1 class="h3">Vận đơn <span class="font-monospace"><c:out value="${shipment.trackingNumber}"/></span></h1>
         <p class="mb-1">Trạng thái: <span class="badge text-bg-primary"><c:out value="${shipment.currentStatus}"/></span></p>
-        <p class="mb-1">Cước phí: <strong><fmt:formatNumber value="${shipment.shippingFee}" pattern="#,##0"/> VND</strong> (<c:out value="${shipment.paymentStatus}"/>)</p>
+        <p class="mb-1">Cước phí: <strong><fmt:formatNumber value="${shipment.shippingFee}" pattern="#,##0" var="shippingFormatted"/>${fn:replace(shippingFormatted, ',', '.')}đ</strong> (<c:out value="${shipment.paymentStatus}"/>)</p>
         <p class="text-ute-muted mb-0">Tạo lúc: <c:out value="${shipment.createdAt}"/></p>
     </section>
     <section class="card-ute p-4 mb-3">
@@ -54,6 +55,13 @@
             </form>
         </c:if>
     </section>
+    <section class="card-ute p-4 mb-3" aria-labelledby="shipment-addresses-title">
+        <h2 id="shipment-addresses-title" class="h5 text-ute-primary">Thông tin gửi và nhận</h2>
+        <div class="row g-3">
+            <div class="col-md-6"><h3 class="h6">Người gửi</h3><p class="mb-1"><c:out value="${shipment.senderName}"/> · <c:out value="${shipment.senderPhone}"/></p><p class="mb-0 text-ute-muted"><c:out value="${shipment.senderAddress}"/></p></div>
+            <div class="col-md-6"><h3 class="h6">Người nhận</h3><p class="mb-1"><c:out value="${shipment.receiverName}"/> · <c:out value="${shipment.receiverPhone}"/></p><p class="mb-0 text-ute-muted"><c:out value="${shipment.receiverAddress}"/></p></div>
+        </div>
+    </section>
     <section class="card-ute p-4">
         <h2 class="h5 text-ute-primary">Lịch sử vận đơn</h2>
         <ul class="list-group list-group-flush">
@@ -62,7 +70,7 @@
             </c:forEach>
         </ul>
     </section>
-<p><a href="${pageContext.request.contextPath}/user/shipment-fees/${shipment.id}">Thanh toán phụ thu / phí hoàn</a></p>
+    <a class="btn btn-outline-primary mt-3" href="${pageContext.request.contextPath}/user/shipment-fees/${shipment.id}">Xem phí hoàn và phụ thu</a>
 </main>
 </body>
 </html>

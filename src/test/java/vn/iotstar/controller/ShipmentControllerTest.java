@@ -50,7 +50,8 @@ class ShipmentControllerTest {
         mockMvc.perform(get("/user/shipments/create"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("shipment/create"))
-                .andExpect(model().attributeExists("createShipmentRequest"));
+                .andExpect(model().attributeExists("createShipmentRequest", "addressProvinces"))
+                .andExpect(model().attribute("addressProvinces", org.hamcrest.Matchers.hasSize(34)));
     }
 
     @Test
@@ -100,6 +101,23 @@ class ShipmentControllerTest {
                 .andExpect(model().attributeDoesNotExist("quote"));
 
         verifyNoInteractions(shipmentService);
+    }
+
+    @Test void rejectsWardFromAnotherProvinceBeforeCallingQuoteService() throws Exception {
+        var request = validForm("/user/shipments/quote");
+        request.with(servletRequest -> { servletRequest.setParameter("receiverWardCode", "00004"); return servletRequest; });
+        mockMvc.perform(request).andExpect(status().isOk())
+                .andExpect(model().attributeHasErrors("createShipmentRequest"))
+                .andExpect(model().attributeDoesNotExist("quote"));
+        verifyNoInteractions(shipmentService);
+    }
+
+    @Test void derivesQuoteRegionsEvenWhenClientSubmitsOtherValidRegions() throws Exception {
+        when(shipmentService.quote(any())).thenReturn(new QuoteResponse(new BigDecimal("22000")));
+        var request = validForm("/user/shipments/quote");
+        request.with(servletRequest -> { servletRequest.setParameter("fromRegion", "NORTH"); servletRequest.setParameter("toRegion", "CENTRAL"); return servletRequest; });
+        mockMvc.perform(request).andExpect(model().hasNoErrors());
+        verify(shipmentService).quote(org.mockito.ArgumentMatchers.argThat(r -> "SOUTH".equals(r.getFromRegion()) && "SOUTH".equals(r.getToRegion())));
     }
 
     @Test
@@ -172,7 +190,7 @@ class ShipmentControllerTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"weightGrams,900", "receiverName,Changed", "feePayer,RECEIVER", "paymentMethod,CASH", "serviceCode,FAST"})
+    @CsvSource({"weightGrams,900", "receiverName,Changed", "feePayer,RECEIVER", "paymentMethod,CASH", "serviceCode,FAST", "receiverWardCode,26743"})
     void changingReviewedInputsRequiresANewQuote(String field, String value) throws Exception {
         QuotedForm quoted = quoteForm();
         var request = quotedCreate(quoted);
@@ -244,7 +262,8 @@ class ShipmentControllerTest {
     private record QuotedForm(MockHttpSession session, String reference) { }
 
     private MockHttpServletRequestBuilder validForm(String path) {
-        return post(path).param("senderName", "Owner").param("senderPhone", "0900000001")
+        return post(path).param("senderProvinceCode", "79").param("senderWardCode", "26740")
+                .param("receiverProvinceCode", "79").param("receiverWardCode", "26740").param("senderName", "Owner").param("senderPhone", "0900000001")
                 .param("senderAddress", "1 Owner Street").param("receiverName", "Receiver")
                 .param("receiverPhone", "0900000002").param("receiverAddress", "2 Receiver Street")
                 .param("receiverProvince", "HCM").param("receiverDistrict", "Q1")

@@ -30,6 +30,7 @@ import vn.iotstar.repository.ShipmentRepository;
 import vn.iotstar.repository.UserRepository;
 import vn.iotstar.security.AuthenticatedActor;
 import vn.iotstar.service.ShipmentService;
+import vn.iotstar.service.VietnamAddressCatalog;
 import vn.iotstar.service.auth.VietnamPhoneNormalizer;
 
 import java.math.BigDecimal;
@@ -72,6 +73,10 @@ public class ShipmentServiceImpl implements ShipmentService {
     @Override
     @Transactional(readOnly = true)
     public QuoteResponse quote(CreateShipmentRequest request) {
+        if (request.usesModernAddress()) {
+            VietnamAddressCatalog.standard().normalize(request);
+            resolveDestination(request);
+        }
         receiverPhone(request);
         checkPayerAndMethod(request);
         return new QuoteResponse(price(request));
@@ -93,6 +98,7 @@ public class ShipmentServiceImpl implements ShipmentService {
     }
 
     private Long createShipment(CreateShipmentRequest request, BigDecimal acceptedFee) {
+        if (request.usesModernAddress()) VietnamAddressCatalog.standard().normalize(request);
         AuthenticatedActor actor = AuthenticatedActor.requireCurrent();
         String receiverPhone = receiverPhone(request);
         checkPayerAndMethod(request);
@@ -107,8 +113,12 @@ public class ShipmentServiceImpl implements ShipmentService {
                 .filter(u -> u.getRole() == UserRole.ROLE_USER && u.isEnabled() && u.isPhoneVerified()).orElse(null);
         boolean onlinePrepaid = "SENDER".equals(request.getFeePayer()) && "VNPAY".equals(request.getPaymentMethod());
 
+        String senderAddress = request.usesModernAddress() ? VietnamAddressCatalog.standard().resolve(request.getSenderProvinceCode(),
+                request.getSenderWardCode(), request.getSenderAddress()).fullAddress() : request.getSenderAddress();
+        String receiverAddress = request.usesModernAddress() ? VietnamAddressCatalog.standard().resolve(request.getReceiverProvinceCode(),
+                request.getReceiverWardCode(), request.getReceiverAddress()).fullAddress() : request.getReceiverAddress();
         Shipment shipment = Shipment.create(newTrackingNumber(), sender, request.getSenderName(), request.getSenderPhone(),
-                request.getSenderAddress(), request.getReceiverName(), receiverPhone, request.getReceiverAddress());
+                senderAddress, request.getReceiverName(), receiverPhone, receiverAddress);
         shipment.applyIntake(receiver, request.getReceiverProvince(), request.getReceiverDistrict(),
                 request.getPickupMethod(), request.getFeePayer(), request.getInspectionPolicy(),
                 request.getWeightGrams(), request.getLengthCm(), request.getWidthCm(), request.getHeightCm(),
@@ -214,7 +224,8 @@ public class ShipmentServiceImpl implements ShipmentService {
 
     private Hub resolveDestination(CreateShipmentRequest request) {
         List<Hub> matches = hubRepository.findByStatusAndTypeAndProvinceAndDistrict(
-                "ACTIVE", "DELIVERY_HUB", request.getReceiverProvince().trim(), request.getReceiverDistrict().trim());
+                "ACTIVE", "DELIVERY_HUB", request.getReceiverProvince().trim(),
+                request.usesModernAddress() ? null : request.getReceiverDistrict().trim());
         if (matches.size() != 1) {
             throw new IllegalArgumentException("Địa chỉ nhận chưa có một bưu cục giao hàng hợp lệ duy nhất.");
         }

@@ -26,18 +26,25 @@ public class CreateShipmentRequest {
     private String receiverPhone;
     @NotBlank(message = "Vui lòng nhập địa chỉ người nhận.") @Size(max = 255)
     private String receiverAddress;
-    @NotBlank(message = "Vui lòng nhập tỉnh/thành người nhận.") @Size(max = 100)
+    @Size(max = 100)
     private String receiverProvince;
-    @NotBlank(message = "Vui lòng nhập quận/huyện người nhận.") @Size(max = 100)
+    @Size(max = 100)
     private String receiverDistrict;
+
+    @NotBlank(message = "Chọn tỉnh/thành người gửi.") @Pattern(regexp = "[0-9]{2}")
+    private String senderProvinceCode;
+    @NotBlank(message = "Chọn phường/xã người gửi.") @Pattern(regexp = "[0-9]{5}")
+    private String senderWardCode;
+    @NotBlank(message = "Chọn tỉnh/thành người nhận.") @Pattern(regexp = "[0-9]{2}")
+    private String receiverProvinceCode;
+    @NotBlank(message = "Chọn phường/xã người nhận.") @Pattern(regexp = "[0-9]{5}")
+    private String receiverWardCode;
 
     @NotBlank(message = "Vui lòng chọn dịch vụ.")
     @Pattern(regexp = "STANDARD|FAST|EXPRESS", message = "Dịch vụ không hợp lệ.")
     private String serviceCode = "STANDARD";
-    @NotBlank(message = "Vui lòng chọn vùng gửi.")
     @Pattern(regexp = "NORTH|CENTRAL|SOUTH", message = "Vui lòng chọn vùng gửi.")
     private String fromRegion;
-    @NotBlank(message = "Vui lòng chọn vùng nhận.")
     @Pattern(regexp = "NORTH|CENTRAL|SOUTH", message = "Vui lòng chọn vùng nhận.")
     private String toRegion;
 
@@ -70,6 +77,15 @@ public class CreateShipmentRequest {
     private String inspectionPolicy = "NO_INSPECTION";
 
     public String getSenderName() { return senderName; }
+    public String getSenderProvinceCode() { return senderProvinceCode; }
+    public void setSenderProvinceCode(String value) { senderProvinceCode = value; }
+    public String getSenderWardCode() { return senderWardCode; }
+    public void setSenderWardCode(String value) { senderWardCode = value; }
+    public String getReceiverProvinceCode() { return receiverProvinceCode; }
+    public void setReceiverProvinceCode(String value) { receiverProvinceCode = value; }
+    public String getReceiverWardCode() { return receiverWardCode; }
+    public void setReceiverWardCode(String value) { receiverWardCode = value; }
+    public boolean usesModernAddress() { return senderProvinceCode != null || senderWardCode != null || receiverProvinceCode != null || receiverWardCode != null; }
     public void setSenderName(String v) { this.senderName = v; }
     public String getSenderPhone() { return senderPhone; }
     public void setSenderPhone(String v) { this.senderPhone = v; }
@@ -115,8 +131,10 @@ public class CreateShipmentRequest {
     /** Snapshot after validation; pickup is chosen last and does not change the quote. */
     public List<Object> quoteInputs() {
         return List.of(senderName, senderPhone, senderAddress, receiverName, receiverPhone, receiverAddress,
-                receiverProvince, receiverDistrict, serviceCode, fromRegion, toRegion,
+                java.util.Objects.toString(receiverProvince, ""), java.util.Objects.toString(receiverDistrict, ""), serviceCode, fromRegion, toRegion,
                 weightGrams, lengthCm, widthCm, heightCm, declaredValue.stripTrailingZeros(),
-                codAmount.stripTrailingZeros(), feePayer, paymentMethod, inspectionPolicy);
+                codAmount.stripTrailingZeros(), feePayer, paymentMethod, inspectionPolicy,
+                java.util.Objects.toString(senderProvinceCode, ""), java.util.Objects.toString(senderWardCode, ""),
+                java.util.Objects.toString(receiverProvinceCode, ""), java.util.Objects.toString(receiverWardCode, ""));
     }
 }

@@ -24,6 +24,7 @@ import vn.iotstar.dto.auth.VerifyPhoneOtpRequest;
 import vn.iotstar.exception.RegistrationException;
 import vn.iotstar.service.PhoneSessionService;
 import vn.iotstar.service.RegistrationService;
+import vn.iotstar.service.auth.VietnamPhoneNormalizer;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -71,6 +72,14 @@ public class RegistrationController {
     @PostMapping("/register")
     public String register(@Valid @ModelAttribute("registerUserRequest") RegisterUserRequest form,
                            BindingResult errors, HttpSession session, Model model) {
+        if (!errors.hasFieldErrors("phone")) {
+            try {
+                VietnamPhoneNormalizer.normalize(form.getPhone());
+            } catch (RegistrationException exception) {
+                errors.rejectValue("phone", "phone.invalid",
+                        "Nhập số di động Việt Nam 10 chữ số bắt đầu bằng 03, 05, 07, 08 hoặc 09; hoặc dùng dạng +84 tương ứng.");
+            }
+        }
         if (errors.hasErrors()) {
             form.setPassword("");
             return "auth/register";

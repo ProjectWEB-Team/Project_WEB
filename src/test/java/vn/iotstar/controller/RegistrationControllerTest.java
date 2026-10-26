@@ -79,6 +79,25 @@ class RegistrationControllerTest {
     }
 
     @Test
+    void invalidMobilePrefixShowsPhoneFeedbackWithoutAttemptingOtpDelivery() throws Exception {
+        MvcResult result = mockMvc.perform(post("/register").with(csrf())
+                        .param("username", "new-user").param("password", "LocalTestPassword123!")
+                        .param("fullName", "Nguyen Van A").param("phone", "0123456789")
+                        .param("email", "sender@example.test"))
+                .andExpect(status().isOk()).andExpect(view().name("auth/register"))
+                .andExpect(model().attributeHasFieldErrors("registerUserRequest", "phone"))
+                .andExpect(model().attributeDoesNotExist("error"))
+                .andReturn();
+        var binding = (org.springframework.validation.BindingResult) result.getModelAndView().getModel()
+                .get(org.springframework.validation.BindingResult.MODEL_KEY_PREFIX + "registerUserRequest");
+        assertThat(binding.getFieldError("phone").getDefaultMessage()).contains("03, 05, 07, 08", "09", "+84");
+        RegisterUserRequest form = (RegisterUserRequest) result.getModelAndView().getModel().get("registerUserRequest");
+        assertThat(form.getPhone()).isEqualTo("0123456789");
+        assertThat(form.getPassword()).isEmpty();
+        verifyNoInteractions(registrationService, phoneSessionService);
+    }
+
+    @Test
     void successfulSignupStoresOnlyServerChallengeAndUsesPrg() throws Exception {
         when(registrationService.register(any())).thenReturn(challenge(CHALLENGE));
         MvcResult result = mockMvc.perform(post("/register").with(csrf())

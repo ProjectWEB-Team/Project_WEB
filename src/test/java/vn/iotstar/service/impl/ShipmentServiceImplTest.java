@@ -124,6 +124,37 @@ class ShipmentServiceImplTest {
         assertThat(shipmentService.quote(request).shippingFee()).isEqualByComparingTo("50000");
     }
 
+    @Test void modernCreationPersistsFullAddressesAndDerivesRegionsBeforePricing() {
+        User user = authenticate(7L, "owner");
+        stubPolicy();
+        when(userRepository.getReferenceById(7L)).thenReturn(user);
+        when(shipmentRepository.save(any(Shipment.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(shipmentEventRepository.save(any(ShipmentEvent.class))).thenAnswer(inv -> inv.getArgument(0));
+        var destination = vn.iotstar.entity.Hub.active("LOCAL2025-P79", "Demo HCM", 1, "DELIVERY_HUB", "SOUTH", "Thành phố Hồ Chí Minh");
+        ReflectionTestUtils.setField(destination, "id", 92L);
+        when(hubRepository.findByStatusAndTypeAndProvinceAndDistrict("ACTIVE", "DELIVERY_HUB", "Thành phố Hồ Chí Minh", null)).thenReturn(List.of(destination));
+        var request = request();
+        request.setSenderProvinceCode("79"); request.setSenderWardCode("26740");
+        request.setReceiverProvinceCode("79"); request.setReceiverWardCode("26743");
+        request.setFromRegion("NORTH"); request.setToRegion("CENTRAL");
+        shipmentService.create(request);
+        var captured = ArgumentCaptor.forClass(Shipment.class);
+        verify(shipmentRepository).save(captured.capture());
+        assertThat(captured.getValue().getSenderAddress()).isEqualTo("1 Owner Street, Phường Sài Gòn, Thành phố Hồ Chí Minh");
+        assertThat(captured.getValue().getReceiverAddress()).isEqualTo("2 Receiver Street, Phường Bến Thành, Thành phố Hồ Chí Minh");
+        assertThat(captured.getValue().getReceiverDistrict()).isNull();
+        assertThat(captured.getValue().getDestinationHubId()).isEqualTo(92L);
+        verify(pricingPolicyRepository).findFirstByServiceCodeAndFromRegionAndToRegionAndStatusOrderByIdDesc("STANDARD", "SOUTH", "SOUTH", "ACTIVE");
+    }
+
+    @Test void missingModernCoverageIsRejectedBeforeOfferingAQuote() {
+        var request = request();
+        request.setSenderProvinceCode("79"); request.setSenderWardCode("26740");
+        request.setReceiverProvinceCode("01"); request.setReceiverWardCode("00004");
+        assertThatThrownBy(() -> shipmentService.quote(request)).isInstanceOf(IllegalArgumentException.class);
+        verifyNoInteractions(pricingPolicyRepository, shipmentRepository, paymentRepository, shipmentEventRepository);
+    }
+
     @Test
     void rejectsChangedPriceBeforeAnyShipmentOrPaymentIsWritten() {
         authenticate(7L, "owner");

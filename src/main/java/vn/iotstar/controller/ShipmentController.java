@@ -17,6 +17,7 @@ import vn.iotstar.dto.shipment.CreateShipmentRequest;
 import vn.iotstar.dto.shipment.QuoteResponse;
 import vn.iotstar.entity.ShipmentStatus;
 import vn.iotstar.service.ShipmentService;
+import vn.iotstar.service.VietnamAddressCatalog;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -27,7 +28,6 @@ import java.util.UUID;
 public class ShipmentController {
     private static final String QUOTED_DRAFT = ShipmentController.class.getName() + ".quotedDraft";
     private final ShipmentService shipmentService;
-
     public ShipmentController(ShipmentService shipmentService) {
         this.shipmentService = shipmentService;
     }
@@ -46,7 +46,13 @@ public class ShipmentController {
         if (!model.containsAttribute("createShipmentRequest")) {
             model.addAttribute("createShipmentRequest", new CreateShipmentRequest());
         }
-        return "shipment/create";
+        return createView(model);
+    }
+
+    @GetMapping("/address-catalog")
+    @org.springframework.web.bind.annotation.ResponseBody
+    public List<VietnamAddressCatalog.Province> addressCatalog() {
+        return VietnamAddressCatalog.standard().provinces();
     }
 
     @PostMapping("/quote")
@@ -56,6 +62,7 @@ public class ShipmentController {
             session.removeAttribute(QUOTED_DRAFT);
             if (!bindingResult.hasErrors()) {
                 try {
+                    VietnamAddressCatalog.standard().normalize(request);
                     QuoteResponse quote = shipmentService.quote(request);
                     String reference = UUID.randomUUID().toString();
                     session.setAttribute(QUOTED_DRAFT, new QuotedDraft(reference, request.quoteInputs(), quote.shippingFee()));
@@ -66,21 +73,27 @@ public class ShipmentController {
                 }
             }
         }
-        return "shipment/create";
+        return createView(model);
     }
 
     @PostMapping
     public String create(@Valid @ModelAttribute CreateShipmentRequest request, BindingResult bindingResult,
-                         @RequestParam(required = false) String quoteReference, HttpSession session) {
+                         @RequestParam(required = false) String quoteReference, HttpSession session, Model model) {
         if (bindingResult.hasErrors()) {
-            return "shipment/create";
+            return createView(model);
+        }
+        try {
+            VietnamAddressCatalog.standard().normalize(request);
+        } catch (IllegalArgumentException exception) {
+            bindingResult.reject("address.invalid", exception.getMessage());
+            return createView(model);
         }
         // One reviewed draft per session; serialize final submits and consume after successful commit.
         synchronized (WebUtils.getSessionMutex(session)) {
             QuotedDraft draft = (QuotedDraft) session.getAttribute(QUOTED_DRAFT);
             if (draft == null || !draft.reference().equals(quoteReference) || !draft.inputs().equals(request.quoteInputs())) {
                 bindingResult.reject("quote.changed", "Thông tin hoặc báo giá đã thay đổi. Vui lòng xem báo giá lại trước khi tạo đơn.");
-                return "shipment/create";
+                return createView(model);
             }
             try {
                 Long shipmentId = shipmentService.create(request, draft.fee());
@@ -89,7 +102,7 @@ public class ShipmentController {
             } catch (IllegalArgumentException exception) {
                 session.removeAttribute(QUOTED_DRAFT);
                 bindingResult.reject("create.rejected", exception.getMessage());
-                return "shipment/create";
+                return createView(model);
             }
         }
     }
@@ -118,6 +131,15 @@ public class ShipmentController {
             redirectAttributes.addFlashAttribute("error", exception.getMessage());
         }
         return "redirect:/user/shipments/" + shipmentId;
+    }
+
+    private String createView(Model model) {
+        var catalog = VietnamAddressCatalog.standard();
+        var request = (CreateShipmentRequest) model.getAttribute("createShipmentRequest");
+        model.addAttribute("addressProvinces", catalog.provinces());
+        model.addAttribute("senderWards", catalog.wards(request.getSenderProvinceCode()));
+        model.addAttribute("receiverWards", catalog.wards(request.getReceiverProvinceCode()));
+        return "shipment/create";
     }
 
     private record QuotedDraft(String reference, List<Object> inputs, BigDecimal fee) implements java.io.Serializable { }

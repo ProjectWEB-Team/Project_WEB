@@ -28,7 +28,8 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label" for="phone">Số điện thoại</label>
-                            <form:input path="phone" id="phone" type="tel" cssClass="form-control" cssErrorClass="form-control is-invalid" htmlEscape="true" autocomplete="tel" maxlength="20" required="required"/>
+                            <form:input path="phone" id="phone" type="tel" cssClass="form-control" cssErrorClass="form-control is-invalid" htmlEscape="true" autocomplete="tel" maxlength="20" required="required" aria-describedby="phoneHelp"/>
+                            <div id="phoneHelp" class="form-text">Số di động 10 chữ số, đầu 03, 05, 07, 08, 09; hoặc dạng +84 tương ứng.</div>
                             <form:errors path="phone" cssClass="invalid-feedback d-block" htmlEscape="true"/>
                         </div>
                         <div class="mb-3">

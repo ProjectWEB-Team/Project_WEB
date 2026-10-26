@@ -149,11 +149,19 @@ class Phase05OperationsJspRenderingTest {
         login("USER");
         when(fees.view(42L)).thenReturn(new vn.iotstar.dto.returnflow.ShipmentFeeResponse(42L,"UTX-42",money("30000"),money("25000"),money("5000")));
         String form=html("/user/shipment-fees/42");
-        assertThat(form).contains("UTX-42","25000","value=\"RETURN\"","value=\"WEIGHT_SURCHARGE\"","name=\"confirmDemo\"");
+        assertThat(form).contains("UTX-42","25.000đ","60.000đ","/assets/css/ute-express.css", "href=\"/user/shipments/42\"",
+                "value=\"RETURN\"","value=\"WEIGHT_SURCHARGE\"","name=\"confirmDemo\"");
         assertThat(post("/user/shipment-fees/42/demo-vnpay",form,Map.of("obligation","RETURN","confirmDemo","true")).statusCode()).isEqualTo(302);
         verify(fees).payReturn(42L,"VNPAY",true);
         assertThat(post("/user/shipment-fees/42/wallet",form,Map.of("obligation","WEIGHT_SURCHARGE")).statusCode()).isEqualTo(302);
         verify(fees).paySurcharge(42L,"E_WALLET",false);
+    }
+
+    @Test void noAdditionalFeesExplainsZeroAndLinksBackWithoutPaymentForms() throws Exception {
+        login("USER");
+        when(fees.view(42L)).thenReturn(new vn.iotstar.dto.returnflow.ShipmentFeeResponse(42L,"UTX-42",money("0"),money("0"),money("0")));
+        assertThat(html("/user/shipment-fees/42")).contains("id=\"shipment-fees-empty\"", "href=\"/user/shipments/42\"", "0đ")
+                .doesNotContain("name=\"obligation\"", "name=\"confirmDemo\"");
     }
 
     @Test void populatedDeliveryAndHomeReturnFormsBindAmountsAndIndependentMethods() throws Exception {

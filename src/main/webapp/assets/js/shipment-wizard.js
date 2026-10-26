@@ -20,14 +20,18 @@
 
     const fieldValue = (name) => form.elements.namedItem(name).value;
     const selectedLabel = (name) => form.elements.namedItem(name).selectedOptions[0]?.textContent || '';
+    const addressLabel = (who) => `${fieldValue(`${who}Address`)}, ${selectedLabel(`${who}WardCode`)}, ${selectedLabel(`${who}ProvinceCode`)}`;
+    const money = (value) => `${new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 2 }).format(Number(value))}đ`;
 
     function updateSummary() {
         const values = {
-            sender: `${fieldValue('senderName')} · ${fieldValue('senderPhone')} · ${fieldValue('senderAddress')}`,
-            receiver: `${fieldValue('receiverName')} · ${fieldValue('receiverPhone')} · ${fieldValue('receiverAddress')}, ${fieldValue('receiverDistrict')}, ${fieldValue('receiverProvince')}`,
+            sender: `${fieldValue('senderName')} · ${fieldValue('senderPhone')} · ${addressLabel('sender')}`,
+            receiver: `${fieldValue('receiverName')} · ${fieldValue('receiverPhone')} · ${addressLabel('receiver')}`,
+            route: `${selectedLabel('senderProvinceCode')} → ${selectedLabel('receiverProvinceCode')}`,
             parcel: `${fieldValue('weightGrams')} g · ${fieldValue('lengthCm')} × ${fieldValue('widthCm')} × ${fieldValue('heightCm')} cm · ${selectedLabel('serviceCode')} · ${selectedLabel('inspectionPolicy')}`,
-            values: `${fieldValue('declaredValue')} VND / ${fieldValue('codAmount')} VND`,
+            values: `${money(fieldValue('declaredValue'))} / ${money(fieldValue('codAmount'))}`,
             payment: `${selectedLabel('feePayer')} · ${selectedLabel('paymentMethod')}`,
+            pickup: selectedLabel('pickupMethod'),
             fee: hasQuote ? quote.querySelector('strong').textContent : 'Cần báo giá lại'
         };
         summary.querySelectorAll('[data-summary]').forEach((item) => {
@@ -80,7 +84,7 @@
 
     function invalidateQuote(event) {
         const field = event.target;
-        if (!field.closest('[data-shipment-step]') || field.name === 'pickupMethod' || !hasQuote) return;
+        if (!field.name || !field.closest('[data-shipment-step]') || field.name === 'pickupMethod' || !hasQuote) return;
         hasQuote = false;
         quote.hidden = true;
         const reference = form.elements.namedItem('quoteReference');

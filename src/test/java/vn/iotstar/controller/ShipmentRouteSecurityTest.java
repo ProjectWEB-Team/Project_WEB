@@ -161,7 +161,8 @@ class ShipmentRouteSecurityTest {
     }
 
     private MockHttpServletRequestBuilder validForm(String path) {
-        return post(path).param("senderName", "Owner").param("senderPhone", "0900000001")
+        return post(path).param("senderProvinceCode", "79").param("senderWardCode", "26740")
+                .param("receiverProvinceCode", "79").param("receiverWardCode", "26740").param("senderName", "Owner").param("senderPhone", "0900000001")
                 .param("senderAddress", "1 Owner Street").param("receiverName", "Receiver")
                 .param("receiverPhone", "0900000002").param("receiverAddress", "2 Receiver Street")
                 .param("receiverProvince", "HCM").param("receiverDistrict", "Q1")

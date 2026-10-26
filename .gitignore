@@ -46,8 +46,14 @@ Thumbs.db
 *.sql
 !docs/schema.sql
 !src/main/resources/db/*.sql
+!docs/sql/local-demo-delivery-areas.sql
+!docs/sql/local-demo-nationwide-2025.sql
 *.csv
 *.json
+!src/main/resources/geography/*.json
+!.planning/config.json
+!.planning/phases/01-shared-walking-skeleton/01-01-tdd-red-evidence.json
+!.planning/phases/05-cross-slice-integration/05-SQL-RESULTS.json
 *.sqlite
 *.db
 
