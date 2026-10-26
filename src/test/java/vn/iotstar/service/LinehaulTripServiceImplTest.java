@@ -1,16 +1,17 @@
 package vn.iotstar.service;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
+import vn.iotstar.config.LogisticsProperties;
 import vn.iotstar.dto.driver.TripDelayCommand;
 import vn.iotstar.dto.realtime.OperationalActionNotification;
 import vn.iotstar.entity.EmployeeProfile;
@@ -49,7 +50,12 @@ class LinehaulTripServiceImplTest {
     @Mock private ShipmentEventRepository shipmentEventRepository;
     @Mock private UserRepository userRepository;
     @Mock private ApplicationEventPublisher applicationEventPublisher;
-    @InjectMocks private LinehaulTripServiceImpl service;
+    private final LogisticsProperties logisticsProperties = new LogisticsProperties();
+    private LinehaulTripServiceImpl service;
+    @BeforeEach void createService() {
+        service = new LinehaulTripServiceImpl(operationsRepository, hubOperationsRepository, incidentRepository,
+                shipmentEventRepository, userRepository, applicationEventPublisher, logisticsProperties);
+    }
     @AfterEach void clear() { SecurityContextHolder.clearContext(); }
 
     @Test void assignedDriverFollowsAcceptedStartArriveWithoutCompletingHandover() {
@@ -112,6 +118,94 @@ class LinehaulTripServiceImplTest {
         assertThat(incident.getDescription()).contains("Weather closure", "INC-1");
         assertThatThrownBy(() -> service.reportTripDelay(new TripDelayCommand(40L, " ", null))).isInstanceOf(HubOperationAccessDeniedException.class);
     }
+
+    // --- Demo auto linehaul transit simulation (Workflow section 101, D-08) ---
+
+    @Test void withoutTheFlagStartOnlyDepartsAndEmitsNoArrival() {
+        Ready r = readyTrip();
+        assertThat(service.startTrip(40L).status()).isEqualTo("IN_TRANSIT");
+        assertThat(eventTypes()).containsExactly("LINEHAUL_TRIP_STARTED");
+        verifyNoInteractions(applicationEventPublisher);
+        assertThat(service.arriveTrip(40L).status()).isEqualTo("ARRIVED");
+    }
+
+    @Test void withTheFlagStartPerformsTheNormalArrivalInTheSameCall() {
+        Ready r = readyTrip();
+        logisticsProperties.getDemo().setAutoLinehaulTransitSimulation(true);
+
+        assertThat(service.startTrip(40L).status()).isEqualTo("ARRIVED");
+
+        assertThat(r.trip().getStatus()).isEqualTo("ARRIVED");
+        assertThat(eventTypes()).containsExactly("LINEHAUL_TRIP_STARTED", "LINEHAUL_ARRIVED");
+        ArgumentCaptor<OperationalActionNotification> notifications = ArgumentCaptor.forClass(OperationalActionNotification.class);
+        verify(applicationEventPublisher, times(2)).publishEvent(notifications.capture());
+        assertThat(notifications.getAllValues()).extracting(OperationalActionNotification::type)
+                .containsExactly("DESTINATION_ARRIVAL", "INBOUND_READY_CONTAINER");
+        assertThat(notifications.getAllValues()).allMatch(n -> n.currentHubId().equals(2L));
+    }
+
+    @Test void simulatedArrivalKeepsCustodyOpenForDestinationReceipt() {
+        Ready r = readyTrip();
+        logisticsProperties.getDemo().setAutoLinehaulTransitSimulation(true);
+
+        service.startTrip(40L);
+
+        assertThat(r.trip().getHandover().getStatus()).isEqualTo("IN_TRANSIT");
+        assertThat(r.parcel().getCurrentStatus()).isEqualTo(ShipmentStatus.IN_TRANSIT);
+        assertThat(r.parcel().getCurrentHubId()).isNull();
+        assertThat(r.vehicle().getStatus()).isEqualTo("IN_USE");
+    }
+
+    @Test void simulationNeverLetsAnUnassignedDriverStartTheTrip() {
+        Ready r = readyTrip();
+        logisticsProperties.getDemo().setAutoLinehaulTransitSimulation(true);
+        User other = user(10L, "other");
+        authenticate(other);
+        when(hubOperationsRepository.findActiveProfileByUserId(10L)).thenReturn(Optional.of(EmployeeProfile.active(other, hub(1L), "LINEHAUL_DRIVER")));
+
+        assertThatThrownBy(() -> service.startTrip(40L)).isInstanceOf(HubOperationAccessDeniedException.class);
+        verifyNoInteractions(shipmentEventRepository, applicationEventPublisher);
+        assertThat(r.trip().getStatus()).isEqualTo("SCHEDULED");
+    }
+
+    @Test void repeatedStartAfterSimulatedArrivalEmitsNothingNew() {
+        readyTrip();
+        logisticsProperties.getDemo().setAutoLinehaulTransitSimulation(true);
+        service.startTrip(40L);
+        clearInvocations(shipmentEventRepository, applicationEventPublisher);
+
+        assertThat(service.startTrip(40L).status()).isEqualTo("ARRIVED");
+        verifyNoInteractions(shipmentEventRepository, applicationEventPublisher);
+    }
+
+    private java.util.List<String> eventTypes() {
+        ArgumentCaptor<vn.iotstar.entity.ShipmentEvent> events = ArgumentCaptor.forClass(vn.iotstar.entity.ShipmentEvent.class);
+        verify(shipmentEventRepository, atLeastOnce()).save(events.capture());
+        return events.getAllValues().stream().map(vn.iotstar.entity.ShipmentEvent::getEventType).toList();
+    }
+
+    /** A scheduled trip with one sealed, scanned container holding one parcel at the origin hub. */
+    private Ready readyTrip() {
+        User driver = user(9L, "driver"); Hub origin = hub(1L); Hub destination = hub(2L);
+        Handover handover = acceptedHandover(origin, destination, driver);
+        Vehicle vehicle = vehicle(); vehicle.reserve();
+        TransportTrip trip = TransportTrip.accepted(handover, driver, vehicle); ReflectionTestUtils.setField(trip, "id", 40L);
+        handover.linkTransportTrip(trip);
+        Shipment parcel = Shipment.create("T-DEMO", driver, "S", "1", "A", "R", "2", "B");
+        ReflectionTestUtils.setField(parcel, "id", 70L);
+        parcel.receiveAt(origin);
+        ParcelContainer container = ParcelContainer.open("BAG", origin, destination, driver); container.seal();
+        HandoverContainer membership = HandoverContainer.expected(handover, container); membership.markScanned();
+        authenticate(driver);
+        lenient().when(hubOperationsRepository.findActiveProfileByUserId(9L)).thenReturn(Optional.of(EmployeeProfile.active(driver, origin, "LINEHAUL_DRIVER")));
+        when(operationsRepository.findTripForUpdate(40L)).thenReturn(Optional.of(trip));
+        lenient().when(operationsRepository.findContainersForUpdate(30L)).thenReturn(java.util.List.of(membership));
+        lenient().when(operationsRepository.findManifestItemsForUpdate(30L)).thenReturn(java.util.List.of(ContainerItem.scanned(container, parcel)));
+        lenient().when(operationsRepository.findShipmentsForHandover(30L)).thenReturn(java.util.List.of(parcel));
+        lenient().when(userRepository.getReferenceById(9L)).thenReturn(driver);
+        return new Ready(trip, parcel, vehicle);
+    }
+    private record Ready(TransportTrip trip, Shipment parcel, Vehicle vehicle) { }
     private static User user(Long id, String name) { return new User(id, name, "hash", UserRole.ROLE_LINEHAUL_DRIVER, "ACTIVE"); }
     private static Vehicle vehicle() { Vehicle v = Vehicle.available("51C-123", "TRUCK", 1000); ReflectionTestUtils.setField(v, "id", 50L); return v; }
     private static Hub hub(Long id) { Hub hub = Hub.active("H" + id, "H" + id, 1, "HUB", "SOUTH", "Can Tho"); ReflectionTestUtils.setField(hub, "id", id); return hub; }

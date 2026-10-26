@@ -45,7 +45,7 @@ class LinehaulCustodyCompletionTest {
     Incident savedIncident;
 
     @BeforeEach void setup() {
-        trips = new LinehaulTripServiceImpl(operations, profiles, incidents, events, users, publisher);
+        trips = new LinehaulTripServiceImpl(operations, profiles, incidents, events, users, publisher, new vn.iotstar.config.LogisticsProperties());
         inbound = new DestinationReceiptServiceImpl(receipts, profiles, events, incidents, users, publisher, managers);
         origin = hub(1L); destination = hub(2L);
         driver = user(9L, UserRole.ROLE_LINEHAUL_DRIVER); staff = user(11L, UserRole.ROLE_HUB_STAFF); manager = user(12L, UserRole.ROLE_MANAGER);

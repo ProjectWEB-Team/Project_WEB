@@ -3,6 +3,7 @@ package vn.iotstar.service.impl;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import vn.iotstar.config.LogisticsProperties;
 import vn.iotstar.dto.driver.TripActionResponse;
 import vn.iotstar.dto.driver.TripDelayCommand;
 import vn.iotstar.dto.realtime.OperationalActionNotification;
@@ -40,13 +41,16 @@ public class LinehaulTripServiceImpl implements LinehaulTripService {
     private final ShipmentEventRepository shipmentEventRepository;
     private final UserRepository userRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final LogisticsProperties logisticsProperties;
 
     public LinehaulTripServiceImpl(LinehaulOperationsRepository operationsRepository,
                                    HubOperationsRepository hubOperationsRepository,
                                    OperationalIncidentRepository incidentRepository,
                                    ShipmentEventRepository shipmentEventRepository,
                                    UserRepository userRepository,
-                                   ApplicationEventPublisher applicationEventPublisher) {
+                                   ApplicationEventPublisher applicationEventPublisher,
+                                   LogisticsProperties logisticsProperties) {
+        this.logisticsProperties = logisticsProperties;
         this.operationsRepository = operationsRepository;
         this.hubOperationsRepository = hubOperationsRepository;
         this.incidentRepository = incidentRepository;
@@ -131,6 +135,8 @@ public class LinehaulTripServiceImpl implements LinehaulTripService {
             shipment.setCurrentHubId(null);
             shipmentEventRepository.save(ShipmentEvent.linehaulTripStarted(shipment, driver, trip.getOriginHub()));
         }
+        // Demo only (Workflow section 101): reuse the normal arrival instead of a parallel state path.
+        if (logisticsProperties.getDemo().isAutoLinehaulTransitSimulation()) return arriveTrip(tripId);
         return response(trip);
     }
 
