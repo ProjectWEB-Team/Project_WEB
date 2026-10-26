@@ -21,6 +21,7 @@ import vn.iotstar.service.WithdrawalService;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -46,9 +47,14 @@ public class WithdrawalServiceImpl implements WithdrawalService {
         AuthenticatedActor actor = AuthenticatedActor.requireCurrent();
         Long userId = actor.userId();
 
+        // A blank key gets a fresh server key: UNIQUE (user_id, request_key) would otherwise
+        // reject the user's second blank (or NULL) request.
+        String requestKey = dto.getRequestKey() == null || dto.getRequestKey().isBlank()
+                ? UUID.randomUUID().toString() : dto.getRequestKey();
+
         // Idempotency check with request_key
-        if (dto.getRequestKey() != null && !dto.getRequestKey().isBlank()) {
-            Optional<WithdrawalRequest> existing = withdrawalRepository.findByUserIdAndRequestKey(userId, dto.getRequestKey());
+        if (requestKey.equals(dto.getRequestKey())) {
+            Optional<WithdrawalRequest> existing = withdrawalRepository.findByUserIdAndRequestKey(userId, requestKey);
             if (existing.isPresent()) {
                 WithdrawalRequest req = existing.get();
                 // If matching request payload, return existing
@@ -63,7 +69,7 @@ public class WithdrawalServiceImpl implements WithdrawalService {
         // Create request
         WithdrawalRequest request = WithdrawalRequest.create(
                 userId, dto.getAmount(), dto.getBankName(),
-                dto.getAccountNumber(), dto.getAccountHolderName(), dto.getRequestKey());
+                dto.getAccountNumber(), dto.getAccountHolderName(), requestKey);
         request = withdrawalRepository.save(request);
 
         // Lock funds in wallet and record WITHDRAWAL_LOCK ledger entry

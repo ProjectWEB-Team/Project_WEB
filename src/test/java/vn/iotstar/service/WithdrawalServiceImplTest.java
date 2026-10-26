@@ -83,6 +83,21 @@ class WithdrawalServiceImplTest {
     }
 
     @Test
+    @DisplayName("Request: blank keys get distinct server keys so a second withdrawal is not blocked")
+    void blankKeyGetsDistinctServerKey() {
+        when(withdrawalRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        WithdrawalRequest first = withdrawalService.requestWithdrawal(new WithdrawalRequestDto(
+                new BigDecimal("50000.00"), "Vietcombank", "0123456789", "Nguyen Van A", ""));
+        WithdrawalRequest second = withdrawalService.requestWithdrawal(new WithdrawalRequestDto(
+                new BigDecimal("50000.00"), "Vietcombank", "0123456789", "Nguyen Van A", null));
+
+        assertThat(first.getRequestKey()).isNotBlank().isNotEqualTo(second.getRequestKey());
+        assertThat(second.getRequestKey()).isNotBlank();
+        verify(withdrawalRepository, never()).findByUserIdAndRequestKey(any(), any());
+    }
+
+    @Test
     @DisplayName("Request: the same idempotency key returns the existing request")
     void requestIsIdempotent() {
         WithdrawalRequest existing = WithdrawalRequest.create(
