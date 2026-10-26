@@ -48,7 +48,7 @@ public class LastMileDeliveryController {
             lastMileDeliveryService.scanForDelivery(request);
             redirectAttributes.addFlashAttribute("successMessage", "Shipment scanned successfully into OUT_FOR_DELIVERY");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", FlashMessages.of(e));
         }
         return "redirect:/shipper/delivery-tasks";
     }
@@ -65,7 +65,7 @@ public class LastMileDeliveryController {
             lastMileDeliveryService.recordCollection(request);
             redirectAttributes.addFlashAttribute("successMessage", "Payment collection recorded successfully");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", FlashMessages.of(e));
         }
         return "redirect:/shipper/delivery-tasks";
     }
@@ -77,7 +77,7 @@ public class LastMileDeliveryController {
             lastMileDeliveryService.confirmDelivery(shipmentId);
             redirectAttributes.addFlashAttribute("successMessage", "Shipment confirmed DELIVERED");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", FlashMessages.of(e));
         }
         return "redirect:/shipper/delivery-tasks";
     }
@@ -94,7 +94,7 @@ public class LastMileDeliveryController {
             lastMileDeliveryService.recordFailure(request);
             redirectAttributes.addFlashAttribute("successMessage", "Delivery failure recorded");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", FlashMessages.of(e));
         }
         return "redirect:/shipper/delivery-tasks";
     }
@@ -121,7 +121,7 @@ public class LastMileDeliveryController {
             lastMileDeliveryService.confirmReturnDelivery(shipmentId);
             redirectAttributes.addFlashAttribute("successMessage", "Return delivery confirmed completed");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", FlashMessages.of(e));
         }
         return "redirect:/shipper/return-tasks";
     }
@@ -138,7 +138,7 @@ public class LastMileDeliveryController {
             lastMileDeliveryService.processReturnHandover(request);
             redirectAttributes.addFlashAttribute("successMessage", "Return parcel collected successfully");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", FlashMessages.of(e));
         }
         return "redirect:/hub/return-collection";
     }

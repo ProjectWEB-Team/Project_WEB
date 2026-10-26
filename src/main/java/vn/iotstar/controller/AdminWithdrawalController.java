@@ -46,7 +46,7 @@ public class AdminWithdrawalController {
             redirectAttributes.addFlashAttribute("successMessage",
                     "Withdrawal #" + approved.getId() + " approved and released to the sender wallet");
         } catch (RuntimeException exception) {
-            redirectAttributes.addFlashAttribute("errorMessage", exception.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", FlashMessages.of(exception));
         }
         return "redirect:/admin/withdrawals";
     }
@@ -64,7 +64,7 @@ public class AdminWithdrawalController {
             redirectAttributes.addFlashAttribute("successMessage",
                     "Withdrawal #" + rejected.getId() + " rejected and the locked balance was released");
         } catch (RuntimeException exception) {
-            redirectAttributes.addFlashAttribute("errorMessage", exception.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", FlashMessages.of(exception));
         }
         return "redirect:/admin/withdrawals";
     }

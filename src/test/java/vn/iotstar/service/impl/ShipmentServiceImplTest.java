@@ -323,12 +323,22 @@ class ShipmentServiceImplTest {
     }
 
     @Test
-    void missingShipmentIsSafelyReportedAsNotFound() {
+    void missingShipmentIsIndistinguishableFromSomeoneElses() {
         authenticate(7L, "owner");
         when(shipmentRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> shipmentService.getDetail(999L))
-                .isInstanceOf(ResourceNotFoundException.class);
+                .isInstanceOf(ShipmentAccessDeniedException.class);
+    }
+
+    @Test
+    void onlyCustomerAccountsCanCreateShipments() {
+        User staff = new User(11L, "staff", "hash", UserRole.ROLE_HUB_STAFF, "ACTIVE");
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(staff, null, staff.getAuthorities()));
+
+        assertThatThrownBy(() -> shipmentService.create(request(), new BigDecimal("20000")))
+                .isInstanceOf(ShipmentAccessDeniedException.class);
+        verifyNoInteractions(shipmentRepository, paymentRepository);
     }
 
     @Test

@@ -56,7 +56,7 @@ public class WalletController {
             redirectAttributes.addFlashAttribute("successMessage",
                     "Withdrawal request #" + created.getId() + " submitted for Administrator review");
         } catch (RuntimeException exception) {
-            redirectAttributes.addFlashAttribute("errorMessage", exception.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", FlashMessages.of(exception));
         }
         return "redirect:/user/wallet";
     }

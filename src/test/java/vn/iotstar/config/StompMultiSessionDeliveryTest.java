@@ -204,6 +204,16 @@ class StompMultiSessionDeliveryTest {
         }
     }
 
+    @Test void aNonDriverAccountOnTheHandoverOrTripIsNeverNotifiedAsDriver() {
+        operationalHarness();
+        User notDriver = user(6L, "not-driver", UserRole.ROLE_USER, "ACTIVE");
+        when(entities.find(Handover.class, 30L).getReceiverDriver()).thenReturn(notDriver);
+        when(entities.find(TransportTrip.class, 40L).getDriver()).thenReturn(notDriver);
+        operations.publishAfterCommit(new OperationalActionNotification("HANDOVER_ACCEPTED", 11L, "handover:30"));
+        operations.publishAfterCommit(new OperationalActionNotification("DESTINATION_ARRIVAL", 12L, "trip:40"));
+        verify(template, never()).convertAndSendToUser(eq("not-driver"), anyString(), any());
+    }
+
     // --- Destination and principal-name invariants ---
 
     @Test void everyPublisherDestinationIsSubscribableOnlyThroughTheUserPrefix() {

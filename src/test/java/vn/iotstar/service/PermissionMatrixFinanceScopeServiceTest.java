@@ -156,6 +156,13 @@ class PermissionMatrixFinanceScopeServiceTest {
         assertThat(f.service.getAssignedDeliveryTasks()).hasSize(1);
     }
 
+    @Test void aCompletedDeliveryTaskIsNoLongerReadable() {
+        LastMileTestFixture f = new LastMileTestFixture();
+        f.outbound();
+        f.tasks.getFirst().complete(java.time.LocalDateTime.now());
+        assertThatThrownBy(() -> f.service.getDeliveryTask(10L)).isInstanceOf(AccessDeniedException.class);
+    }
+
     @Test void nonShipperRolesCannotReadShipperTaskLists() {
         LastMileTestFixture f = new LastMileTestFixture();
         for (User actor : List.of(f.sender, f.inbound)) {

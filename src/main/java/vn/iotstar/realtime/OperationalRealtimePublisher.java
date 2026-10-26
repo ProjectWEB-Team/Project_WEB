@@ -43,11 +43,11 @@ public class OperationalRealtimePublisher {
         switch (notification.type()) {
             case "HANDOVER_ACCEPTED" -> {
                 recipients.addAll(staffAtHub(notification.currentHubId(), "OUTBOUND"));
-                handover(notification.diagnosticReference()).ifPresent(handover -> recipients.add(handover.getReceiverDriver()));
+                handover(notification.diagnosticReference()).map(Handover::getReceiverDriver).filter(OperationalRealtimePublisher::isDriver).ifPresent(recipients::add);
             }
             case "DESTINATION_ARRIVAL", "INBOUND_READY_CONTAINER" -> {
                 recipients.addAll(staffAtHub(notification.currentHubId(), "INBOUND"));
-                trip(notification.diagnosticReference()).ifPresent(trip -> recipients.add(trip.getDriver()));
+                trip(notification.diagnosticReference()).map(TransportTrip::getDriver).filter(OperationalRealtimePublisher::isDriver).ifPresent(recipients::add);
             }
             case "BLOCKED_ROUTE" -> recipients.addAll(supervisorsAtHub(notification.currentHubId()));
             case "NEW_INCIDENT" -> {
@@ -72,6 +72,8 @@ public class OperationalRealtimePublisher {
         recipients.removeIf(user -> user == null || !"ACTIVE".equals(user.getStatus()));
         return recipients;
     }
+
+    private static boolean isDriver(User user) { return user.getRole() == UserRole.ROLE_LINEHAUL_DRIVER; }
 
     private List<User> staffAtHub(Long hubId, String position) {
         return entityManager.createQuery("select p.user from EmployeeProfile p where p.hub.id = :hubId and p.hub.status = 'ACTIVE' and p.user.status = 'ACTIVE' and p.status = 'ACTIVE' and (p.position = :position or p.position = 'GENERAL_STAFF')", User.class)

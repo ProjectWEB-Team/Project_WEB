@@ -3047,33 +3047,37 @@ Max 3 failed attempts/3 days
 
 Không thể chờ thật khi bảo vệ.
 
-Ví dụ profile Demo:
+Profile Demo (`src/main/resources/application-demo.properties`, bật bằng `--spring.profiles.active=demo`).
+Chỉ các khóa `uteexpress.*` dưới đây có tác dụng; Spring bỏ qua im lặng các khóa `app.*` dùng trong bản trước của tài liệu này.
 
 ```properties
-app.scheduler.timeout-check-interval-ms=30000
+uteexpress.scheduler.timeout-check-interval-ms=30000
 
 # Rút ngắn các bộ đếm thời gian
-app.logistics.timeout.dropoff-expiration-minutes=2
-app.logistics.timeout.pickup-expiration-minutes=2
-app.logistics.return.grace-period-minutes=2
+uteexpress.timeout.dropoff-hours=0
+uteexpress.timeout.dropoff-minutes=2
+uteexpress.timeout.pickup-hours=0
+uteexpress.timeout.pickup-minutes=2
+uteexpress.timeout.disposed-grace-days=0
+uteexpress.timeout.disposed-grace-minutes=2
 
-app.logistics.delivery.max-attempts=3
-app.demo.delivery-attempt-day-lock=false
+uteexpress.delivery.max-attempts=3
+uteexpress.delivery.attempt-day-lock=false
 
 # Fast-track Demo Routing (Cho phép chạy mô phỏng trung chuyển liên Hub nhanh)
-app.demo.fast-track-route-bypass=true
-app.demo.auto-linehaul-transit-simulation=true
+uteexpress.demo.fast-track-route-bypass=true
+uteexpress.demo.auto-linehaul-transit-simulation=true
 ```
 
-Production profile:
+Production profile (`application.properties`):
 
 ```properties
-app.logistics.timeout.dropoff-expiration-hours=48
-app.logistics.timeout.pickup-expiration-hours=48
-app.logistics.return.grace-period-days=7
-app.logistics.delivery.max-attempts=3
-app.demo.delivery-attempt-day-lock=true
-app.demo.fast-track-route-bypass=false
+uteexpress.timeout.dropoff-hours=48
+uteexpress.timeout.pickup-hours=48
+uteexpress.timeout.disposed-grace-days=7
+uteexpress.delivery.max-attempts=3
+uteexpress.delivery.attempt-day-lock=true
+# uteexpress.demo.* không được đặt: cả hai cờ mặc định false
 ```
 
 ---

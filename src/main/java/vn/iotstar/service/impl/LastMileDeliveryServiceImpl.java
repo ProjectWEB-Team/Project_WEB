@@ -572,6 +572,7 @@ public class LastMileDeliveryServiceImpl implements LastMileDeliveryService {
         List<ShipmentAssignment> assignments = shipmentAssignmentRepository.findByShipmentIdOrderByAssignedAtDesc(shipment.getId());
         ShipmentAssignment assignment = assignments.stream()
                 .filter(a -> a.getAssignee().getId().equals(actor.userId()) && "DELIVERY".equals(a.getAssignmentType()))
+                .filter(a -> List.of("ASSIGNED", "ACCEPTED", "IN_PROGRESS").contains(a.getStatus()))
                 .findFirst()
                 .orElseThrow(() -> new AccessDeniedException("Not assigned to this shipment"));
 

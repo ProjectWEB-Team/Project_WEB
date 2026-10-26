@@ -53,7 +53,7 @@ public class SecurityConfig {
                 .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(apiAuthenticationEntryPoint())
                         .accessDeniedHandler(apiAccessDeniedHandler()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/tracking/**", "/api/calculator/**", "/api/auth/**").permitAll()
+                        .requestMatchers("/api/tracking/**", "/api/auth/**").permitAll()
                         .requestMatchers("/api/shipper/**").hasAnyRole("SHIPPER", "ADMIN")
                         .requestMatchers("/api/driver/**").hasAnyRole("LINEHAUL_DRIVER", "ADMIN")
                         .requestMatchers("/api/hub/**").hasAnyRole("HUB_STAFF", "ADMIN")
@@ -85,7 +85,9 @@ public class SecurityConfig {
                         .requestMatchers("/shipper/**").hasAnyRole("ADMIN", "SHIPPER")
                         .requestMatchers("/user/**").authenticated().anyRequest().authenticated())
                 .formLogin(form -> form.loginPage("/login").loginProcessingUrl("/login")
-                        .defaultSuccessUrl("/user/shipments/create", true).failureUrl("/login?error=true").permitAll())
+                        .successHandler((request, response, authentication) ->
+                                response.sendRedirect(request.getContextPath() + landingPage(authentication)))
+                        .failureUrl("/login?error=true").permitAll())
                 .logout(logout -> logout.logoutUrl("/logout").logoutSuccessUrl("/login?logout=true")
                         .deleteCookies("UTEEXPRESS_SESSION", "JSESSIONID").invalidateHttpSession(true)
                         .clearAuthentication(true).permitAll());
@@ -97,6 +99,16 @@ public class SecurityConfig {
                     .failureHandler((request, response, exception) -> handler.reject(request, response)));
         }
         return http.build();
+    }
+
+    /** Each role lands on its own workspace instead of the customer intake form. */
+    static String landingPage(org.springframework.security.core.Authentication authentication) {
+        var roles = org.springframework.security.core.authority.AuthorityUtils.authorityListToSet(authentication.getAuthorities());
+        if (roles.contains("ROLE_ADMIN") || roles.contains("ROLE_MANAGER")) return "/manager/operations";
+        if (roles.contains("ROLE_HUB_STAFF")) return "/hub/sorter";
+        if (roles.contains("ROLE_LINEHAUL_DRIVER")) return "/driver";
+        if (roles.contains("ROLE_SHIPPER")) return "/shipper/tasks";
+        return "/user/shipments/create";
     }
 
     private AuthenticationEntryPoint apiAuthenticationEntryPoint() {

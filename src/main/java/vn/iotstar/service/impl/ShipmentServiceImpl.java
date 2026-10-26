@@ -100,6 +100,8 @@ public class ShipmentServiceImpl implements ShipmentService {
     private Long createShipment(CreateShipmentRequest request, BigDecimal acceptedFee) {
         if (request.usesModernAddress()) VietnamAddressCatalog.standard().normalize(request);
         AuthenticatedActor actor = AuthenticatedActor.requireCurrent();
+        // Only customer accounts may send: fee payment (ShipmentFeeService.requireOwner) also requires ROLE_USER.
+        if (!actor.hasRole(UserRole.ROLE_USER)) throw new ShipmentAccessDeniedException();
         String receiverPhone = receiverPhone(request);
         checkPayerAndMethod(request);
         BigDecimal fee = price(request);
@@ -151,8 +153,9 @@ public class ShipmentServiceImpl implements ShipmentService {
     @Transactional(readOnly = true)
     public ShipmentDetailResponse getDetail(Long shipmentId) {
         AuthenticatedActor actor = AuthenticatedActor.requireCurrent();
+        // Unknown and foreign ids get the same 403 so shipment ids cannot be probed for existence.
         Shipment shipment = shipmentRepository.findById(shipmentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Shipment"));
+                .orElseThrow(ShipmentAccessDeniedException::new);
         if (!shipment.getSender().getId().equals(actor.userId())) {
             throw new ShipmentAccessDeniedException();
         }
@@ -174,7 +177,7 @@ public class ShipmentServiceImpl implements ShipmentService {
         AuthenticatedActor actor = AuthenticatedActor.requireCurrent();
         // Serialize confirmation before reading payment state so retries preserve one reference and event.
         Shipment shipment = shipmentRepository.findByIdForUpdate(shipmentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Shipment"));
+                .orElseThrow(ShipmentAccessDeniedException::new);
         if (!shipment.getSender().getId().equals(actor.userId())) {
             throw new ShipmentAccessDeniedException();
         }
@@ -213,7 +216,7 @@ public class ShipmentServiceImpl implements ShipmentService {
         AuthenticatedActor actor = AuthenticatedActor.requireCurrent();
         // Same row lock as pickup completion: only one of cancel / PICKED_UP can win.
         Shipment shipment = shipmentRepository.findByIdForUpdate(shipmentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Shipment"));
+                .orElseThrow(ShipmentAccessDeniedException::new);
         if (!shipment.getSender().getId().equals(actor.userId())) {
             throw new ShipmentAccessDeniedException();
         }

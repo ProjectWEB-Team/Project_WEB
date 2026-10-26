@@ -103,7 +103,8 @@ public class ContainerHandoverServiceImpl implements ContainerHandoverService {
                 .orElseThrow(() -> new ResourceNotFoundException("Destination hub"));
         User driver = userRepository.findById(command.receiverDriverId())
                 .orElseThrow(() -> new ResourceNotFoundException("Driver"));
-        if (driver.getRole() != UserRole.ROLE_LINEHAUL_DRIVER) throw new HubOperationAccessDeniedException();
+        if (driver.getRole() != UserRole.ROLE_LINEHAUL_DRIVER || hubOperationsRepository.findActiveProfileByUserId(driver.getId())
+                .filter(driverProfile -> "LINEHAUL_DRIVER".equals(driverProfile.getPosition())).isEmpty()) throw new HubOperationAccessDeniedException();
         return createHandover(profile, destination, driver, command.containerIds(), null);
     }
 

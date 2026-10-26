@@ -53,7 +53,7 @@ class PermissionMatrixApiChainTest {
             // Prefix rules without a controller today; probes prove the rule itself.
             new Route("GET", "/api/shipper/probe", SHIPPER, false),
             new Route("GET", "/api/hub/probe", HUB, false),
-            new Route("GET", "/api/calculator/probe", PUBLIC, false),
+            new Route("GET", "/api/calculator/probe", ALL, false),
             new Route("GET", "/api/unlisted", ALL, false));
 
     @Autowired private MockMvc mockMvc;

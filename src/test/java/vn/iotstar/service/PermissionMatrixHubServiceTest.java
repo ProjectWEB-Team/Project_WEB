@@ -177,6 +177,17 @@ class PermissionMatrixHubServiceTest {
         verify(custody, never()).persist(any());
     }
 
+    @Test void handoverToADriverWithoutAnActiveDriverProfileIsDenied() {
+        as("OUTBOUND");
+        when(custody.findHubById(12L)).thenReturn(Optional.of(hub12));
+        when(users.findById(9L)).thenReturn(Optional.of(driver));
+        when(hubOps.findActiveProfileByUserId(9L)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> handovers.createHandover(new CreateHandoverCommand(12L, 9L, List.of(1L)))).isInstanceOf(HubOperationAccessDeniedException.class);
+        when(hubOps.findActiveProfileByUserId(9L)).thenReturn(Optional.of(EmployeeProfile.active(driver, hub11, "OUTBOUND")));
+        assertThatThrownBy(() -> handovers.createHandover(new CreateHandoverCommand(12L, 9L, List.of(1L)))).isInstanceOf(HubOperationAccessDeniedException.class);
+        verify(custody, never()).persist(any());
+    }
+
     @Test void outboundStaffOfAnotherHubCannotCorrectAHandover() {
         Hub other = hub(13L, "HUB-B");
         LastMileTestFixture.login(staff);
