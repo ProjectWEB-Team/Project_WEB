@@ -27,23 +27,9 @@ docker compose up -d
 docker exec -it project_web-sqlserver-1 /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P $env:MSSQL_SA_PASSWORD -C -Q "CREATE DATABASE ute_express"
 ```
 
-## 2. Tạo database RDS for SQL Server
+## 2. Tạo máy chủ EC2
 
-AWS Console → chọn region gần Việt Nam, ví dụ **Asia Pacific (Singapore) ap-southeast-1**. Dùng **cùng region** cho RDS và EC2.
-
-1. **RDS → Create database**
-   - Creation method: **Standard create**
-   - Engine: **Microsoft SQL Server**, Edition: **SQL Server Express Edition**
-   - Templates: **Free tier** (nếu có)
-   - DB instance identifier: `uteexpress-db`
-   - Master username: `admin`, đặt mật khẩu mạnh và lưu lại
-   - Instance class: `db.t3.micro`, Storage: 20 GB
-   - Connectivity: **Public access: No**. VPC: Default VPC
-   - VPC security group: **Create new**, tên `uteexpress-db-sg`
-2. Bấm **Create database**, chờ trạng thái **Available** (10–20 phút). Ghi lại **Endpoint** (dạng `uteexpress-db.xxxx.ap-southeast-1.rds.amazonaws.com`).
-3. Security group chỉ cho EC2 vào (làm sau khi có EC2 ở bước 3): **EC2 → Security Groups → uteexpress-db-sg → Edit inbound rules** → xoá rule cũ, thêm: Type **MSSQL** (1433), Source: security group của EC2 (`uteexpress-web-sg`).
-
-## 3. Tạo máy chủ EC2
+AWS Console → chọn region **Asia Pacific (Singapore) ap-southeast-1** (góc trên bên phải). Tạo EC2 và RDS **cùng region**.
 
 1. **EC2 → Launch instance**
    - Name: `uteexpress-web`
@@ -54,9 +40,22 @@ AWS Console → chọn region gần Việt Nam, ví dụ **Asia Pacific (Singapo
      - SSH (22): **My IP**
      - HTTP (80): Anywhere
      - HTTPS (443): Anywhere
-   - Storage: 20 GB
+   - Storage: 12 GB gp3
 2. **Elastic IP**: EC2 → Elastic IPs → Allocate → Associate với `uteexpress-web`. Ghi lại IP này (IP cố định, không đổi khi khởi động lại).
-3. Quay lại bước 2.3 để mở 1433 cho `uteexpress-web-sg`.
+
+## 3. Tạo database RDS for SQL Server
+
+1. **RDS → Create database**
+   - Creation method: **Standard create**
+   - Engine: **Microsoft SQL Server**, Edition: **SQL Server Express Edition**
+   - Templates: **Free tier** (nếu có)
+   - DB instance identifier: `uteexpress-db`
+   - Master username: `admin`, đặt mật khẩu mạnh và lưu lại
+   - Instance class: `db.t3.micro`, Storage: 20 GB gp3 (mức tối thiểu của SQL Server), bỏ tick storage autoscaling
+   - Connectivity: **Public access: No**. VPC: Default VPC
+   - VPC security group: **Create new**, tên `uteexpress-db-sg`
+2. Bấm **Create database**, chờ trạng thái **Available** (10–20 phút). Ghi lại **Endpoint** (dạng `uteexpress-db.xxxx.ap-southeast-1.rds.amazonaws.com`).
+3. Security group chỉ cho EC2 vào: **EC2 → Security Groups → uteexpress-db-sg → Edit inbound rules** → xoá rule cũ, thêm: Type **MSSQL** (1433), Source: security group của EC2 (`uteexpress-web-sg`).
 
 ## 4. Trỏ domain ở TenTen về EC2
 
@@ -64,8 +63,8 @@ AWS Console → chọn region gần Việt Nam, ví dụ **Asia Pacific (Singapo
 
 | Loại | Tên (Host) | Giá trị | TTL |
 |---|---|---|---|
-| A | `@` | Elastic IP ở bước 3.2 | 300 |
-| A | `www` | Elastic IP ở bước 3.2 | 300 |
+| A | `@` | Elastic IP ở bước 2.2 | 300 |
+| A | `www` | Elastic IP ở bước 2.2 | 300 |
 
 Xoá các bản ghi A/CNAME cũ trùng `@` hoặc `www` nếu có. Kiểm tra sau 5–30 phút: `nslookup tenmiencuaban.vn` trả về đúng IP.
 
@@ -81,7 +80,7 @@ Trên EC2:
 
 ```bash
 sudo apt update && sudo apt -y upgrade
-sudo apt -y install openjdk-21-jre-headless nginx certbot python3-certbot-nginx git maven
+sudo apt -y install openjdk-21-jre-headless nginx certbot python3-certbot-nginx apache2-utils git maven
 sudo useradd --system --create-home --home-dir /opt/uteexpress uteexpress
 ```
 
@@ -189,7 +188,7 @@ OTP: profile `otp-local` ghi mã vào file trên server (`/opt/uteexpress/.local
 - Tài khoản nhân viên (shipper, hub, tài xế, quản lý, admin) cần được tạo trong DB; không có trang tự đăng ký cho các vai trò này.
 - File upload lưu ở `/opt/uteexpress/uploads`. Sao lưu RDS: bật **Automated backups** (mặc định 7 ngày).
 - Lỗi thường gặp:
-  - `Login failed` / timeout tới RDS: kiểm tra security group bước 2.3 và URL trong `/etc/uteexpress.env`.
+  - `Login failed` / timeout tới RDS: kiểm tra security group bước 3.3 và URL trong `/etc/uteexpress.env`.
   - `502 Bad Gateway`: app chưa chạy xong hoặc lỗi, xem `journalctl -u uteexpress -n 200`.
   - Certbot lỗi: domain chưa trỏ đúng IP (bước 4).
 
