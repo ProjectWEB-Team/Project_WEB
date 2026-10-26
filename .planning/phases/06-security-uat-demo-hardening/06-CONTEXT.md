@@ -67,7 +67,7 @@ Note: `.planning/codebase/*.md` is dated 2026-10-01 and describes the pre-Phase-
 ### Reusable Assets
 - `src/main/java/vn/iotstar/config/SecurityConfig.java`: dual chains (API order 1 JWT/no CSRF; web order 2 with CSRF; `/ws/**` authenticated)
 - `src/main/java/vn/iotstar/config/LogisticsProperties.java` (+ `Timeout`), `src/main/resources/application-demo.properties`: existing demo timeout/day-lock profile
-- `src/main/java/vn/iotstar/security/` (`AuthenticatedActor`, `JwtAuthenticationFilter`), `config/AuthenticatedShipmentStompInterceptor`, `config/WebSocketConfig`
+- `src/main/java/vn/iotstar/security/` (`AuthenticatedActor`, `JwtAuthenticationFilter`), `config/WebSocketConfig` (contains the nested `AuthenticatedShipmentStompInterceptor`)
 - Exceptions `ShipmentAccessDeniedException`, `HubOperationAccessDeniedException` — existing denial pattern
 - `src/test/java/vn/iotstar/{config,controller,integration,realtime,security,service}` — 88 test files incl. SQL integration suites
 
