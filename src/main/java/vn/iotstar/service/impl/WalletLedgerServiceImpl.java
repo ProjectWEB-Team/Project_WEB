@@ -1,12 +1,15 @@
 package vn.iotstar.service.impl;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.iotstar.dto.wallet.WalletResponse;
 import vn.iotstar.entity.Wallet;
+import vn.iotstar.entity.UserRole;
 import vn.iotstar.entity.WalletTransaction;
 import vn.iotstar.repository.WalletRepository;
 import vn.iotstar.repository.WalletTransactionRepository;
+import vn.iotstar.security.AuthenticatedActor;
 import vn.iotstar.service.WalletLedgerService;
 
 import java.math.BigDecimal;
@@ -35,6 +38,7 @@ public class WalletLedgerServiceImpl implements WalletLedgerService {
     @Override
     @Transactional(readOnly = true)
     public WalletResponse getWalletResponse(Long userId) {
+        requireOwnerOrAdmin(userId);
         Wallet wallet = walletRepository.findByUserId(userId)
                 .orElseGet(() -> Wallet.createForUser(userId));
         return new WalletResponse(wallet.getUserId(), wallet.getBalance(), wallet.getLockedBalance(), wallet.getStatus());
@@ -149,7 +153,14 @@ public class WalletLedgerServiceImpl implements WalletLedgerService {
     @Override
     @Transactional(readOnly = true)
     public List<WalletTransaction> getTransactions(Long userId) {
+        requireOwnerOrAdmin(userId);
         return transactionRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }
-}
 
+    private static void requireOwnerOrAdmin(Long userId) {
+        AuthenticatedActor actor = AuthenticatedActor.requireCurrent();
+        if (!actor.hasRole(UserRole.ROLE_ADMIN) && !actor.userId().equals(userId)) {
+            throw new AccessDeniedException("Wallet owner required");
+        }
+    }
+}

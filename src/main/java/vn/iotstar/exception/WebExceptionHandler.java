@@ -30,6 +30,13 @@ public class WebExceptionHandler {
         return "error/403";
     }
 
+    /** Service-layer denials (LastMileAccess, FinanceAccess, ...) would otherwise fall into the 500 handler. */
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public String accessDenied(org.springframework.security.access.AccessDeniedException exception) {
+        return "error/403";
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public String notFound(ResourceNotFoundException exception) {

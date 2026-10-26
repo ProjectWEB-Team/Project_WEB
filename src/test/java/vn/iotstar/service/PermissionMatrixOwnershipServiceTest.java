@@ -102,6 +102,23 @@ class PermissionMatrixOwnershipServiceTest {
         verify(ledger, never()).recordWithdrawalLock(eq(100L), any(), any());
     }
 
+    // --- Wallet reads (WalletLedgerServiceImpl) ---
+
+    @Test void walletReadsAreForTheOwnerOrAnAdministrator() {
+        var wallets = mock(vn.iotstar.repository.WalletRepository.class);
+        var transactions = mock(vn.iotstar.repository.WalletTransactionRepository.class);
+        var walletLedger = new vn.iotstar.service.impl.WalletLedgerServiceImpl(wallets, transactions);
+        LastMileTestFixture.login(manager);
+        assertThatThrownBy(() -> walletLedger.getWalletResponse(1L)).isInstanceOf(AccessDeniedException.class);
+        assertThatThrownBy(() -> walletLedger.getTransactions(1L)).isInstanceOf(AccessDeniedException.class);
+        verifyNoInteractions(wallets, transactions);
+
+        LastMileTestFixture.login(customer);
+        assertThat(walletLedger.getWalletResponse(1L).getUserId()).isEqualTo(1L);
+        LastMileTestFixture.login(admin);
+        assertThat(walletLedger.getTransactions(1L)).isEmpty();
+    }
+
     // --- Return fee cash collection (ShipmentFeeService.payReturn) ---
 
     @Test void cashReturnFeeAtAnotherHubIsDeniedWithoutAnyPayment() {

@@ -45,6 +45,15 @@ class ExceptionHandlingTest {
     }
 
     @Test
+    void plainServiceDenialUsesSafeForbiddenView() throws Exception {
+        when(shipmentService.getDetail(43L)).thenThrow(new org.springframework.security.access.AccessDeniedException("Sender ownership required"));
+
+        mockMvc.perform(get("/user/shipments/43"))
+                .andExpect(status().isForbidden())
+                .andExpect(view().name("error/403"));
+    }
+
+    @Test
     void unexpectedFailureUsesGenericServerErrorView() throws Exception {
         when(shipmentService.getDetail(500L)).thenThrow(new IllegalStateException("jdbc password leaked"));
 

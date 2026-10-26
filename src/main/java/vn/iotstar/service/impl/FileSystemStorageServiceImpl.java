@@ -32,13 +32,12 @@ public class FileSystemStorageServiceImpl implements StorageService {
 
     @Override
     public String buildStorageFilename(MultipartFile file, String prefix) {
-        String extension = FilenameUtils.getExtension(file.getOriginalFilename());
-        String safeExtension = extension == null || extension.isBlank()
-                ? ""
-                : "." + FilenameUtils.getExtension(file.getOriginalFilename());
-        if (safeExtension.length() > 10) {
-            safeExtension = "";
+        // Uploads are served same-origin from /uploads/**, so only image types may be stored (no .html/.svg).
+        String extension = String.valueOf(FilenameUtils.getExtension(file.getOriginalFilename())).toLowerCase(java.util.Locale.ROOT);
+        if (!java.util.Set.of("jpg", "jpeg", "png", "webp").contains(extension)) {
+            throw new IllegalArgumentException("Evidence must be a JPG, PNG or WEBP image");
         }
+        String safeExtension = "." + extension;
         String uniquePart = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
         String safePrefix = prefix == null || prefix.isBlank() ? "evidence" : prefix;
         if (safePrefix.length() > MAX_FILENAME_LENGTH) {
