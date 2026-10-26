@@ -48,7 +48,7 @@ Thumbs.db
 # Big Data & Dumps
 *.sql
 !docs/schema.sql
-!src/main/resources/db/*.sql
+!src/main/resources/db/**/*.sql
 !docs/sql/local-demo-delivery-areas.sql
 !docs/sql/local-demo-nationwide-2025.sql
 *.csv
