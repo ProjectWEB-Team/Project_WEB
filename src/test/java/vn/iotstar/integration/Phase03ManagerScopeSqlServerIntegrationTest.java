@@ -34,8 +34,8 @@ class Phase03ManagerScopeSqlServerIntegrationTest {
     @BeforeEach
     void applyMigrationAndSeedHierarchy() throws Exception {
         SqlServerMigrationSupport.apply(dataSource,
-                "db/phase-01-shipment-events-event-type.sql",
-                "db/phase-03-hub-routing-schema.sql");
+                "db/migration/V2__phase_01_shipment_events_event_type.sql",
+                "db/migration/V6__phase_03_hub_routing_schema.sql");
         // Legacy databases may retain hubs.code at 20 characters; keep all generated test codes safely below it.
         suffix = Long.toUnsignedString(System.nanoTime(), 36);
         rootId = insertHub("P3M-R-" + suffix, null);

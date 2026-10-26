@@ -50,19 +50,19 @@ Hai lát cắt đều cần ghi vào bảng `incidents`, nhưng mỗi bên đã 
 | Nguồn | Shape |
 |---|---|
 | `docs/schema.sql` (canonical, ADR-004) | `shipment_id, trip_id, hub_id, type, description, reported_by, status, created_at, resolved_at` |
-| `phase-03-linehaul-trip-schema.sql` | `transport_trip_id, hub_id, actor_user_id, incident_type, note, evidence_reference` + `CHECK (incident_type = 'TRIP_DELAY')` |
-| `phase-04-finance-reconciliation-schema.sql` | theo `docs/schema.sql` ✔ |
+| `V8__phase_03_linehaul_trip_schema.sql` | `transport_trip_id, hub_id, actor_user_id, incident_type, note, evidence_reference` + `CHECK (incident_type = 'TRIP_DELAY')` |
+| `V12__phase_04_finance_reconciliation_schema.sql` | theo `docs/schema.sql` ✔ |
 
 **Phase 04 đã giải quyết theo hướng canonical:**
 
 - Entity `vn.iotstar.entity.Incident` map đúng bộ cột của `docs/schema.sql`.
 - Entity `FinancialIncident` cũ đã bị **xoá** (tránh hai entity JPA trên cùng một bảng).
-- `phase-04-finance-reconciliation-schema.sql` tự động **bổ sung cột canonical** nếu bảng đã tồn tại với shape khác, và **xoá** ràng buộc `CK_incidents_driver_type` để bảng không bị giới hạn vào một loại sự cố.
+- `V12__phase_04_finance_reconciliation_schema.sql` tự động **bổ sung cột canonical** nếu bảng đã tồn tại với shape khác, và **xoá** ràng buộc `CK_incidents_driver_type` để bảng không bị giới hạn vào một loại sự cố.
 
 **Việc cần làm ở Phase 03 (của Vạn) khi hợp nhất:**
 
 1. Bỏ entity `vn.iotstar.entity.Incident` cũ, dùng entity canonical của Phase 04.
-2. Bỏ phần `CREATE TABLE dbo.incidents` và `CK_incidents_driver_type` khỏi `phase-03-linehaul-trip-schema.sql` (giữ lại phần `ALTER` để thêm cột).
+2. Bỏ phần `CREATE TABLE dbo.incidents` và `CK_incidents_driver_type` khỏi `V8__phase_03_linehaul_trip_schema.sql` (giữ lại phần `ALTER` để thêm cột).
 3. Bổ sung cột canonical (`type`, `description`, `reported_by`, `status`, `created_at`, `resolved_at`, `trip_id`) vào entity, và ánh xạ `actor_user_id` → `reported_by`, `note` → `description`, `incident_type` → `type`.
 4. Cập nhật `OperationalRealtimePublisher` và `IncidentRepository` cho entity mới.
 

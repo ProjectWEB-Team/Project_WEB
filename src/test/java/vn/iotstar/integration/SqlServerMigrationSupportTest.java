@@ -30,13 +30,13 @@ class SqlServerMigrationSupportTest {
     @Test void orderedManifestResolvesEveryResourceWithoutDemoSeed() throws Exception {
         var scripts = SqlServerMigrationSupport.phase05Manifest();
         assertThat(scripts).hasSize(16).doesNotHaveDuplicates();
-        assertThat(scripts.indexOf("db/phase-05-route-key-alignment.sql"))
-                .isGreaterThan(scripts.indexOf("db/phase-04-return-schema.sql"))
-                .isLessThan(scripts.indexOf("db/phase-05-custody-alignment.sql"));
-        assertThat(scripts.getFirst()).contains("phase-01-shipment-events");
+        assertThat(scripts.indexOf("db/migration/V15__phase_05_route_key_alignment.sql"))
+                .isGreaterThan(scripts.indexOf("db/migration/V11__phase_04_return_schema.sql"))
+                .isLessThan(scripts.indexOf("db/migration/V16__phase_05_custody_alignment.sql"));
+        assertThat(scripts.getFirst()).contains("phase_01_shipment_events");
         for (String script : scripts) {
             assertThat(new org.springframework.core.io.ClassPathResource(script).exists()).as(script).isTrue();
-            assertThat(script).doesNotContain("pricing-seed");
+            assertThat(script).doesNotContain("demo");
         }
     }
 }

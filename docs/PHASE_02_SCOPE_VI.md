@@ -4,7 +4,7 @@
 > Đối chiếu GitHub ngày **22/10/2026**, sau `git fetch origin`.
 > Đã cập nhật phần account theo yêu cầu người dùng ngày **22/10/2026**: OTP điện thoại hoặc đăng nhập Google, cấu hình nhà cung cấp sau. Quyết định được ghi ở [ADR-016](ARCHITECTURE_DECISIONS.md#adr-016--customer-phone-otp-and-google-oidc-sign-in); không ghi nhận thay phê duyệt của trưởng nhóm.
 > Mã account, giao diện và liên kết người nhận cũ đã có bằng chứng SQL; cấu hình provider thật và browser UAT vẫn còn. Hướng dẫn chạy: [PHASE_02_ACCOUNT_SETUP.md](PHASE_02_ACCOUNT_SETUP.md).
-> **Cập nhật 24/10:** trên nhánh `feature/phase-02-intake`, `mvn test` chạy **197 test, 0 lỗi**; 9 SQL Server tests bị bỏ qua khi không bật biến môi trường. Lần chạy SQL gần nhất (23/10, 11 test đạt) là trước khi thêm first-mile/hủy/timeout/outbox, nên phần mới chưa có bằng chứng SQL Server. Đã có code first-mile, hủy đơn, timeout 48 giờ, outbox hoàn tiền, tracking công khai và mở khóa cho người nhận. Bảng giá demo đã nạp bằng `phase-02-pricing-seed.sql` (chờ nhóm xác nhận). Đăng ký → OTP local → đăng nhập và báo giá đã thử trên trình duyệt. Còn mở: bảng `refund_settlement_outbox` chưa áp dụng trên DB local, dữ liệu hub/nhân sự để UAT first-mile, UAT theo vai trò, test SQL cho phần mới, lưu mã dịch vụ và optimistic version, ETA, provider thật, review chéo; **chưa hoàn thành toàn Phase 02.**
+> **Cập nhật 24/10:** trên nhánh `feature/phase-02-intake`, `mvn test` chạy **197 test, 0 lỗi**; 9 SQL Server tests bị bỏ qua khi không bật biến môi trường. Lần chạy SQL gần nhất (23/10, 11 test đạt) là trước khi thêm first-mile/hủy/timeout/outbox, nên phần mới chưa có bằng chứng SQL Server. Đã có code first-mile, hủy đơn, timeout 48 giờ, outbox hoàn tiền, tracking công khai và mở khóa cho người nhận. Bảng giá demo đã nạp bằng `R__demo_pricing.sql` (chờ nhóm xác nhận). Đăng ký → OTP local → đăng nhập và báo giá đã thử trên trình duyệt. Còn mở: bảng `refund_settlement_outbox` chưa áp dụng trên DB local, dữ liệu hub/nhân sự để UAT first-mile, UAT theo vai trò, test SQL cho phần mới, lưu mã dịch vụ và optimistic version, ETA, provider thật, review chéo; **chưa hoàn thành toàn Phase 02.**
 
 > **Cập nhật 23/10/2026 (tối):** đã code 02-05, 02-06, 02-07, 02-09 và phần realtime/unlock của 02-08: phân công lấy hàng cùng hub, shipper ghi lần liên hệ và quét mã hoàn tất (thu tiền mặt người gửi một lần), hủy đơn của người gửi, job timeout 48 giờ, outbox hoàn tiền `PENDING_WALLET_CREDIT`, tra cứu công khai `/tracking` và `/api/tracking/{mã}`, danh sách đơn đã gửi, “Đơn đang đến” có che và mở khóa bằng mã vận đơn đầy đủ. 193 test chạy, 0 lỗi, 9 test SQL bị bỏ qua vì môi trường build không có SQL Server. Ô ✔ chỉ ghi nhận mã đã có; SQL evidence, UAT và review vẫn còn. Chi tiết và các mặc định đã chọn: nhật ký cuối [checklist](PHASE_02_DIRECTOR_CHECKLIST.md).
 
@@ -53,7 +53,7 @@ Phần đã bổ sung và phần Phase 02 còn thiếu:
 ### 02-01 — Account: OTP điện thoại và Google
 
 - [x] Ghi yêu cầu người dùng ở ADR-016: chỉ tạo `ROLE_USER`; nhánh phone bắt đầu `INACTIVE`, OTP hợp lệ mới thành `ACTIVE`; nhánh Google có verified email được tạo account `ACTIVE` với phone chưa xác thực.
-- [x] Viết `phase-02-account-otp.sql`: thêm `phone_otp_challenges`, timestamps xác thực và Google subject; kiểm tra dữ liệu legacy trước DDL. Chính sách hiện tại: 5 phút, 5 lần thử, 60 giây gửi lại, 5 lần gửi/giờ.
+- [x] Viết `V3__phase_02_account_otp.sql`: thêm `phone_otp_challenges`, timestamps xác thực và Google subject; kiểm tra dữ liệu legacy trước DDL. Chính sách hiện tại: 5 phút, 5 lần thử, 60 giây gửi lại, 5 lần gửi/giờ.
 - [x] Mở rộng `User`, chuẩn hóa SĐT Việt Nam, tra cứu/kiểm tra trùng username/phone/email. Schema account và các giao dịch đã được kiểm tra trên SQL Server local.
 - [x] BCrypt cho password và OTP; challenge gắn tài khoản, purpose, expiry, dùng một lần; session giữ challenge ID.
 - [x] Có `OtpDelivery` và profile `otp-local` để mô phỏng bằng file local bị Git ignore; mặc định tắt delivery, không trả/log mã trong HTTP thông thường.
@@ -168,7 +168,7 @@ Phần pickup kết thúc ở việc nhận kiện và bàn giao dữ liệu đ�
 
 ### 02-09 — Ghi nhận nghĩa vụ hoàn tiền, trước khi làm 02-08
 
-- [x] Tạo `RefundSettlementOutbox` và migration `phase-02-refund-outbox.sql` theo plan.
+- [x] Tạo `RefundSettlementOutbox` và migration `V5__phase_02_refund_outbox.sql` theo plan.
 - [x] Chỉ shipping fee đã `PAID` thuộc nhánh hợp lệ mới sinh nghĩa vụ hoàn.
 - [x] Bốn trigger trong plan: `SENDER_REQUEST`, `PICKUP_TIMEOUT`, `PICKUP_SERVICE_FAILURE`, `DROPOFF_TIMEOUT`.
 - [x] Cùng transaction với cancellation/event tạo đúng một row `PENDING_WALLET_CREDIT`; unique theo payment/idempotency key.
@@ -246,7 +246,7 @@ Schema và migration cần phân biệt:
 6. `ddl-auto=none`: Hibernate không tự tạo/sửa schema. Cấu hình local/secret không commit.
 7. Trước SQL integration test, cần DB kiểm chứng riêng và account phù hợp vì test có tạo/xóa fixture. Không dùng database của các bài tập khác.
 
-**Trạng thái local ngày 23/10/2026:** đã chọn `ute_express`, SQL login `uteexpress_app`, JDK 22 và nhập config local. Schema cần cho account/shipment/payment đã được kiểm tra; 11 SQL integration tests đạt, gồm rollback/concurrency. Fixture được dọn sau kiểm thử. Ngày 23/10 người dùng đồng ý nạp bảng giá demo bằng `phase-02-pricing-seed.sql` (27 dòng `ACTIVE`) để thử giao diện; nhóm vẫn cần chốt giá chính thức. Bảng `refund_settlement_outbox` chưa được áp dụng trên DB local. Hibernate vẫn dùng `ddl-auto=none`; không chạy lại schema nền như một thao tác reset. Hướng dẫn ở [PHASE_02_ACCOUNT_SETUP.md](PHASE_02_ACCOUNT_SETUP.md).
+**Trạng thái local ngày 23/10/2026:** đã chọn `ute_express`, SQL login `uteexpress_app`, JDK 22 và nhập config local. Schema cần cho account/shipment/payment đã được kiểm tra; 11 SQL integration tests đạt, gồm rollback/concurrency. Fixture được dọn sau kiểm thử. Ngày 23/10 người dùng đồng ý nạp bảng giá demo bằng `R__demo_pricing.sql` (27 dòng `ACTIVE`) để thử giao diện; nhóm vẫn cần chốt giá chính thức. Bảng `refund_settlement_outbox` chưa được áp dụng trên DB local. Hibernate vẫn dùng `ddl-auto=none`; không chạy lại schema nền như một thao tác reset. Hướng dẫn ở [PHASE_02_ACCOUNT_SETUP.md](PHASE_02_ACCOUNT_SETUP.md).
 
 ## 6. Các điểm phải phối hợp với Vạn/Phát
 
@@ -293,10 +293,10 @@ Bạn vẫn cần hiểu interface, đọc/review mã của đồng đội và t
 ## 9. Việc cần làm tiếp
 
 1. Mở lại Eclipse, refresh project và chạy `UteExpressApplication` với `local,otp-local`; kiểm thử trang chủ và đăng ký → OTP local → kích hoạt → đăng nhập trên trình duyệt. Launch local đã cấu hình loại test code và working directory; vẫn cần xác nhận thực tế trong IDE.
-2. Bảng giá demo đã nạp; nhóm quyết định giữ hay thay bằng bảng giá chính thức (dịch vụ, tuyến, cân cơ bản/giá cơ bản, bậc cân thêm/giá thêm, tỷ lệ bảo hiểm/COD). Chỉ cần sửa số trong `phase-02-pricing-seed.sql`.
+2. Bảng giá demo đã nạp; nhóm quyết định giữ hay thay bằng bảng giá chính thức (dịch vụ, tuyến, cân cơ bản/giá cơ bản, bậc cân thêm/giá thêm, tỷ lệ bảo hiểm/COD). Chỉ cần sửa số trong `R__demo_pricing.sql`.
 3. Thử báo giá/tạo đơn và ba nhánh thanh toán trên trình duyệt. Test SQL đã qua sender-online, sender-cash và receiver-cash với fixture riêng, cùng rollback/linking và payment đồng thời. Google/provider thật tiếp tục hoãn theo yêu cầu.
 4. Hoàn thiện intake: chốt quy tắc giá/service/hub với nhóm, lưu dấu policy/dịch vụ và quy định thời hạn thanh toán. Wizard và mốc chờ bàn giao đã có; scheduler, version và các field lifecycle còn lại vẫn mở.
-5. First-mile, hủy/timeout 48 giờ, tracking, refund outbox và unlock đã có code. Việc tiếp: áp dụng `phase-02-refund-outbox.sql`, nạp hub/nhân sự để UAT, chạy lại SQL suite và thêm SQL test cho phần mới (race hủy/lấy hàng, hai hub).
+5. First-mile, hủy/timeout 48 giờ, tracking, refund outbox và unlock đã có code. Việc tiếp: áp dụng `V5__phase_02_refund_outbox.sql`, nạp hub/nhân sự để UAT, chạy lại SQL suite và thêm SQL test cho phần mới (race hủy/lấy hàng, hai hub).
 6. Bạn kiểm thử giao diện/vận hành và phối hợp quyết định với nhóm; phần sửa code và automated tests do trợ lý thực hiện khi tiếp tục triển khai. Ghi bằng chứng thật vào [PHASE_02_DIRECTOR_CHECKLIST.md](PHASE_02_DIRECTOR_CHECKLIST.md), không tick nghiệm thu chỉ vì đã có class.
 
 Baseline đã chạy trên máy này với JDK 22: **58 test, 0 failures, 0 errors, 1 skipped**, `BUILD SUCCESS`. Test bị skip là SQL Server integration; đây không phải bằng chứng DB đã sẵn sàng. Các con số Phase 04 trong handoff là báo cáo của nhánh đó, chưa được chạy lại trong phiên rà soát này.

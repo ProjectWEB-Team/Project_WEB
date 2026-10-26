@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.*;
 
 @org.junit.jupiter.api.condition.EnabledIf(value="vn.iotstar.integration.Phase05SqlServerFixtureSupport#configured", disabledReason="REAL_SQLSERVER_VERIFICATION = BLOCKED_BY_ENVIRONMENT")
 class Phase05SchemaConvergenceSqlServerIntegrationTest extends Phase05SqlServerFixtureSupport {
-    private static final String ROUTE_MIGRATION="db/phase-05-route-key-alignment.sql";
+    private static final String ROUTE_MIGRATION="db/migration/V15__phase_05_route_key_alignment.sql";
     private String legacyKey(Long id) { return "shipment:"+id+":hub:"+hub("O"); }
     private void legacyRoute(Long id) {
         // Explicit pre-upgrade snapshot: the old producer omitted FORWARD only.
@@ -80,8 +80,8 @@ class Phase05SchemaConvergenceSqlServerIntegrationTest extends Phase05SqlServerF
         sql.update("UPDATE dbo.shipments SET current_status='AT_HUB',current_hub_id=? WHERE id=?",hub("O"),pending);
         sql.update("UPDATE dbo.parcel_containers SET status='SEALED' WHERE id=?",hop.container());
         sql.update("UPDATE dbo.vehicles SET status='AVAILABLE' WHERE id=?",vehicle());
-        SqlServerMigrationSupport.apply(source,"db/phase-05-custody-alignment.sql");
-        SqlServerMigrationSupport.apply(source,"db/phase-05-custody-alignment.sql");
+        SqlServerMigrationSupport.apply(source,"db/migration/V16__phase_05_custody_alignment.sql");
+        SqlServerMigrationSupport.apply(source,"db/migration/V16__phase_05_custody_alignment.sql");
         assertParcel(pending,"IN_TRANSIT",null); assertParcel(received,"AT_HUB",hub("M"));
         assertThat(sql.queryForObject("SELECT received_at FROM dbo.container_items WHERE container_id=? AND shipment_id=?",Object.class,hop.container(),received)).isEqualTo(receivedAt);
         assertThat(sql.queryForObject("SELECT status FROM dbo.vehicles WHERE id=?",String.class,vehicle())).isEqualTo("IN_USE");
@@ -94,8 +94,8 @@ class Phase05SchemaConvergenceSqlServerIntegrationTest extends Phase05SqlServerF
         sql.update("UPDATE dbo.handovers SET status='ACCEPTED' WHERE id=?",hop.handover());
         sql.update("UPDATE dbo.shipments SET current_status='AT_HUB',current_hub_id=? WHERE id=?",hub("O"),id);
         sql.update("UPDATE dbo.parcel_containers SET status='SEALED' WHERE id=?",hop.container());
-        SqlServerMigrationSupport.apply(source,"db/phase-05-custody-alignment.sql");
-        SqlServerMigrationSupport.apply(source,"db/phase-05-custody-alignment.sql");
+        SqlServerMigrationSupport.apply(source,"db/migration/V16__phase_05_custody_alignment.sql");
+        SqlServerMigrationSupport.apply(source,"db/migration/V16__phase_05_custody_alignment.sql");
         assertParcel(id,"IN_TRANSIT",null);
         actor("L"); linehaul.arriveTrip(hop.trip()); receive(hop,id);
     }
@@ -110,8 +110,8 @@ class Phase05SchemaConvergenceSqlServerIntegrationTest extends Phase05SqlServerF
         sql.update("UPDATE dbo.transport_trips SET status='ARRIVED' WHERE id=?",hop.trip());
         sql.update("UPDATE dbo.shipments SET current_status='AT_HUB',current_hub_id=?,on_hold=0 WHERE id=?",hub("O"),id);
         sql.update("UPDATE dbo.parcel_containers SET status='SEALED' WHERE id=?",hop.container());
-        SqlServerMigrationSupport.apply(source,"db/phase-05-custody-alignment.sql");
-        SqlServerMigrationSupport.apply(source,"db/phase-05-custody-alignment.sql");
+        SqlServerMigrationSupport.apply(source,"db/migration/V16__phase_05_custody_alignment.sql");
+        SqlServerMigrationSupport.apply(source,"db/migration/V16__phase_05_custody_alignment.sql");
         assertParcel(id,"IN_TRANSIT",null);
         assertThat(sql.queryForObject("SELECT on_hold FROM dbo.shipments WHERE id=?",Boolean.class,id)).isTrue();
         assertThat(sql.queryForObject("SELECT description FROM dbo.incidents WHERE id=?",String.class,incident)).isEqualTo(evidence);
@@ -127,13 +127,13 @@ class Phase05SchemaConvergenceSqlServerIntegrationTest extends Phase05SqlServerF
         Long secondVehicle=sql.queryForObject("SELECT id FROM dbo.vehicles WHERE plate_number=?",Long.class,fixture+"_2");
         Long second=create(); inbound(second); Hop two=depart(List.of(second),"O","M",secondVehicle);
         sql.update("UPDATE dbo.transport_trips SET vehicle_id=? WHERE id=?",vehicle(),two.trip());
-        assertThatThrownBy(()->SqlServerMigrationSupport.apply(source,"db/phase-05-custody-alignment.sql"))
+        assertThatThrownBy(()->SqlServerMigrationSupport.apply(source,"db/migration/V16__phase_05_custody_alignment.sql"))
                 .isInstanceOf(java.sql.SQLException.class).hasRootCauseMessage("Conflicting active vehicle allocations: resolve transport_trips grouped by vehicle_id before retry.");
         assertParcel(first,"IN_TRANSIT",null); assertParcel(second,"IN_TRANSIT",null);
         // The original service-selected vehicle is known; never fabricate an assignment.
         sql.update("UPDATE dbo.transport_trips SET vehicle_id=? WHERE id=?",secondVehicle,two.trip());
-        SqlServerMigrationSupport.apply(source,"db/phase-05-custody-alignment.sql");
-        SqlServerMigrationSupport.apply(source,"db/phase-05-custody-alignment.sql");
+        SqlServerMigrationSupport.apply(source,"db/migration/V16__phase_05_custody_alignment.sql");
+        SqlServerMigrationSupport.apply(source,"db/migration/V16__phase_05_custody_alignment.sql");
         receive(one,first); receive(two,second);
         assertThat(sql.queryForObject("SELECT status FROM dbo.vehicles WHERE id=?",String.class,secondVehicle)).isEqualTo("AVAILABLE");
     }

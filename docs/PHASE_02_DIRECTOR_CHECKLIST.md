@@ -5,7 +5,7 @@
 > **Purpose:** This is the single daily execution checklist for Phase 02. Open it at the start and end of each session and keep incomplete acceptance gates visible. On 2026-10-22 the user explicitly requested implementing account code/UI while deferring provider configuration; independent implementation may proceed while database setup remains pending.
 
 > **Vietnamese scope guide (GitHub audit 2026-10-22):** Read [PHASE_02_SCOPE_VI.md](PHASE_02_SCOPE_VI.md) for the complete Person-A scope, existing Phase-03/04 contracts, database responsibilities, and unresolved decisions.
-> **Current state (2026-10-24):** branch `feature/phase-02-intake` is pushed. `mvn test` runs **197 tests, 0 failures/errors, 9 SQL Server tests skipped** without the opt-in environment. The last SQL Server pass (171 tests, 11 SQL, 2026-10-23) predates first-mile, cancellation/timeout, refund outbox and tracking, which now exist in code with unit/MVC/Jasper tests only. Demo pricing is seeded (`phase-02-pricing-seed.sql`, pending team confirmation). Owner browser checks so far: registration, local OTP, login, quote. Open: apply `phase-02-refund-outbox.sql` locally, seed hub/staff for first-mile UAT, SQL tests for the new paths, persisted service code and `@Version`, payment deadline, ETA, real providers, role UAT and cross-review. Setup: [PHASE_02_ACCOUNT_SETUP.md](PHASE_02_ACCOUNT_SETUP.md).
+> **Current state (2026-10-24):** branch `feature/phase-02-intake` is pushed. `mvn test` runs **197 tests, 0 failures/errors, 9 SQL Server tests skipped** without the opt-in environment. The last SQL Server pass (171 tests, 11 SQL, 2026-10-23) predates first-mile, cancellation/timeout, refund outbox and tracking, which now exist in code with unit/MVC/Jasper tests only. Demo pricing is seeded (`R__demo_pricing.sql`, pending team confirmation). Owner browser checks so far: registration, local OTP, login, quote. Open: apply `V5__phase_02_refund_outbox.sql` locally, seed hub/staff for first-mile UAT, SQL tests for the new paths, persisted service code and `@Version`, payment deadline, ETA, real providers, role UAT and cross-review. Setup: [PHASE_02_ACCOUNT_SETUP.md](PHASE_02_ACCOUNT_SETUP.md).
 
 ### Next actions after the 2026-10-23 fixes
 
@@ -143,7 +143,7 @@ Read: ADR-002, ADR-016, Workflow §§5–8, Phase-02 decision D-01.
 
 Read: Workflow §§5–8; `ENGINEERING_STANDARDS.md` DTO, transaction, validation, and security rules.
 
-- [x] Add `phase-02-account-otp.sql` for OTP challenge persistence and verification/Google identity columns; migrated columns were inspected and the account SQL tests now pass.
+- [x] Add `V3__phase_02_account_otp.sql` for OTP challenge persistence and verification/Google identity columns; migrated columns were inspected and the account SQL tests now pass.
 - [x] Bring `User` mapping in line with registration data: username, BCrypt password, full name, normalized unique phone, unique email, role, status, timestamps.
 - [x] Add `PhoneOtpChallenge` entity/repository and registration request/verification DTOs.
 - [x] Implement `RegistrationService`/`RegistrationServiceImpl` with constructor injection and transactions.
@@ -498,7 +498,7 @@ Next unchecked checkbox:
 - Continued at the owner's request without seeding UI pricing. Reused existing JSP/controller/service for four steps, backward navigation, reviewed summary, keyboard access, field-error focus and a full-form fallback without JavaScript.
 - Stored the reviewed inputs/fee behind a random quote reference in the session. Final POST must match it; pickup method remains selectable at the last step. Service recalculates the price and rejects changes before persistence. Successful creation consumes the draft; repeated same-session submits cannot create another shipment from it. This is single-instance/session protection, not durable cross-session idempotency.
 - Added required choice validation and DECIMAL(15,2)-compatible money bounds. Removed the redundant JSP source-substring test after replacing it with real Jasper/form-action evidence.
-- Added nullable `waiting_for_handover_at` and the guarded `phase-02-handover-wait.sql` migration; applied and reran it safely on local `ute_express`. Cash creation starts the timer immediately; online creation starts it at payment confirmation; retries keep its original value. Existing rows are not guessed/backfilled. Clock uses the existing server-local operational time convention at second precision.
+- Added nullable `waiting_for_handover_at` and the guarded `V4__phase_02_handover_wait.sql` migration; applied and reran it safely on local `ute_express`. Cash creation starts the timer immediately; online creation starts it at payment confirmation; retries keep its original value. Existing rows are not guessed/backfilled. Clock uses the existing server-local operational time convention at second precision.
 - Final `mvn -B package`: **171 tests, 0 failures/errors/skips**, including 11 SQL Server tests. Updated the previous tracer test for Clock injection and the quote-before-create flow. Evidence: `target/phase02-wizard-final-build.log`.
 - Seven real HTTP/Jasper shipment tests exercise login/CSRF, quote/reference/create, escaping, errors and payment instructions. Ten headless Chrome interaction checks passed on those synthetic pages, including mobile/no-JS/hidden-error behavior. Desktop/mobile screenshots were inspected; see `target/shipment-wizard-desktop.png`, `target/shipment-wizard-mobile.png` and `target/check-shipment-wizard.mjs`.
 - Post-test DB counts match the pre-test snapshot: one existing user/challenge retained, zero shipments/payments/pricing/events. Final WAR includes wizard JS and excludes private local properties. No Git commit/push or real-provider configuration performed.
@@ -509,7 +509,7 @@ Next unchecked checkbox:
 ### 2026-10-23 — First-mile, cancellation/timeout, refund outbox and tracking implemented
 
 - Implemented `FirstMileService` (same-hub coordinator assignment, shipper failed attempts, scan-to-complete with one-time sender-cash collection, coordinator `PICKUP_SERVICE_FAILURE`), sender cancellation, `IntakeTimeoutService` (48 h from `assigned_at` / `waiting_for_handover_at`, demo minutes), `refund_settlement_outbox` (`PENDING_WALLET_CREDIT`, unique per payment), guest/API tracking with allowlisted timeline, sender list, recipient masked list/unlock, and post-commit STOMP notifications to sender/assigned shipper.
-- New migration: `src/main/resources/db/phase-02-refund-outbox.sql`. Shipment columns used (`origin_hub_id`, `current_hub_id`, `picked_up_at`, `cancel_reason`) already exist in `docs/schema.sql`.
+- New migration: `src/main/resources/db/migration/V5__phase_02_refund_outbox.sql`. Shipment columns used (`origin_hub_id`, `current_hub_id`, `picked_up_at`, `cancel_reason`) already exist in `docs/schema.sql`.
 - Tests: 193 run, 0 failures/errors, 9 SQL Server tests skipped in an environment without SQL Server (container build, JDK 21). New unit, MVC-security and Jasper rendering tests cover the new paths. No SQL Server evidence yet for the new tables/locks.
 - Defaults chosen without a leader decision (record or change them): origin hub is bound to the first coordinator who assigns; scheduler runs every 60 s in-process; automated events use a NULL actor; unlock uses the exact full tracking number per session (no OTP); ETA is shown as "chưa có ước tính"; SELF_DROPOFF counter acceptance stays with Phase 03.
 - Next: apply the outbox migration, run the SQL suite, add SQL race tests (cancel vs pickup, two hubs), browser UAT per role, Person B/C reviews.
@@ -517,7 +517,7 @@ Next unchecked checkbox:
 ### 2026-10-23 — Demo pricing table seeded (needs team confirmation)
 
 - Without an ACTIVE `pricing_policies` row the wizard cannot quote (step 3 error "Chưa có bảng giá cho dịch vụ và tuyến này"), so step 4 is unreachable on a fresh database.
-- New seed: `src/main/resources/db/phase-02-pricing-seed.sql` (27 ACTIVE rows, idempotent, adds only missing combinations). Prices are a market-range reference (GHTK, GHN, Viettel Post, SPX), not an official tariff: 500 g base, 500 g steps, insurance 0.5 %, COD 0.8 %. Table is in `PHASE_02_ACCOUNT_SETUP.md` step 9.
+- New seed: `src/main/resources/db/demo/R__demo_pricing.sql` (27 ACTIVE rows, idempotent, adds only missing combinations). Prices are a market-range reference (GHTK, GHN, Viettel Post, SPX), not an official tariff: 500 g base, 500 g steps, insurance 0.5 %, COD 0.8 %. Table is in `PHASE_02_ACCOUNT_SETUP.md` step 9.
 - Known limits versus carriers: pricing uses actual weight only (no volumetric weight), no free-insurance threshold under 1M VND, no free-COD tier, no intra-province/ward split. Add them later only if the team wants them.
 - Decision needed from the team: keep these demo prices or replace them with the official table.
 
@@ -526,4 +526,4 @@ Next unchecked checkbox:
 - Re-checked every open Phase 02 item against the branch. Ticked in `PHASE_02_SCOPE_VI.md` only items with code and tests: intake snapshot and receiver auto-link, ACTIVE-policy BigDecimal quote, re-quote on submit, single-transaction persist, `VNPAY` demo method, owner-only idempotent confirmation, refund outbox payload, exact-tracking-number unlock.
 - Still open in code: persisted service code, `@Version`, payment deadline, ETA, OTP-based unlock (not built; unlock uses the tracking number).
 - Still open as evidence: SQL Server runs for first-mile/cancel/timeout/outbox, race tests, role UAT, Google/OTP provider, reviews by Vạn and Phát.
-- Local DB: `refund_settlement_outbox` is not applied, so cancelling a paid shipment will fail until `phase-02-refund-outbox.sql` runs.
+- Local DB: `refund_settlement_outbox` is not applied, so cancelling a paid shipment will fail until `V5__phase_02_refund_outbox.sql` runs.

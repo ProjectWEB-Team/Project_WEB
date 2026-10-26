@@ -51,8 +51,8 @@ class Phase03RoutingSqlServerIntegrationTest {
     @BeforeEach
     void applyMigrationAndSeed() throws Exception {
         SqlServerMigrationSupport.apply(dataSource,
-                "db/phase-01-shipment-events-event-type.sql",
-                "db/phase-03-hub-routing-schema.sql");
+                "db/migration/V2__phase_01_shipment_events_event_type.sql",
+                "db/migration/V6__phase_03_hub_routing_schema.sql");
         suffix = String.valueOf(System.nanoTime());
         actorId = insertUser("phase03-staff-" + suffix, "ROLE_HUB_STAFF");
         hubAId = insertHub("P3-A-" + suffix, "Phase 03 Hub A", "Binh Duong");

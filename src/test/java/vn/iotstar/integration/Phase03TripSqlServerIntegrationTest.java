@@ -20,10 +20,10 @@ class Phase03TripSqlServerIntegrationTest {
     @Autowired private JdbcTemplate jdbcTemplate;
     @Test void realSqlServerAppliesLinehaulTripAndIncidentSchema() throws Exception {
         SqlServerMigrationSupport.apply(dataSource,
-                "db/phase-01-shipment-events-event-type.sql",
-                "db/phase-03-hub-routing-schema.sql",
-                "db/phase-03-container-handover-schema.sql",
-                "db/phase-03-linehaul-trip-schema.sql");
+                "db/migration/V2__phase_01_shipment_events_event_type.sql",
+                "db/migration/V6__phase_03_hub_routing_schema.sql",
+                "db/migration/V7__phase_03_container_handover_schema.sql",
+                "db/migration/V8__phase_03_linehaul_trip_schema.sql");
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM sys.tables WHERE name IN ('transport_trips', 'incidents')", Integer.class)).isEqualTo(2);
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.incidents') " +
                 "AND name IN ('shipment_id', 'trip_id', 'hub_id', 'type', 'description', 'reported_by', 'status', 'created_at', 'resolved_at')", Integer.class)).isEqualTo(9);

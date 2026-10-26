@@ -21,11 +21,11 @@ class Phase03ReceiptSqlServerIntegrationTest {
 
     @Test void realSqlServerInstallsDestinationReceiptEvidenceSchema() throws Exception {
         SqlServerMigrationSupport.apply(dataSource,
-                "db/phase-01-shipment-events-event-type.sql",
-                "db/phase-03-hub-routing-schema.sql",
-                "db/phase-03-container-handover-schema.sql",
-                "db/phase-03-linehaul-trip-schema.sql",
-                "db/phase-03-destination-receipt-schema.sql");
+                "db/migration/V2__phase_01_shipment_events_event_type.sql",
+                "db/migration/V6__phase_03_hub_routing_schema.sql",
+                "db/migration/V7__phase_03_container_handover_schema.sql",
+                "db/migration/V8__phase_03_linehaul_trip_schema.sql",
+                "db/migration/V9__phase_03_destination_receipt_schema.sql");
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.container_items') AND name IN ('received_at', 'received_by_user_id')", Integer.class)).isEqualTo(2);
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.incidents') " +
                 "AND name IN ('shipment_id', 'trip_id', 'hub_id', 'type', 'reported_by', 'status')", Integer.class)).isEqualTo(6);

@@ -26,7 +26,7 @@ Thay đổi địa chỉ sau khi báo giá yêu cầu báo giá lại. Với đ�
 
 Định tuyến mẫu: bưu cục → hub vùng → SOC nếu liên vùng → hub vùng đích → bưu cục đích. Script chạy lại không tạo trùng; cấu hình xung đột sẽ rollback. Script không tự tạo nhân viên, tài xế, phương tiện hay đơn hàng. Khi thử các bước kho và giao hàng, cần gán nhân sự/phương tiện demo đúng phạm vi. Mạng lưới này chứng minh luồng phần mềm, không đại diện cho cơ sở hay năng lực vận chuyển ngoài đời.
 
-Bảng giá mẫu vẫn dùng script có sẵn `src/main/resources/db/phase-02-pricing-seed.sql` (27 tổ hợp dịch vụ/vùng). Không thay bảng giá thương mại bằng giá mẫu.
+Bảng giá mẫu vẫn dùng script có sẵn `src/main/resources/db/demo/R__demo_pricing.sql` (27 tổ hợp dịch vụ/vùng). Không thay bảng giá thương mại bằng giá mẫu.
 
 ## Trang phí hoàn và phụ thu
 

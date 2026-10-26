@@ -28,9 +28,9 @@ class Phase03CustodySqlServerIntegrationTest {
 
     @BeforeEach void seed() throws Exception {
         SqlServerMigrationSupport.apply(dataSource,
-                "db/phase-01-shipment-events-event-type.sql",
-                "db/phase-03-hub-routing-schema.sql",
-                "db/phase-03-container-handover-schema.sql");
+                "db/migration/V2__phase_01_shipment_events_event_type.sql",
+                "db/migration/V6__phase_03_hub_routing_schema.sql",
+                "db/migration/V7__phase_03_container_handover_schema.sql");
         suffix = String.valueOf(System.nanoTime());
         originHubId = hub("P3O" + suffix); destinationHubId = hub("P3D" + suffix);
         senderId = user("phase03-outbound-" + suffix, "ROLE_HUB_STAFF"); driverId = user("phase03-driver-" + suffix, "ROLE_LINEHAUL_DRIVER");

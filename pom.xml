@@ -96,6 +96,16 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Applies db/migration on startup so every machine and server has the same schema. -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-sqlserver</artifactId>
+        </dependency>
+
         <!-- JSP Engine (Tomcat Embed Jasper) for embedded JSP rendering -->
         <dependency>
             <groupId>org.apache.tomcat.embed</groupId>

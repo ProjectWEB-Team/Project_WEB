@@ -19,15 +19,15 @@ Google chỉ xác thực email. Phone nhập khi hoàn tất hồ sơ vẫn **ch
 
 1. Chọn rõ database local phục vụ dự án/kiểm thử và tài khoản truy cập. Trên máy đang thiết lập đã chọn `ute_express` theo Phase 01, với SQL login `uteexpress_app`.
 2. Với database mới, chuẩn bị schema nền từ `docs/schema.sql` đúng database đã chọn. File gốc hard-code `ute_express` và không phải script reset an toàn cho DB đã có bảng; không chạy nguyên file lên một target chưa kiểm tra.
-3. Áp dụng `src/main/resources/db/phase-01-shipment-events-event-type.sql` theo nền Phase 01.
+3. Áp dụng `src/main/resources/db/migration/V2__phase_01_shipment_events_event_type.sql` theo nền Phase 01.
 4. Kiểm tra dữ liệu `users` sẵn có: phone theo dạng chuẩn `+84...`, email trim/lowercase, không có collision sau chuẩn hóa. Migration account sẽ dừng nếu chưa đáp ứng; nó không tự sửa hay xác thực dữ liệu cũ.
-5. Áp dụng `src/main/resources/db/phase-02-account-otp.sql` trong database đã chọn. Script dùng transaction/TRY CATCH, thêm `phone_verified_at`, `email_verified_at`, `google_subject` với unique index có điều kiện, và bảng `phone_otp_challenges` có FK/unique theo account.
+5. Áp dụng `src/main/resources/db/migration/V3__phase_02_account_otp.sql` trong database đã chọn. Script dùng transaction/TRY CATCH, thêm `phone_verified_at`, `email_verified_at`, `google_subject` với unique index có điều kiện, và bảng `phone_otp_challenges` có FK/unique theo account.
 6. Kiểm chứng schema/ràng buộc rồi chạy integration tests. `ddl-auto=none` nghĩa là khởi động Spring Boot không tự tạo những bảng/cột này.
-7. Với DB đã có schema nền, chạy `src/main/resources/db/phase-02-handover-wait.sql` trước bản có wizard mới. Script chỉ thêm cột nullable `shipments.waiting_for_handover_at` và chạy lại an toàn; không suy đoán mốc thời gian cho đơn cũ. Trên máy hiện tại, migration này đã được áp dụng ngày 23/10; DB mới tạo từ `docs/schema.sql` đã có cột.
+7. Với DB đã có schema nền, chạy `src/main/resources/db/migration/V4__phase_02_handover_wait.sql` trước bản có wizard mới. Script chỉ thêm cột nullable `shipments.waiting_for_handover_at` và chạy lại an toàn; không suy đoán mốc thời gian cho đơn cũ. Trên máy hiện tại, migration này đã được áp dụng ngày 23/10; DB mới tạo từ `docs/schema.sql` đã có cột.
 
-8. Chạy `src/main/resources/db/phase-02-refund-outbox.sql` để tạo bảng `refund_settlement_outbox` (nghĩa vụ hoàn cước khi hủy đơn đã thanh toán). Script chạy lại an toàn. Phân công lấy hàng cần dữ liệu `hubs` và `employee_profiles` (coordinator `COORDINATOR`/`GENERAL_STAFF`, shipper `ROLE_SHIPPER`) cùng hub.
+8. Chạy `src/main/resources/db/migration/V5__phase_02_refund_outbox.sql` để tạo bảng `refund_settlement_outbox` (nghĩa vụ hoàn cước khi hủy đơn đã thanh toán). Script chạy lại an toàn. Phân công lấy hàng cần dữ liệu `hubs` và `employee_profiles` (coordinator `COORDINATOR`/`GENERAL_STAFF`, shipper `ROLE_SHIPPER`) cùng hub.
 
-9. Chạy `src/main/resources/db/phase-02-pricing-seed.sql` để nạp bảng giá mẫu dev/demo: 27 dòng `ACTIVE` (STANDARD/FAST/EXPRESS × 3 vùng gửi × 3 vùng nhận). Không có bảng giá thì bước 3 của wizard tạo đơn báo "Chưa có bảng giá cho dịch vụ và tuyến này" và không sang được bước 4. Script chỉ thêm tổ hợp chưa có dòng `ACTIVE`, chạy lại an toàn và không sửa giá đã có.
+9. Chạy `src/main/resources/db/demo/R__demo_pricing.sql` để nạp bảng giá mẫu dev/demo: 27 dòng `ACTIVE` (STANDARD/FAST/EXPRESS × 3 vùng gửi × 3 vùng nhận). Không có bảng giá thì bước 3 của wizard tạo đơn báo "Chưa có bảng giá cho dịch vụ và tuyến này" và không sang được bước 4. Script chỉ thêm tổ hợp chưa có dòng `ACTIVE`, chạy lại an toàn và không sửa giá đã có.
 
 Bảng giá mẫu (gói đầu 500g, mỗi bước 500g thêm; bảo hiểm 0,5% giá trị khai báo, phí COD 0,8% số tiền thu hộ). Đây là giá tham khảo trong khoảng thị trường GHTK/GHN/Viettel Post/SPX, nhóm có thể thay bằng bảng giá chính thức:
 

@@ -1,0 +1,16 @@
+# Optional local SQL Server 2022 for development: docker compose up -d
+# Then use jdbc:sqlserver://localhost:1433;databaseName=ute_express;encrypt=true;trustServerCertificate=true
+# (create the database once: see docs/DEPLOY_AWS.md, "Chạy SQL Server bằng Docker").
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD:?set MSSQL_SA_PASSWORD}"
+      MSSQL_PID: Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql-data:/var/opt/mssql
+volumes:
+  mssql-data:

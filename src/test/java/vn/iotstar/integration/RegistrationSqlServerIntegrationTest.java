@@ -50,7 +50,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Opt-in verification against an existing SQL Server database with the canonical schema
- * and phase-02-account-otp.sql already applied. No schema or database is created here.
+ * and V3__phase_02_account_otp.sql already applied. No schema or database is created here.
  * Deliberately has no test-level transaction: each service call must really commit or roll back.
  */
 @EnabledIf(value = "sqlServerVerificationConfigured", disabledReason = "REAL_SQLSERVER_VERIFICATION = BLOCKED_BY_ENVIRONMENT")
