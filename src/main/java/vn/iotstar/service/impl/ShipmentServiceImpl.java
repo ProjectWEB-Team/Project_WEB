@@ -127,6 +127,15 @@ public class ShipmentServiceImpl implements ShipmentService {
                 onlinePrepaid ? ShipmentStatus.WAITING_FOR_PAYMENT : ShipmentStatus.WAITING_FOR_HANDOVER,
                 serverTime());
         shipment.setDestinationHubId(destination.getId());
+        // Scopes the coordinator pickup queue to the sender's area (F-06-H-01).
+        // shortcut: no single delivery hub for the sender's province (or legacy address) leaves the origin unset,
+        // so that pickup stays in every coordinator's queue; upgrade by mapping each ward to its pickup hub.
+        if ("HOME_PICKUP".equals(request.getPickupMethod()) && request.usesModernAddress()) {
+            String senderProvince = VietnamAddressCatalog.standard().resolve(request.getSenderProvinceCode(),
+                    request.getSenderWardCode(), request.getSenderAddress()).province().name();
+            List<Hub> senderHubs = hubRepository.findByStatusAndTypeAndProvinceAndDistrict("ACTIVE", "DELIVERY_HUB", senderProvince, null);
+            if (senderHubs.size() == 1) shipment.assignOriginHub(senderHubs.getFirst().getId());
+        }
         shipment.setDestinationGrouping(destination.getRegion(), destination.getProvince());
         shipment.setServiceCode(request.getServiceCode());
         Shipment savedShipment = shipmentRepository.save(shipment);

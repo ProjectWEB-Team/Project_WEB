@@ -147,6 +147,30 @@ class ShipmentServiceImplTest {
         verify(pricingPolicyRepository).findFirstByServiceCodeAndFromRegionAndToRegionAndStatusOrderByIdDesc("STANDARD", "SOUTH", "SOUTH", "ACTIVE");
     }
 
+    @Test void homePickupIsScopedToTheSendersAreaHubOnlyWhenThatHubIsUnique() {
+        User user = authenticate(7L, "owner");
+        stubPolicy();
+        when(userRepository.getReferenceById(7L)).thenReturn(user);
+        when(shipmentRepository.save(any(Shipment.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(shipmentEventRepository.save(any(ShipmentEvent.class))).thenAnswer(inv -> inv.getArgument(0));
+        var hcm = vn.iotstar.entity.Hub.active("LOCAL2025-P79", "Demo HCM", 1, "DELIVERY_HUB", "SOUTH", "Thành phố Hồ Chí Minh");
+        ReflectionTestUtils.setField(hcm, "id", 92L);
+        when(hubRepository.findByStatusAndTypeAndProvinceAndDistrict("ACTIVE", "DELIVERY_HUB", "Thành phố Hồ Chí Minh", null)).thenReturn(List.of(hcm));
+        var request = request();
+        request.setSenderProvinceCode("79"); request.setSenderWardCode("26740");
+        request.setReceiverProvinceCode("79"); request.setReceiverWardCode("26743");
+        request.setPickupMethod("HOME_PICKUP");
+        shipmentService.create(request);
+        request.setPickupMethod("SELF_DROPOFF");
+        shipmentService.create(request);
+
+        var captured = ArgumentCaptor.forClass(Shipment.class);
+        verify(shipmentRepository, times(2)).save(captured.capture());
+        assertThat(captured.getAllValues().get(0).getOriginHubId()).isEqualTo(92L);
+        // Self-dropoff keeps the origin open: the receiving hub assigns it at physical intake.
+        assertThat(captured.getAllValues().get(1).getOriginHubId()).isNull();
+    }
+
     @Test void missingModernCoverageIsRejectedBeforeOfferingAQuote() {
         var request = request();
         request.setSenderProvinceCode("79"); request.setSenderWardCode("26740");
