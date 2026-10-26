@@ -185,7 +185,24 @@ Implementation summaries (checked items mean source repairs are implemented; the
   2. Automated and manual UAT evidence covers vertical paths, state/event invariants, financial invariants, error paths, data scope, and applicable WebSocket behavior.
   3. The canonical primary and exception demo scenarios run under Workflow-permitted demo mode without changing real domain rules.
 
-**Plans:** TBD
+**Plans:** 7 plans (planned 2026-10-26; source work on branch `feature/phase-06-hardening` from `main`, planning artifacts stay on `project-plans`)
+
+Plans:
+**Wave 1**
+
+- [ ] 06-01-PLAN.md — Route-level permission matrix: role x CSRF x anonymous over every controller route, API chain (D-03), completeness guard, findings (HARD-01).
+- [ ] 06-02-PLAN.md — Service-layer matrix, ownership/finance/last-mile slice: shipment/tracking/fee/wallet/withdrawal/reconciliation/refund/delivery cells and findings (HARD-01).
+- [ ] 06-03-PLAN.md — Maven-only multi-session STOMP delivery, rollback, payload and interceptor matrix; closes the technical part of 05-UAT item 3 (HARD-01, HARD-02).
+- [ ] 06-04-PLAN.md — Demo flags `uteexpress.demo.fast-track-route-bypass` and `uteexpress.demo.auto-linehaul-transit-simulation`, inert outside the demo profile, with naming map (HARD-03).
+
+**Wave 2** *(after 06-01 / 06-04)*
+
+- [ ] 06-05-PLAN.md — Service-layer matrix, hub/custody/linehaul/manager/audit/first-mile slice, hub scope, position, assignment, location (HARD-01).
+- [ ] 06-06-PLAN.md — Demo scenario script and checklist for Workflow sections 106 and 107 (HARD-03).
+
+**Wave 3** *(after all)*
+
+- [ ] 06-07-PLAN.md — Full regression, UAT coverage map and manual checklist (results NOT_RUN), findings gate, owner report and branch hand-off (HARD-01, HARD-02, HARD-03).
 
 ## Progress
 
@@ -199,7 +216,7 @@ Implementation summaries (checked items mean source repairs are implemented; the
 | 04. Last-mile & Finance | Person C | 10/10 implementation plans | Complete | Owner-confirmed 2026-10-26; source merged earlier |
 | 05. Cross-slice Integration | Shared | 5/5 implementation plans | Complete | Owner-confirmed 2026-10-26; regression 516/50 SQL/0 skips |
 | 05.1 Manual Functional Test Guide | TV3 | 1/1 guide delivered; manual review not executed by Codex | TV3 testing/assessment pending | User final review pending |
-| 06. Security + UAT + Demo Hardening | TV2 | Plans TBD | Pending; may run in parallel with TV3 | User final review pending |
+| 06. Security + UAT + Demo Hardening | TV2 | 0/7 plans (planned) | Planned; execution pending, may run in parallel with TV3 | User final review pending |
 
 Phase01–05 are complete as implementation phases. Missing original summaries and unobserved manual/realtime checks do not reset their implementation status to Pending. Historical audits retain the results actually observed; TV3 and TV2 own the follow-up evidence. The original completion dates of Phase02–05 are not reconstructed; 2026-10-26 is the date of the owner's confirmation and this status correction.
 
