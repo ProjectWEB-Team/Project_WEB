@@ -19,10 +19,33 @@ public class LogisticsProperties {
     private final Delivery delivery = new Delivery();
     private final Timeout timeout = new Timeout();
     private final Finance finance = new Finance();
+    private final Demo demo = new Demo();
 
     public Delivery getDelivery() { return delivery; }
     public Timeout getTimeout() { return timeout; }
     public Finance getFinance() { return finance; }
+    public Demo getDemo() { return demo; }
+
+    /**
+     * Workflow section 101 demo shortcuts. Defaults must stay false; only
+     * application-demo.properties may enable them. The Workflow's app.demo.* names
+     * map to uteexpress.demo.* here (see 06-MATRIX-DEMO.md).
+     */
+    public static class Demo {
+
+        /** Route straight to the persisted destination (or origin, for returns) when no single static rule exists. */
+        private boolean fastTrackRouteBypass = false;
+
+        /** Starting a linehaul trip also performs the normal arrival in the same transaction. */
+        private boolean autoLinehaulTransitSimulation = false;
+
+        public boolean isFastTrackRouteBypass() { return fastTrackRouteBypass; }
+        public void setFastTrackRouteBypass(boolean fastTrackRouteBypass) { this.fastTrackRouteBypass = fastTrackRouteBypass; }
+        public boolean isAutoLinehaulTransitSimulation() { return autoLinehaulTransitSimulation; }
+        public void setAutoLinehaulTransitSimulation(boolean autoLinehaulTransitSimulation) {
+            this.autoLinehaulTransitSimulation = autoLinehaulTransitSimulation;
+        }
+    }
 
     public static class Delivery {
 

@@ -408,7 +408,7 @@ class ShipmentServiceImplTest {
         var hubService = new HubOperationsServiceImpl(operations, shipmentEventRepository,
                 mock(vn.iotstar.repository.RoutingExceptionRepository.class), userRepository,
                 mock(org.springframework.context.ApplicationEventPublisher.class), paymentRepository, pricingPolicyRepository,
-                cancellation, shipmentEventPublisher);
+                cancellation, shipmentEventPublisher, new vn.iotstar.config.LogisticsProperties());
         hubService.receiveAtHub(new vn.iotstar.dto.hub.InboundShipmentCommand(42L, persisted.get().getTrackingNumber(),
                 500, 10, 10, 10, new BigDecimal("20000"), null));
         assertThat(hubService.sortAtHub(new vn.iotstar.dto.hub.SortShipmentCommand(42L)).containerReady()).isFalse();

@@ -3,6 +3,7 @@ package vn.iotstar.service.impl;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import vn.iotstar.config.LogisticsProperties;
 import vn.iotstar.dto.hub.InboundShipmentCommand;
 import vn.iotstar.dto.hub.SortShipmentCommand;
 import vn.iotstar.dto.hub.SortingDecisionResponse;
@@ -33,6 +34,7 @@ import vn.iotstar.service.HubOperationsService;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.math.BigDecimal;
 
 /** Transaction boundary for scoped hub receipt and static next-hop decisions. */
@@ -47,6 +49,7 @@ public class HubOperationsServiceImpl implements HubOperationsService {
     private final PricingPolicyRepository pricingPolicyRepository;
     private final ShipmentCancellation cancellation;
     private final vn.iotstar.realtime.ShipmentEventPublisher shipmentPublisher;
+    private final LogisticsProperties logisticsProperties;
 
     public HubOperationsServiceImpl(HubOperationsRepository hubOperationsRepository,
                                     ShipmentEventRepository shipmentEventRepository,
@@ -54,7 +57,9 @@ public class HubOperationsServiceImpl implements HubOperationsService {
                                     UserRepository userRepository,
                                     ApplicationEventPublisher applicationEventPublisher,
                                     PaymentRepository paymentRepository, PricingPolicyRepository pricingPolicyRepository,
-                                    ShipmentCancellation cancellation, vn.iotstar.realtime.ShipmentEventPublisher shipmentPublisher) {
+                                    ShipmentCancellation cancellation, vn.iotstar.realtime.ShipmentEventPublisher shipmentPublisher,
+                                    LogisticsProperties logisticsProperties) {
+        this.logisticsProperties = logisticsProperties;
         this.hubOperationsRepository = hubOperationsRepository;
         this.shipmentEventRepository = shipmentEventRepository;
         this.routingExceptionRepository = routingExceptionRepository;
@@ -127,9 +132,12 @@ public class HubOperationsServiceImpl implements HubOperationsService {
 
     private SortingDecisionResponse createDecision(AuthenticatedActor actor, EmployeeProfile profile, Shipment shipment,
                                                    Hub currentHub, String decisionKey) {
-        HubRoutingRule rule = resolveSingleStaticRule(shipment, currentHub);
+        Hub nextHub = singleStaticRule(shipment, currentHub).map(HubRoutingRule::getNextHub)
+                .or(() -> logisticsProperties.getDemo().isFastTrackRouteBypass()
+                        ? fastTrackTarget(shipment, currentHub) : Optional.empty())
+                .orElseGet(() -> blocked(shipment, currentHub));
         ShipmentRoute saved = hubOperationsRepository.saveRoute(
-                ShipmentRoute.decided(shipment, currentHub, rule.getNextHub(), decisionKey));
+                ShipmentRoute.decided(shipment, currentHub, nextHub, decisionKey));
         User user = userRepository.getReferenceById(actor.userId());
         routingExceptionRepository.findOpenRouteLookupBlockedForUpdate(shipment.getId(), currentHub.getId())
                 .ifPresent(exception -> exception.resolve(user));
@@ -137,9 +145,9 @@ public class HubOperationsServiceImpl implements HubOperationsService {
         return response(saved, false);
     }
 
-    private HubRoutingRule resolveSingleStaticRule(Shipment shipment, Hub currentHub) {
+    private Optional<HubRoutingRule> singleStaticRule(Shipment shipment, Hub currentHub) {
         if (blank(targetRegion(shipment)) || blank(targetProvince(shipment))) {
-            return blocked(shipment, currentHub);
+            return Optional.empty();
         }
         List<HubRoutingRule> matches = hubOperationsRepository.findActiveRules(currentHub.getId(),
                 targetRegion(shipment), targetProvince(shipment));
@@ -148,10 +156,14 @@ public class HubOperationsServiceImpl implements HubOperationsService {
         List<HubRoutingRule> selected = exact.isEmpty()
                 ? matches.stream().filter(rule -> rule.getDestinationProvince() == null).toList()
                 : exact;
-        if (selected.size() != 1) {
-            return blocked(shipment, currentHub);
-        }
-        return selected.getFirst();
+        return selected.size() == 1 ? Optional.of(selected.getFirst()) : Optional.empty();
+    }
+
+    /** Demo only: the server-persisted target hub, never a request value (ADR-016). */
+    private Optional<Hub> fastTrackTarget(Shipment shipment, Hub currentHub) {
+        Long targetId = "RETURN".equals(shipment.getDirection()) ? shipment.getOriginHubId() : shipment.getDestinationHubId();
+        if (targetId == null || targetId.equals(currentHub.getId())) return Optional.empty();
+        return hubOperationsRepository.findActiveHub(targetId);
     }
 
     private Hub returnTarget(Shipment s) {
@@ -161,7 +173,7 @@ public class HubOperationsServiceImpl implements HubOperationsService {
     private String targetRegion(Shipment s) { return "RETURN".equals(s.getDirection()) ? returnTarget(s).getRegion() : s.getDestinationRegion(); }
     private String targetProvince(Shipment s) { return "RETURN".equals(s.getDirection()) ? returnTarget(s).getProvince() : s.getDestinationProvince(); }
 
-    private HubRoutingRule blocked(Shipment shipment, Hub currentHub) {
+    private <T> T blocked(Shipment shipment, Hub currentHub) {
         if (routingExceptionRepository.findOpenRouteLookupBlockedForUpdate(shipment.getId(), currentHub.getId()).isEmpty()) {
             User actor = userRepository.getReferenceById(AuthenticatedActor.requireCurrent().userId());
             RoutingExceptionRecord exception = routingExceptionRepository.save(

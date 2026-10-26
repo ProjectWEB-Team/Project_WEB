@@ -1,16 +1,22 @@
 package vn.iotstar.service;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.context.properties.bind.Bindable;
+import org.springframework.boot.context.properties.bind.Binder;
+import org.springframework.boot.context.properties.source.ConfigurationPropertySources;
+import org.springframework.boot.env.PropertiesPropertySourceLoader;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
+import vn.iotstar.config.LogisticsProperties;
 import vn.iotstar.dto.hub.InboundShipmentCommand;
 import vn.iotstar.dto.hub.SortShipmentCommand;
 import vn.iotstar.dto.hub.SortingDecisionResponse;
@@ -51,7 +57,14 @@ class HubRoutingServiceImplTest {
     @Mock private RoutingExceptionRepository routingExceptionRepository;
     @Mock private UserRepository userRepository;
     @Mock private ApplicationEventPublisher applicationEventPublisher;
-    @InjectMocks private HubOperationsServiceImpl service;
+    private final LogisticsProperties logisticsProperties = new LogisticsProperties();
+    private HubOperationsServiceImpl service;
+
+    @BeforeEach
+    void createService() {
+        service = new HubOperationsServiceImpl(hubOperationsRepository, shipmentEventRepository, routingExceptionRepository,
+                userRepository, applicationEventPublisher, null, null, null, null, logisticsProperties);
+    }
 
     @AfterEach
     void clearSecurityContext() { SecurityContextHolder.clearContext(); }
@@ -300,6 +313,137 @@ class HubRoutingServiceImplTest {
         authenticate(f.staff());when(hubOperationsRepository.findActiveProfileByUserId(7L)).thenReturn(Optional.of(f.sorterProfile()));when(hubOperationsRepository.findShipmentByIdForUpdate(101L)).thenReturn(Optional.of(f.shipment()));
         assertThat(service.sortAtHub(new SortShipmentCommand(101L)).containerReady()).isFalse();verify(hubOperationsRepository,never()).saveRoute(any());
     }
+    // --- Demo fast-track route bypass (Workflow section 101, D-08) ---
+
+    @Test
+    void demoProfileBypassRoutesToThePersistedDestinationWithTheNormalDecisionAndEvent() throws Exception {
+        new Binder(ConfigurationPropertySources.from(new PropertiesPropertySourceLoader()
+                .load("demo", new ClassPathResource("application-demo.properties"))))
+                .bind("uteexpress", Bindable.ofInstance(logisticsProperties));
+        Fixture f = sortable();
+        Hub destination = destination(f);
+        when(hubOperationsRepository.findActiveRules(11L, "SOUTH", "Can Tho")).thenReturn(List.of());
+
+        SortingDecisionResponse decision = service.sortAtHub(new SortShipmentCommand(101L));
+
+        assertThat(logisticsProperties.getDemo().isFastTrackRouteBypass()).isTrue();
+        assertThat(decision.nextHubCode()).isEqualTo(destination.getCode());
+        assertThat(decision.containerReady()).isTrue();
+        assertThat(decision.reused()).isFalse();
+        ArgumentCaptor<vn.iotstar.entity.ShipmentRoute> route = ArgumentCaptor.forClass(vn.iotstar.entity.ShipmentRoute.class);
+        verify(hubOperationsRepository).saveRoute(route.capture());
+        assertThat(route.getValue().getHub()).isSameAs(destination);
+        assertThat(route.getValue().getRouteDecisionKey()).isEqualTo("shipment:101:hub:11:FORWARD");
+        ArgumentCaptor<ShipmentEvent> event = ArgumentCaptor.forClass(ShipmentEvent.class);
+        verify(shipmentEventRepository).save(event.capture());
+        assertThat(event.getValue().getEventType()).isEqualTo("SORTING_COMPLETED");
+        verify(routingExceptionRepository, never()).save(any());
+        verifyNoInteractions(applicationEventPublisher);
+        assertThat(f.shipment().getCurrentStatus()).isEqualTo(ShipmentStatus.AT_HUB);
+    }
+
+    @Test
+    void bypassNeverOverridesASingleValidStaticRule() {
+        Fixture f = sortable();
+        logisticsProperties.getDemo().setFastTrackRouteBypass(true);
+        when(hubOperationsRepository.findActiveRules(11L, "SOUTH", "Can Tho")).thenReturn(List.of(f.rule()));
+
+        assertThat(service.sortAtHub(new SortShipmentCommand(101L)).nextHubCode()).isEqualTo("SOC-LA");
+        verify(hubOperationsRepository, never()).findActiveHub(anyLong());
+    }
+
+    @Test
+    void ambiguousRulesUseTheBypassOnlyWhenTheFlagIsOn() {
+        Fixture f = sortable();
+        Hub destination = destination(f);
+        when(hubOperationsRepository.findActiveRules(11L, "SOUTH", "Can Tho")).thenReturn(List.of(f.rule(), f.rule()));
+        when(routingExceptionRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        assertThatThrownBy(() -> service.sortAtHub(new SortShipmentCommand(101L))).isInstanceOf(RouteConfigurationException.class);
+        verify(hubOperationsRepository, never()).saveRoute(any());
+
+        logisticsProperties.getDemo().setFastTrackRouteBypass(true);
+        assertThat(service.sortAtHub(new SortShipmentCommand(101L)).nextHubCode()).isEqualTo(destination.getCode());
+    }
+
+    @Test
+    void bypassStillBlocksWithoutAUsablePersistedTarget() {
+        Fixture f = sortable();
+        logisticsProperties.getDemo().setFastTrackRouteBypass(true);
+        when(hubOperationsRepository.findActiveRules(11L, "SOUTH", "Can Tho")).thenReturn(List.of());
+        when(routingExceptionRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        // No destination hub persisted.
+        assertThatThrownBy(() -> service.sortAtHub(new SortShipmentCommand(101L))).isInstanceOf(RouteConfigurationException.class);
+        // A destination that is not an active hub (findActiveHub stays empty).
+        f.shipment().setDestinationHubId(30L);
+        assertThatThrownBy(() -> service.sortAtHub(new SortShipmentCommand(101L))).isInstanceOf(RouteConfigurationException.class);
+
+        verify(hubOperationsRepository, never()).saveRoute(any());
+        verify(routingExceptionRepository, atLeastOnce()).save(any(RoutingExceptionRecord.class));
+    }
+
+    @Test
+    void bypassOnAReturnTargetsTheOriginHubWithTheReturnKey() {
+        Fixture f = sortable();
+        f.shipment().setDirection("RETURN");
+        f.shipment().transitionTo(ShipmentStatus.RETURN_TO_SENDER);
+        f.shipment().setOriginHubId(99L);
+        Hub origin = Hub.active("ORIGIN", "Origin", 1, "DELIVERY_HUB", "NORTH", "Ha Noi");
+        ReflectionTestUtils.setField(origin, "id", 99L);
+        when(hubOperationsRepository.findActiveHub(99L)).thenReturn(Optional.of(origin));
+        when(hubOperationsRepository.findActiveRules(11L, "NORTH", "Ha Noi")).thenReturn(List.of());
+        logisticsProperties.getDemo().setFastTrackRouteBypass(true);
+
+        assertThat(service.sortAtHub(new SortShipmentCommand(101L)).nextHubCode()).isEqualTo("ORIGIN");
+        verify(hubOperationsRepository).saveRoute(argThat(r -> "shipment:101:hub:11:RETURN".equals(r.getRouteDecisionKey())));
+    }
+
+    @Test
+    void bypassKeepsTheSorterAuthorizationRules() {
+        Fixture f = fixture();
+        ReflectionTestUtils.setField(f.shipment(), "currentStatus", ShipmentStatus.AT_HUB);
+        logisticsProperties.getDemo().setFastTrackRouteBypass(true);
+        authenticate(f.staff());
+        when(hubOperationsRepository.findActiveProfileByUserId(7L)).thenReturn(Optional.of(f.inboundProfile()));
+
+        assertThatThrownBy(() -> service.sortAtHub(new SortShipmentCommand(101L))).isInstanceOf(HubOperationAccessDeniedException.class);
+        verify(hubOperationsRepository, never()).saveRoute(any());
+    }
+
+    @Test
+    void successfulBypassResolvesTheOpenBlockedRouteException() {
+        Fixture f = sortable();
+        destination(f);
+        logisticsProperties.getDemo().setFastTrackRouteBypass(true);
+        RoutingExceptionRecord open = RoutingExceptionRecord.openRouteLookupBlocked(f.shipment(), f.currentHub(), f.staff());
+        when(hubOperationsRepository.findActiveRules(11L, "SOUTH", "Can Tho")).thenReturn(List.of());
+        when(routingExceptionRepository.findOpenRouteLookupBlockedForUpdate(101L, 11L)).thenReturn(Optional.of(open));
+
+        service.sortAtHub(new SortShipmentCommand(101L));
+
+        assertThat(open.getStatus()).isEqualTo("RESOLVED");
+    }
+
+    private Fixture sortable() {
+        Fixture f = fixture();
+        ReflectionTestUtils.setField(f.shipment(), "currentStatus", ShipmentStatus.AT_HUB);
+        authenticate(f.staff());
+        when(hubOperationsRepository.findActiveProfileByUserId(7L)).thenReturn(Optional.of(f.sorterProfile()));
+        when(hubOperationsRepository.findShipmentByIdForUpdate(101L)).thenReturn(Optional.of(f.shipment()));
+        lenient().when(hubOperationsRepository.saveRoute(any())).thenAnswer(i -> i.getArgument(0));
+        lenient().when(userRepository.getReferenceById(7L)).thenReturn(f.staff());
+        return f;
+    }
+
+    private Hub destination(Fixture f) {
+        Hub destination = Hub.active("HUB-CT", "Can Tho Hub", 1, "DELIVERY_HUB", "SOUTH", "Can Tho");
+        ReflectionTestUtils.setField(destination, "id", 31L);
+        f.shipment().setDestinationHubId(31L);
+        when(hubOperationsRepository.findActiveHub(31L)).thenReturn(Optional.of(destination));
+        return destination;
+    }
+
     private Fixture fixture() {
         User staff = new User(7L, "sorter", "hash", UserRole.ROLE_HUB_STAFF, "ACTIVE");
         User sender = new User(8L, "sender", "hash", UserRole.ROLE_USER, "ACTIVE");
