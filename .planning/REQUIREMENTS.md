@@ -28,34 +28,38 @@ Requirements below operationalize that target; they do not replace it. Supplemen
 
 ### User and Shipment Intake — Person A
 
-- [ ] **INTAKE-01**: A sender or recipient can register, authenticate, and access only the account functions permitted by the canonical role and ownership rules.
-- [ ] **INTAKE-02**: A sender can create a shipment with sender/receiver details, parcel data, addresses, declared value, COD, service choice, and canonical initial state.
-- [ ] **INTAKE-03**: A sender can obtain the Workflow-defined shipping fee and select the permitted fee payer/payment path for shipment creation.
-- [ ] **INTAKE-04**: A sender and authorized shipper can complete HOME_PICKUP or SELF_DROPOFF intake, including assignment, timeout, cancellation, and race-condition handling defined by the Workflow.
-- [ ] **INTAKE-05**: A sender can track own shipments, and an eligible recipient can be auto-linked and view masked shipment information according to canonical privacy rules.
+- [x] **INTAKE-01**: A sender or recipient can register, authenticate, and access only the account functions permitted by the canonical role and ownership rules.
+- [x] **INTAKE-02**: A sender can create a shipment with sender/receiver details, parcel data, addresses, declared value, COD, service choice, and canonical initial state.
+- [x] **INTAKE-03**: A sender can obtain the Workflow-defined shipping fee and select the permitted fee payer/payment path for shipment creation.
+- [x] **INTAKE-04**: A sender and authorized shipper can complete HOME_PICKUP or SELF_DROPOFF intake, including assignment, timeout, cancellation, and race-condition handling defined by the Workflow.
+- [x] **INTAKE-05**: A sender can track own shipments, and an eligible recipient can be auto-linked and view masked shipment information according to canonical privacy rules.
 
 ### Hub and Linehaul Operations — Person B
 
-- [ ] **OPS-01**: Authorized operations staff can work within the canonical hub hierarchy and route a shipment using `hub_routing_rules` from current hub plus destination region/province to next hub.
-- [ ] **OPS-02**: Authorized hub staff can receive inbound shipments, record event-based sorting/outbound operations, and preserve the 13-status state machine.
-- [ ] **OPS-03**: Authorized hub staff and linehaul drivers can create and operate parcel containers, container items, handovers, and unbagging with accountable custody records.
-- [ ] **OPS-04**: Authorized linehaul drivers can accept assigned transport work, operate trips between allowed hubs/SOCs, and record arrival or discrepancy outcomes.
-- [ ] **OPS-05**: Authorized operational roles can record missing-parcel and related incidents without corrupting shipment state, custody, or event history.
+- [x] **OPS-01**: Authorized operations staff can work within the canonical hub hierarchy and route a shipment using `hub_routing_rules` from current hub plus destination region/province to next hub.
+- [x] **OPS-02**: Authorized hub staff can receive inbound shipments, record event-based sorting/outbound operations, and preserve the 13-status state machine.
+- [x] **OPS-03**: Authorized hub staff and linehaul drivers can create and operate parcel containers, container items, handovers, and unbagging with accountable custody records.
+- [x] **OPS-04**: Authorized linehaul drivers can accept assigned transport work, operate trips between allowed hubs/SOCs, and record arrival or discrepancy outcomes.
+- [x] **OPS-05**: Authorized operational roles can record missing-parcel and related incidents without corrupting shipment state, custody, or event history.
 
 ### Last-mile and Finance — Person C
 
-- [ ] **LAST-01**: An authorized last-mile shipper can receive only assigned delivery work and record delivery attempts, success, refusal, or the Workflow-defined failure reason.
-- [ ] **LAST-02**: The system applies the canonical retry and return workflow, including return routing and ownership-scoped handling of returned shipments.
-- [ ] **FIN-01**: Permitted shipping-fee, COD, refund, return-fee, and compensation flows create traceable financial records that match the canonical payment and COD states.
-- [ ] **FIN-02**: Each user has a separate `wallets` record with `balance` and `locked_balance`; wallet transactions preserve the canonical ledger and anti-double-spending rules.
-- [ ] **FIN-03**: Authorized staff can complete shipper reconciliation, surface discrepancies through reconciliation items/financial incidents rather than a `shipper_debts` table, and resolve the defined financial outcome.
-- [ ] **FIN-04**: An eligible wallet owner can request withdrawal and an authorized administrator can approve or reject it with correct locked-balance transitions.
+- [x] **LAST-01**: An authorized last-mile shipper can receive only assigned delivery work and record delivery attempts, success, refusal, or the Workflow-defined failure reason.
+- [x] **LAST-02**: The system applies the canonical retry and return workflow, including return routing and ownership-scoped handling of returned shipments.
+- [x] **FIN-01**: Permitted shipping-fee, COD, refund, return-fee, and compensation flows create traceable financial records that match the canonical payment and COD states.
+- [x] **FIN-02**: Each user has a separate `wallets` record with `balance` and `locked_balance`; wallet transactions preserve the canonical ledger and anti-double-spending rules.
+- [x] **FIN-03**: Authorized staff can complete shipper reconciliation, surface discrepancies through reconciliation items/financial incidents rather than a `shipper_debts` table, and resolve the defined financial outcome.
+- [x] **FIN-04**: An eligible wallet owner can request withdrawal and an authorized administrator can approve or reject it with correct locked-balance transitions.
 
 ### Cross-slice Integration
 
-- [ ] **INTEG-01**: A canonical normal shipment journey works end-to-end from intake through origin hub, linehaul, destination hub, last-mile delivery, COD/payment outcome, tracking, and realtime updates where required.
-- [ ] **INTEG-02**: Canonical exception journeys—pickup/dropoff expiry, delivery failure/return, missing parcel, COD discrepancy, and compensation—preserve workflow state, events, custody, and financial consistency across slices.
-- [ ] **INTEG-03**: Authorized managers and administrators can access the Workflow-defined operational/reporting views across slices without bypassing contextual data scope.
+- [x] **INTEG-01**: A canonical normal shipment journey works end-to-end from intake through origin hub, linehaul, destination hub, last-mile delivery, COD/payment outcome, tracking, and realtime updates where required.
+- [x] **INTEG-02**: Canonical exception journeys—pickup/dropoff expiry, delivery failure/return, missing parcel, COD discrepancy, and compensation—preserve workflow state, events, custody, and financial consistency across slices.
+- [x] **INTEG-03**: Authorized managers and administrators can access the Workflow-defined operational/reporting views across slices without bypassing contextual data scope.
+
+### Manual Functional Test Guide (Phase 05.1, updated 2026-10-26)
+
+- [x] **GUIDE-01**: Member 3 has one practical manual guide to start the application with Spring Tools and test all currently implemented functions, with prerequisites, actions, expected results and a blank findings template. Member 3 independently evaluates results and lists inconsistencies; this phase changes no source/test/script/schema. Member 2 performs Phase06 in parallel; the user reviews both outputs last.
 
 ### Security, UAT, and Demo Hardening
 
@@ -86,6 +90,10 @@ These items are intentionally deferred; they are not inputs to the initial roadm
 
 ## Traceability
 
+**Status correction — 2026-10-26:** Phase 01–05 implementation is complete, as confirmed by the project owner and reflected in merged source through `e99257c`. `Complete` tracks delivered implementation; it does not claim that every manual/realtime observation has passed. Missing per-phase SUMMARY/VERIFICATION documents are documentation debt, not unfinished implementation. The existing automated regression evidence is 516 tests, including 50 real SQL cases, with zero failures/errors/skips; this correction does not rerun those tests. TV3 independently tests and reports remaining observations using the Phase05.1 Spring Tools guide. TV2 performs Phase06 hardening in parallel; final approval belongs to the user. GUIDE-01 covers delivery of that guide, not execution or grading of TV3 tests. HARD-01–03 remain pending.
+
+**Branch:** This file and all execution plans are maintained on `project-plans`; application source is maintained on `main`/feature branches.
+
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | SKEL-01 | Phase 01 | Complete |
@@ -93,35 +101,36 @@ These items are intentionally deferred; they are not inputs to the initial roadm
 | SKEL-03 | Phase 01 | Complete |
 | SKEL-04 | Phase 01 | Complete |
 | SKEL-05 | Phase 01 | Complete |
-| INTAKE-01 | Phase 02 | Pending |
-| INTAKE-02 | Phase 02 | Pending |
-| INTAKE-03 | Phase 02 | Pending |
-| INTAKE-04 | Phase 02 | Pending |
-| INTAKE-05 | Phase 02 | Pending |
-| OPS-01 | Phase 03 | Pending |
-| OPS-02 | Phase 03 | Pending |
-| OPS-03 | Phase 03 | Pending |
-| OPS-04 | Phase 03 | Pending |
-| OPS-05 | Phase 03 | Pending |
-| LAST-01 | Phase 04 | Pending |
-| LAST-02 | Phase 04 | Pending |
-| FIN-01 | Phase 04 | Pending |
-| FIN-02 | Phase 04 | Pending |
-| FIN-03 | Phase 04 | Pending |
-| FIN-04 | Phase 04 | Pending |
-| INTEG-01 | Phase 05 | Pending |
-| INTEG-02 | Phase 05 | Pending |
-| INTEG-03 | Phase 05 | Pending |
+| INTAKE-01 | Phase 02 | Complete |
+| INTAKE-02 | Phase 02 | Complete |
+| INTAKE-03 | Phase 02 | Complete |
+| INTAKE-04 | Phase 02 | Complete |
+| INTAKE-05 | Phase 02 | Complete |
+| OPS-01 | Phase 03 | Complete |
+| OPS-02 | Phase 03 | Complete |
+| OPS-03 | Phase 03 | Complete |
+| OPS-04 | Phase 03 | Complete |
+| OPS-05 | Phase 03 | Complete |
+| LAST-01 | Phase 04 | Complete |
+| LAST-02 | Phase 04 | Complete |
+| FIN-01 | Phase 04 | Complete |
+| FIN-02 | Phase 04 | Complete |
+| FIN-03 | Phase 04 | Complete |
+| FIN-04 | Phase 04 | Complete |
+| INTEG-01 | Phase 05 | Complete |
+| INTEG-02 | Phase 05 | Complete |
+| INTEG-03 | Phase 05 | Complete |
+| GUIDE-01 | Phase 05.1 | Guide complete; TV3 testing/assessment pending |
 | HARD-01 | Phase 06 | Pending |
 | HARD-02 | Phase 06 | Pending |
 | HARD-03 | Phase 06 | Pending |
 
 **Coverage:**
 
-- v1 requirements: 27 total
-- Mapped to phases: 27
+- v1 requirements: 27 original + 1 manual-guide requirement = 28 total
+- Mapped to phases: 28
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-10-01*
-*Last updated: 2026-10-01 after canonical-baseline initialization*
+*Last updated: 2026-10-26 — final user scope: one STS test guide for TV3, no source changes; TV2 runs Phase06 in parallel; user final review.*

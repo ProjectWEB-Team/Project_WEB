@@ -2,7 +2,7 @@
 
 ## Overview
 
-This roadmap realizes the canonical UTEExpress target state without redesigning its domain, workflow, roles, state machine, wallet model, routing model, or database architecture. Phase 01 establishes a shared end-to-end walking skeleton; Phases 02, 03, and 04 then remain independent vertical slices for the three-person team. Phase 05 connects and verifies their joint workflows, followed by Phase 06 security, UAT, and demo hardening.
+This roadmap realizes the canonical UTEExpress target state without redesigning its domain, workflow, roles, state machine, wallet model, routing model, or database architecture. Phase 01 establishes a shared end-to-end walking skeleton; Phases 02, 03, and 04 then remain independent vertical slices for the three-person team. Phase 05 connects the implemented workflows. Phase 05.1 supplies one Spring Tools manual testing guide for Member 3; Member 2 works on Phase 06 in parallel. The user reviews both outputs last.
 
 Canonical authority remains: `ARCHITECTURE_DECISIONS.md` > `UTEExpress_Workflow.md` > `ERD.md` > `PROJECT_SPEC_KNOWLEDGE_BASE.md` > `ENGINEERING_STANDARDS.md` > supplementary engineering knowledge. `.planning/codebase/` is current-state evidence only; it cannot override this roadmap.
 
@@ -13,12 +13,12 @@ Phase 01 — Shared Walking Skeleton
     ├── Phase 02 — User & Shipment Intake (Person A)
     ├── Phase 03 — Hub & Linehaul Operations (Person B)
     └── Phase 04 — Last-mile & Finance (Person C)
-                 \        |        /
-                  \       |       /
-                   └─ Phase 05 — Cross-slice Integration
-                                  |
-                                  v
-                  Phase 06 — Security + UAT + Demo Hardening
+                         |
+                 Phase 05 source baseline
+                    /                \
+Phase 05.1 — TV3 manual review     Phase 06 — TV2 hardening/UAT/demo
+                    \                /
+                      User final review
 ```
 
 Phases 02–04 depend only on Phase 01 and are deliberately designed to proceed in parallel. They are vertical slices—JSP/UI → Controller → DTO → Service → Repository/JPA → SQL Server → Security/Data Scope → WebSocket where needed → Tests—not frontend/backend/database allocations.
@@ -26,10 +26,11 @@ Phases 02–04 depend only on Phase 01 and are deliberately designed to proceed 
 ## Phases
 
 - [x] **Phase 01: Shared Walking Skeleton** — Create the canonical cross-layer foundation and one auditable persisted shipment path. (completed 2026-10-07)
-- [ ] **Phase 02: User & Shipment Intake** — Person A owns account, intake, pickup/dropoff, and privacy-aware tracking flows.
-- [ ] **Phase 03: Hub & Linehaul Operations** — Person B owns hub routing, custody operations, and linehaul flows.
-- [ ] **Phase 04: Last-mile & Finance** — Person C owns last-mile, returns, wallet, COD, reconciliation, and withdrawal flows.
-- [ ] **Phase 05: Cross-slice Integration** — Join the three vertical slices across normal and exception journeys.
+- [x] **Phase 02: User & Shipment Intake** — Person A owns account, intake, pickup/dropoff, and privacy-aware tracking flows.
+- [x] **Phase 03: Hub & Linehaul Operations** — Person B owns hub routing, custody operations, and linehaul flows.
+- [x] **Phase 04: Last-mile & Finance** — Person C owns last-mile, returns, wallet, COD, reconciliation, and withdrawal flows.
+- [x] **Phase 05: Cross-slice Integration** — Join the three vertical slices across normal and exception journeys.
+- [ ] **Phase 05.1: Manual Functional Test Guide (INSERTED)** — One Spring Tools guide; TV3 tests, judges results and lists inconsistencies without changing source.
 - [ ] **Phase 06: Security + UAT + Demo Hardening** — Prove data scope, workflow invariants, test coverage, and canonical demos.
 
 ## Phase Details
@@ -70,7 +71,7 @@ Plans:
   3. Authorized users/shipper can complete, cancel, or time out intake according to the defined pickup/dropoff workflow without invalid state transitions.
   4. A sender can track their shipment and an eligible recipient is auto-linked with canonical data masking; required updates can be received through the shared realtime seam.
 
-**Plans:** 9 plans
+**Plans:** 9/9 implementation plans complete; original per-plan summaries were not backfilled.
 
 ### Phase 03: Hub & Linehaul Operations
 
@@ -86,7 +87,7 @@ Plans:
   3. Container, handover, trip, receipt, and unbagging actions retain accountable custody records across authorized actors.
   4. An assigned linehaul driver can run an allowed trip and authorized operations staff can record and investigate a missing/discrepant parcel without corrupting history.
 
-**Plans:** TBD
+**Plans:** 5/5 implementation plans complete; summaries are present. Missing historical phase verification documentation is tracked separately from delivered implementation.
 
 ### Phase 04: Last-mile & Finance
 
@@ -102,37 +103,37 @@ Plans:
   3. Wallet operations use the standalone `wallets` table and preserve `balance`/`locked_balance`, ledger traceability, and withdrawal anti-double-spending behavior.
   4. Reconciliation discrepancies use reconciliation items and financial incidents, not a `shipper_debts` table, and authorized staff can resolve the outcome.
 
-**Plans:** 10 plans
+**Plans:** 10/10 implementation plans complete; original per-plan summaries were not backfilled.
 
 Plans:
 **Wave 1**
 
-- [ ] 04-01-PLAN.md — Assigned delivery scan, required collection, and delivery tracer.
+- [x] 04-01-PLAN.md — Assigned delivery scan, required collection, and delivery tracer.
 
-**Wave 2** *(blocked on Wave 1 completion)*
+**Wave 2** *(original execution order; implementation complete)*
 
-- [ ] 04-02-PLAN.md — Evidence-backed failure, return-to-hub custody, reschedule, and retry.
-- [ ] 04-04-PLAN.md — Source-specific cash reconciliation, COD payout, wallet ledger, and incidents.
+- [x] 04-02-PLAN.md — Evidence-backed failure, return-to-hub custody, reschedule, and retry.
+- [x] 04-04-PLAN.md — Source-specific cash reconciliation, COD payout, wallet ledger, and incidents.
 
-**Wave 3** *(blocked on Wave 2 completion)*
+**Wave 3** *(original execution order; implementation complete)*
 
-- [ ] 04-03-PLAN.md — Fee-gated sender self-pickup and assigned RETURN delivery.
-- [ ] 04-05-PLAN.md — Isolated SQL Server proof for reconciliation source and ledger invariants.
-- [ ] 04-06-PLAN.md — Owner withdrawal lock, retry identity, and balance safety.
+- [x] 04-03-PLAN.md — Fee-gated sender self-pickup and assigned RETURN delivery.
+- [x] 04-05-PLAN.md — Isolated SQL Server proof for reconciliation source and ledger invariants.
+- [x] 04-06-PLAN.md — Owner withdrawal lock, retry identity, and balance safety.
 
-**Wave 4** *(blocked on Wave 3 completion)*
+**Wave 4** *(original execution order; implementation complete)*
 
-- [ ] 04-07-PLAN.md — Admin-only withdrawal approval and rejection.
-- [ ] 04-08-PLAN.md — Reference-safe refund and compensation wallet adjustment seam.
-- [ ] 04-09-PLAN.md — Least-privilege shipper, Manager, and Admin JSP workspaces.
+- [x] 04-07-PLAN.md — Admin-only withdrawal approval and rejection.
+- [x] 04-08-PLAN.md — Reference-safe refund and compensation wallet adjustment seam.
+- [x] 04-09-PLAN.md — Least-privilege shipper, Manager, and Admin JSP workspaces.
 
-**Wave 5** *(blocked on Wave 4 completion)*
+**Wave 5** *(original execution order; implementation complete)*
 
-- [ ] 04-10-PLAN.md — Private after-commit STOMP and final Phase-04 SQL/UAT evidence.
+- [x] 04-10-PLAN.md — Private after-commit STOMP and final Phase-04 SQL/UAT evidence.
 
 ### Phase 05: Cross-slice Integration
 
-**Goal:** Integrate the three vertical slices into canonical normal and exception journeys, including operational visibility and management boundaries.
+**Goal:** As a UTEExpress user or operator with appropriate authorization, I want to integrate the three vertical slices across canonical normal and exception journeys with scoped operational and management views, so that shipments and financial outcomes remain consistent end-to-end.
 **Mode:** mvp
 **Depends on:** Phase 02, Phase 03, Phase 04
 **Owner:** Shared cross-slice review — all three members retain their slice responsibility.
@@ -143,14 +144,40 @@ Plans:
   2. The defined expiry, delivery-failure/return, missing-parcel, COD-discrepancy, and compensation journeys preserve state, event, custody, and wallet consistency end-to-end.
   3. Manager/admin operational and reporting views aggregate cross-slice information while retaining contextual data scope.
 
-**Plans:** TBD
+**Research baseline (2026-10-25):** `GAPS_FOUND` on merged `main@ca2bbf8`; `05-RESEARCH.md` and `05-ALIGNMENT-REVIEW.md` preserve that historical diagnosis. All five repair groups are now implemented in the working tree, including review corrections. Current evidence is recorded in `05-VERIFICATION.md` and `docs/PHASE_05_VERIFICATION.md`: 504 tests passed including 50 real SQL cases, zero skips/failures/errors. SQL acceptance passed; live browser/STOMP acceptance remains pending.
+
+**Follow-up (2026-10-26):** Fresh pre-planning regression passed 516 tests including 50 real SQL cases, zero skips/failures/errors (`docs/PHASE_05_1_PREPLAN_REGRESSION.md`); the user confirmed creation/payment. Under the final team instruction, TV3 uses one Phase05.1 manual guide and judges findings while TV2 works on Phase06 in parallel. Original live observations remain pending; final review belongs to the user.
+
+**Plans:** 5 sequential repair plans replace the earlier evidence-only drafts following the user's request to implement the research findings before starting another phase. Production fixes precede cross-slice verification.
+
+Implementation summaries (checked items mean source repairs are implemented; they do not certify SQL/browser acceptance):
+
+- [x] 05-01-PLAN.md — Intake destination, self-dropoff, safe tracking and scoped operations (historical focused result: 66 passed; later full SQL regression passed).
+- [x] 05-02-PLAN.md — Linehaul/custody completion, missing recovery and vehicle/scan schema (historical focused result: 41 passed/4 SQL skips; later full regression: zero skips).
+- [x] 05-03-PLAN.md — Initial assignments, return routing/custody/grace, collection and sender fee settlement (historical focused result: 107 passed; later SQL integration passed).
+- [x] 05-04-PLAN.md — Refund settlement, authoritative reconciliation, compensation and private recipients (historical focused result: 116 passed; later SQL integration passed).
+- [x] 05-05-PLAN.md — Migration manifest, shared SQL fixtures/journeys/concurrency and Jasper/regression implemented; real SQL acceptance passed. Unobserved browser/STOMP checks in 05-UAT.md are carried into TV3 Phase05.1 review and TV2 Phase06 hardening, not unfinished Phase05 implementation.
+
+### Phase 05.1: Manual Functional Test Guide (INSERTED)
+
+**Goal:** Provide exactly one practical Spring Tools manual testing guide for all implemented functions; Member 3 performs the tests, judges the outcomes and consolidates inconsistencies.
+**Owner:** Person C — Member 3 (TV3).
+**Requirements:** GUIDE-01
+**Depends on:** Existing Phase05 implementation and available local environment/data. No dependency on Phase06 completion.
+**Mode:** Manual guide; no source, test, script, build configuration or database schema changes. Findings are recorded, not repaired in this phase.
+**Deliverable:** One guide, 05.1-01-PLAN.md, with STS startup, roles/prerequisites, URLs/actions/expected behavior and a blank result/findings template. Missing prerequisites are recorded by TV3 instead of bypassed.
+**Evaluation:** TV3 decides pass/fail/not-tested and explains observations. Codex does not execute or grade this guide on TV3's behalf.
+**Parallel work:** TV2 may run Phase06 at the same time. At completion of both workstreams, the user performs final review.
+**Plans:** 1 manual testing guide; not executed.
+
+- [ ] 05.1-01-PLAN.md — Run with Spring Tools; inspect current identity/intake/operations/delivery/finance/tracking/realtime behavior and record TV3's own findings.
 
 ### Phase 06: Security + UAT + Demo Hardening
 
 **Goal:** Verify the canonical project behavior, close cross-cutting security and test gaps, and prepare the approved demo-mode scenarios.
 **Mode:** mvp
-**Depends on:** Phase 05
-**Owner:** Shared — verify each vertical slice together; do not reorganize the team by technical layer.
+**Depends on:** Existing Phase05 source implementation. May proceed in parallel with Phase05.1; no wait for TV3 assessment.
+**Owner:** Person B — Member 2 (TV2). The user reviews the final result together with TV3 findings.
 **Requirements:** HARD-01, HARD-02, HARD-03
 **Success Criteria** (what must be TRUE):
 
@@ -162,16 +189,21 @@ Plans:
 
 ## Progress
 
-**Execution Order:** Phase 01 first; Phases 02, 03, and 04 may run in parallel after Phase 01; Phase 05 follows completion of all three; Phase 06 follows Phase 05.
+**Execution Order:** Phase01 → Phases02/03/04 → Phase05 source baseline → Phase05.1 (TV3 manual testing/review) and Phase06 (TV2) in parallel → user final review. Phase05.1 is a guide, not an automated acceptance gate for Phase06.
 
-| Phase | Owner | Plans Complete | Status | Completed |
-|-------|-------|----------------|--------|-----------|
-| 01. Shared Walking Skeleton | Shared | 3/3 | Complete    | 2026-10-07 |
-| 02. User & Shipment Intake | Person A | 0/TBD | Not started | - |
-| 03. Hub & Linehaul Operations | Person B | 0/TBD | Not started | - |
-| 04. Last-mile & Finance | Person C | 0/TBD | Not started | - |
-| 05. Cross-slice Integration | Shared | 0/TBD | Not started | - |
-| 06. Security + UAT + Demo Hardening | Shared | 0/TBD | Not started | - |
+| Phase | Owner | Implementation / deliverable | Status | Completion record |
+|-------|-------|------------------------------|--------|-------------------|
+| 01. Shared Walking Skeleton | Shared | 3/3 plans | Complete | 2026-10-07 |
+| 02. User & Shipment Intake | Person A | 9/9 implementation plans | Complete | Owner-confirmed 2026-10-26; source merged earlier |
+| 03. Hub & Linehaul Operations | Person B | 5/5 implementation plans | Complete | Owner-confirmed 2026-10-26; source merged earlier |
+| 04. Last-mile & Finance | Person C | 10/10 implementation plans | Complete | Owner-confirmed 2026-10-26; source merged earlier |
+| 05. Cross-slice Integration | Shared | 5/5 implementation plans | Complete | Owner-confirmed 2026-10-26; regression 516/50 SQL/0 skips |
+| 05.1 Manual Functional Test Guide | TV3 | 1/1 guide delivered; manual review not executed by Codex | TV3 testing/assessment pending | User final review pending |
+| 06. Security + UAT + Demo Hardening | TV2 | Plans TBD | Pending; may run in parallel with TV3 | User final review pending |
+
+Phase01–05 are complete as implementation phases. Missing original summaries and unobserved manual/realtime checks do not reset their implementation status to Pending. Historical audits retain the results actually observed; TV3 and TV2 own the follow-up evidence. The original completion dates of Phase02–05 are not reconstructed; 2026-10-26 is the date of the owner's confirmation and this status correction.
+
+Planning lives on `project-plans`. Synchronize source from `main` into `project-plans`; do not merge the planning branch back into `main`.
 
 ---
-*Roadmap created: 2026-10-01 from canonical documentation target state.*
+*Roadmap created: 2026-10-01. Status and branch correction: 2026-10-26.*

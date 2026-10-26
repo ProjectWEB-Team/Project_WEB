@@ -1,9 +1,9 @@
 # Dependencies & local tools
 node_modules/
 .agents/
-.planning/
 .gsd/
-.codex/
+.planning/
+.local/
 .local-backups/
 
 # Environment & local secrets
@@ -21,6 +21,7 @@ target/
 *.class
 
 # Eclipse
+.metadata/
 .classpath
 .project
 .settings/
@@ -34,3 +35,35 @@ target/
 # OS files
 Thumbs.db
 .DS_Store
+
+# Media & Assets
+*.png
+*.jpg
+*.jpeg
+*.svg
+*.ico
+*.pdf
+*.mp4
+
+# Big Data & Dumps
+*.sql
+!docs/schema.sql
+!src/main/resources/db/*.sql
+!docs/sql/local-demo-delivery-areas.sql
+!docs/sql/local-demo-nationwide-2025.sql
+*.csv
+*.json
+!src/main/resources/geography/*.json
+!.planning/config.json
+!.planning/phases/01-shared-walking-skeleton/01-01-tdd-red-evidence.json
+!.planning/phases/05-cross-slice-integration/05-SQL-RESULTS.json
+*.sqlite
+*.db
+
+# Uploaded delivery evidence
+uploads/
+
+# Frontend Artifacts (nếu có)
+dist/
+build/
+coverage/

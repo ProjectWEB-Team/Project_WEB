@@ -401,3 +401,15 @@ Team context stability
 ```
 
 Mọi thành viên đều phải hiểu project như một hệ thống thống nhất, không chỉ phần code mà mình trực tiếp phụ trách.
+
+## 9. Hướng dẫn thực hiện Phase 02 — Person A
+
+- [Cấu hình và kiểm thử phần account](PHASE_02_ACCOUNT_SETUP.md): OTP điện thoại mô phỏng bằng `otp-local`, Google OAuth2/OIDC qua profile `google`, biến môi trường, migration và các bước chưa làm. Đăng nhập Google không cần SMTP.
+- [Phạm vi Phase 02 bằng tiếng Việt](PHASE_02_SCOPE_VI.md): chín gói việc, phần đã có, trách nhiệm database, ranh giới với Phase 03/04 và các quyết định cần thống nhất.
+- [Checklist thực hiện theo ngày](PHASE_02_DIRECTOR_CHECKLIST.md): tiến độ thực tế, điều kiện hoàn thành và nhật ký từng phiên.
+
+Các tài liệu thực hiện này tuân theo authority order ở trên; không thay thế ADR, Workflow hoặc phê duyệt của người phụ trách nhóm.
+
+**Trạng thái hiện tại (26/10/2026):** Phase 01–05 đã hoàn thành triển khai trên `main`. Kết quả hồi quy trước khi lập hướng dẫn: 516 test, gồm 50 ca SQL thật, không lỗi/skip. TV3 kiểm thử thủ công bằng Spring Tools theo [hướng dẫn Phase 5.1 trên project-plans](https://github.com/RVAN1102/Project_WEB/blob/project-plans/.planning/phases/05.1-full-functional-acceptance/05.1-01-PLAN.md), tự đánh giá; TV2 làm Phase 6 song song; người dùng duyệt cuối. Requirements/roadmap/state nằm trên `project-plans`; main chỉ giữ source và tài liệu sử dụng/cấu hình nguồn. Đồng bộ theo chiều `main → project-plans`. Các mốc dưới đây là lịch sử, không phải trạng thái Pending hiện tại.
+
+**Nhật ký lịch sử 22–24/10/2026:** Ngày 22/10/2026, người dùng yêu cầu triển khai account với hai lựa chọn **OTP điện thoại hoặc Google**, cấu hình provider sau; [ADR-016](ARCHITECTURE_DECISIONS.md#adr-016--customer-phone-otp-and-google-oidc-sign-in) ghi đúng nguồn quyết định này. Cập nhật 24/10: trên nhánh `feature/phase-02-intake`, `mvn test` chạy **197 test, 0 lỗi**; 9 SQL Server tests bị bỏ qua khi không bật biến môi trường. Lần chạy SQL gần nhất (23/10, 11 test đạt) là trước khi thêm first-mile/hủy/timeout/outbox, nên phần mới chưa có bằng chứng SQL Server. Đã có code first-mile, hủy đơn, timeout 48 giờ, outbox hoàn tiền, tracking công khai và mở khóa cho người nhận. Bảng giá demo đã nạp bằng `phase-02-pricing-seed.sql` (chờ nhóm xác nhận). Đăng ký → OTP local → đăng nhập và báo giá đã thử trên trình duyệt. Còn mở: bảng `refund_settlement_outbox` chưa áp dụng trên DB local, dữ liệu hub/nhân sự để UAT first-mile, UAT theo vai trò, test SQL cho phần mới, lưu mã dịch vụ và optimistic version, ETA, provider thật, review chéo; **chưa hoàn thành toàn Phase 02.**

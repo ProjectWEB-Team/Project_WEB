@@ -4,7 +4,7 @@
 
 UTEExpress là hệ thống logistics thuần vận chuyển cho người gửi, người nhận và đội ngũ vận hành Hub/SOC. Hệ thống quản lý toàn bộ vòng đời vận đơn: tạo đơn, pickup/self-dropoff, trung chuyển, last-mile, COD, đối soát, ví điện tử, hoàn hàng, incident và tracking thời gian thực.
 
-Canonical documentation trong `docs/` mô tả **target state**. Codebase hiện tại là brownfield bootstrap có Spring Boot, JSP landing page, security chains và test MVC cơ bản; nó không override canonical documentation.
+Canonical documentation trong `docs/` mô tả **target state**. Mã nguồn hiện tại đã hoàn thành triển khai Phase 01–05 trên `main`; việc rà soát thủ công Phase 05.1 và hardening Phase 06 còn được phân công song song. Mã nguồn không override canonical documentation. Planning được duy trì riêng trên `project-plans`.
 
 ## Core Value
 
@@ -31,13 +31,19 @@ The shared walking skeleton is now validated. It provides a real authenticated b
 
 - ✓ Spring Boot WAR bootstrap, JSP landing page, dual web/API security foundation và MVC test cơ bản — existing brownfield source.
 
-### Active
+### Delivered implementation — Phase 01–05
 
-- [ ] Xây Walking Skeleton xuyên JSP/UI → Controller → DTO → Service → Repository/JPA → SQL Server, có auth/security, shipment persistence/tracking tối thiểu và tests.
-- [ ] Cung cấp User & Shipment Intake theo Workflow: account access, shipment creation, fee/payment initiation, pickup/self-dropoff và public/user tracking.
-- [ ] Cung cấp Hub & Linehaul Operations theo Workflow: inbound, event-based sorting/outbound, route planner, containers, handover, trip và incidents.
-- [ ] Cung cấp Last-mile & Finance theo Workflow: delivery, return, COD, reconciliation, wallets và withdrawal.
-- [ ] Hoàn thiện cross-slice integration, security/UAT và demo hardening.
+- [x] Xây Walking Skeleton xuyên JSP/UI → Controller → DTO → Service → Repository/JPA → SQL Server, có auth/security, shipment persistence/tracking tối thiểu và tests.
+- [x] Cung cấp User & Shipment Intake theo Workflow: account access, shipment creation, fee/payment initiation, pickup/self-dropoff và public/user tracking.
+- [x] Cung cấp Hub & Linehaul Operations theo Workflow: inbound, event-based sorting/outbound, route planner, containers, handover, trip và incidents.
+- [x] Cung cấp Last-mile & Finance theo Workflow: delivery, return, COD, reconciliation, wallets và withdrawal.
+- [x] Hoàn thiện cross-slice integration — Phase 05.
+
+### Active follow-up
+
+- [ ] TV3 kiểm thử và tự đánh giá theo một hướng dẫn Spring Tools — Phase 05.1; tài liệu hướng dẫn đã giao.
+- [ ] TV2 thực hiện security/UAT và demo hardening — Phase 06, song song TV3.
+- [ ] Người dùng duyệt kết quả cuối của cả hai.
 
 ### Out of Scope
 
@@ -74,7 +80,7 @@ Canonical docs are authoritative but not exhaustive. Supplementary engineering k
 
 ### Brownfield current state and implementation drift
 
-**Current implementation after Phase 01:** the initial bootstrap has been extended with canonical user/security, shipment/event JPA, DTO/service/repository layers, JSP login/create/detail routes, SQL Server integration verification, safe exception handling, and authenticated STOMP. The initial brownfield-only description below is historical context and does not describe the current implementation.
+**Historical implementation after Phase 01 (superseded by Phase01–05 completion on 2026-10-26):** the initial bootstrap has been extended with canonical user/security, shipment/event JPA, DTO/service/repository layers, JSP login/create/detail routes, SQL Server integration verification, safe exception handling, and authenticated STOMP. The initial brownfield-only description below is historical context and does not describe the current implementation.
 
 `.planning/codebase/` documents the current source state. It has a Spring Boot application entry point, `HomeController`, JSP layout, dual security chains, Maven dependencies, and two MockMvc home-page tests. Domain entities, DTOs, services, repositories, SQL Server persistence, Workflow execution, and WebSocket implementation are not yet present.
 
@@ -123,4 +129,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current implementation and validation state.
 
 ---
-*Last updated: 2026-10-07 after Phase 01 completion*
+*Last updated: 2026-10-26 — Phase01–05 implementation complete; TV3 review / TV2 Phase06 parallel; planning on project-plans.*

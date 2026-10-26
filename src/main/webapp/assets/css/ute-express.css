@@ -193,3 +193,92 @@ body {
     font-weight: 500;
     font-size: 0.85rem;
 }
+
+.shipment-form-container { max-width: 900px; }
+.shipment-steps {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.5rem;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem;
+}
+.shipment-steps button {
+    width: 100%;
+    height: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--ute-border);
+    border-radius: 0.5rem;
+    background: var(--ute-surface);
+    color: var(--ute-primary);
+    text-align: left;
+}
+.shipment-steps button[aria-current="step"] {
+    border-color: var(--ute-primary);
+    background: var(--ute-primary);
+    color: #fff;
+    font-weight: 600;
+}
+.shipment-steps button:disabled { color: var(--ute-text-muted); }
+.shipment-steps button:focus-visible { outline: 3px solid var(--ute-accent); outline-offset: 2px; }
+.shipment-summary { display: grid; grid-template-columns: minmax(140px, 1fr) 2fr; gap: 0.5rem 1rem; }
+.shipment-summary dd { margin: 0; overflow-wrap: anywhere; }
+@media (max-width: 575px) {
+    .shipment-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .shipment-summary { grid-template-columns: 1fr; gap: 0.25rem; }
+    .shipment-summary dd { margin-bottom: 0.75rem; }
+/* -------------------------------------------------------------------
+   6. Page Width Utilities (no inline CSS in the views)
+   ------------------------------------------------------------------- */
+.ute-page-narrow {
+    max-width: 720px;
+    margin-inline: auto;
+}
+
+.ute-page-medium {
+    max-width: 960px;
+    margin-inline: auto;
+}
+
+.ute-page-login {
+    max-width: 440px;
+    margin-inline: auto;
+}
+
+.ute-brand-mark {
+    width: 38px;
+    height: 38px;
+}
+
+.ute-brand-mark-sm {
+    width: 32px;
+    height: 32px;
+}
+
+.ute-brand-caption {
+    font-size: 0.68rem;
+    margin-top: -3px;
+}
+
+/* -------------------------------------------------------------------
+   7. Landing Page Composition
+   ------------------------------------------------------------------- */
+.ute-hero-gradient {
+    background: linear-gradient(135deg, var(--ute-primary) 0%, var(--ute-primary-dark) 100%);
+}
+
+.ute-hero-lead {
+    max-width: 620px;
+}
+
+.ute-hero-form {
+    max-width: 580px;
+}
+
+.ute-accent-border-start {
+    border-left-color: var(--ute-accent) !important;
+}
+
+.ute-index-number {
+    width: 50px;
+}

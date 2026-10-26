@@ -21,7 +21,7 @@
     <description>Hệ thống Quản lý Chuỗi Giao nhận Logistics UTEExpress - HCMUTE</description>
 
     <properties>
-        <java.version>22</java.version>
+        <java.version>21</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
@@ -44,6 +44,12 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
+        <!-- Optional Google OIDC login; credentials are supplied through the google profile. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-client</artifactId>
         </dependency>
 
         <!-- Canonical REST JWT stack, approved for Phase 01. -->
@@ -153,6 +159,14 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <configuration>
+                    <!-- Local SQL/JWT values are for development, never the deployable WAR. -->
+                    <packagingExcludes>WEB-INF/classes/application-local.properties</packagingExcludes>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

@@ -152,6 +152,31 @@
 
 **Consequences:** Service-layer authorization must use the applicable contextual checks.
 
+## ADR-016 — Durable static-routing exceptions
+
+**Status:** ACCEPTED
+
+**Decision:** When static routing lookup has no single active rule, the system keeps the shipment's status and location unchanged and creates or reuses one deduplicated `routing_exceptions` record with `exception_type = ROUTE_LOOKUP_BLOCKED` and `status = OPEN`. A minimal `shipment_events.event_type = ROUTE_LOOKUP_BLOCKED` is appended only when the exception is newly opened. The same successful transaction emits an after-commit, Manager/Admin-scoped operational alert. No route, container assignment, handover, or manual next-hop selection is created by this exception path. When a later sorter retry succeeds after a routing-rule correction, the open exception is marked `RESOLVED`.
+
+**Reason:** Operational routing failures require durable, queryable accountability and actionable supervision without becoming a fourteenth shipment state or bypassing the static routing matrix.
+
+**Consequences:** Manager blocked-route KPIs count open `routing_exceptions`, not transient errors or all historical event rows. Retry remains static-rule-driven and idempotent; it does not authorize a user-selected next hop.
+## ADR-017 — Customer phone OTP and Google OIDC sign-in
+
+**Status:** ACCEPTED for the implementation requested by the project owner on **2026-10-22**. This records the user's instruction in the implementation session; it does not claim approval or review by the team leader or other members.
+
+**Decision:** Customers have two authentication choices: phone OTP and Google sign-in through Spring Security OAuth2 Client / OpenID Connect. Provider credentials and real phone-message delivery configuration are deferred at the user's request. Google sign-in is not email OTP and requires no Gmail SMTP configuration.
+
+**Account boundary:** Public registration creates only `ROLE_USER`. Phone registration starts `INACTIVE`; a valid, unexpired, unused challenge activates it and records `phone_verified_at`. A newly registered Google account may become `ACTIVE` after a valid Google identity with verified email and completion of required contact details. Google establishes `email_verified_at` and `google_subject` only; it does not establish phone ownership. The phone-only activation rule in older Phase-02 planning applies to the phone-registration path, not to this explicitly requested Google path.
+
+**Identity and authorization:** Google identity is keyed by the validated token's immutable `sub`. Email/phone matches never automatically merge or link existing accounts. The temporary Google principal is cleared before onboarding; protected application access uses the local account principal. An unverified contact phone on a Google account is not eligible for public phone-OTP login or recipient-ownership claims. Adding phone verification to an authenticated Google account is separate future work and must not turn knowledge of a contact number into account access.
+
+**OTP implementation:** Persist one challenge row per account in `phone_otp_challenges`, with separate `REGISTRATION`/`LOGIN` purposes, hashed six-digit code, five-minute expiry, maximum five failed attempts per issued code, 60-second resend cooldown, and maximum five sends per one-hour window. Issuing another code invalidates the previous code and retains window counters. Pending registration may resume only using matching username, password and normalized contact details, retaining the existing account and rate limits. The verification challenge is bound to the server session, not a browser-supplied user ID.
+
+**Delivery and deployment:** Default delivery is disabled. The explicit `otp-local` profile writes simulated codes to the ignored local `.local/otp-inbox/` directory; this is developer simulation, not real phone verification. The optional `google` profile reads client credentials from environment variables. No real SMS/Zalo adapter is included. The migration is prepared for a selected SQL Server verification database; no database selection, migration execution, SQL integration success, Google credential configuration, or browser UAT is implied by this decision.
+
+**Consequences:** Existing session/CSRF browser authentication and stateless JWT APIs remain supported. Account code and UI can be implemented while external configuration is pending. Late recipient linking, authenticated Google-account phone verification, live delivery integration, SQL Server verification and UAT require separate completion evidence. Setup and current limitations are documented in [PHASE_02_ACCOUNT_SETUP.md](PHASE_02_ACCOUNT_SETUP.md).
+
 ## OPEN-001 — Historical Issue: Missing Project Spec Knowledge Base source
 
 **Status:** RESOLVED

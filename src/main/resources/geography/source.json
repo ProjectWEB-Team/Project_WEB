@@ -1,0 +1,9 @@
+{
+  "source": "https://provinces.open-api.vn/api/v2/?depth=2",
+  "retrieved": "2026-10-26",
+  "effective": "2025-07-01",
+  "provinces": 34,
+  "wards": 3321,
+  "sourceSha256": "e997eb9dcbbbafbbae00496965572f8ccd6e192cbb1024e8fe6b5513c162dc9b",
+  "regions": "Application tariff regions: province codes below 38=NORTH, 38 through 68=CENTRAL, remaining=SOUTH. Administrative names/codes come from the source; tariff regions are application configuration."
+}

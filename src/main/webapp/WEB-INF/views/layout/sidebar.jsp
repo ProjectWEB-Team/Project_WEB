@@ -1,5 +1,4 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ taglib prefix="c" uri="https://jakarta.ee/tags/jstl/core" %>
 
 <!-- Sidebar Navigation for Internal Operations (6 Roles) -->
 <div class="card-ute p-3 mb-4">
@@ -23,11 +22,13 @@
                 <div class="accordion-body p-2">
                     <ul class="nav flex-column small">
                         <li class="nav-item"><a class="nav-link py-1 text-ute-dark" href="${pageContext.request.contextPath}/hub/inbound"><i class="bi bi-qr-code-scan me-2 text-ute-primary"></i>Quét Inbound Hub</a></li>
-                        <li class="nav-item"><a class="nav-link py-1 text-ute-dark" href="${pageContext.request.contextPath}/hub/sorting"><i class="bi bi-diagram-2 me-2 text-ute-primary"></i>Phân loại Khay/Bao</a></li>
+                        <li class="nav-item"><a class="nav-link py-1 text-ute-dark" href="${pageContext.request.contextPath}/hub/sorter"><i class="bi bi-diagram-2 me-2 text-ute-primary"></i>Phân loại Khay/Bao</a></li>
                         <li class="nav-item"><a class="nav-link py-1 text-ute-dark" href="${pageContext.request.contextPath}/hub/outbound"><i class="bi bi-box-arrow-up-right me-2 text-ute-primary"></i>Đóng bao Outbound</a></li>
-                        <li class="nav-item"><a class="nav-link py-1 text-ute-dark" href="${pageContext.request.contextPath}/driver/trips"><i class="bi bi-truck me-2 text-ute-primary"></i>Chuyến xe Linehaul</a></li>
+                        <li class="nav-item"><a class="nav-link py-1 text-ute-dark" href="${pageContext.request.contextPath}/driver"><i class="bi bi-truck me-2 text-ute-primary"></i>Chuyến xe Linehaul</a></li>
                         <li class="nav-item"><a class="nav-link py-1 text-ute-dark" href="${pageContext.request.contextPath}/hub/incidents"><i class="bi bi-shield-exclamation me-2 text-danger"></i>Biên bản Sự cố</a></li>
-                    </ul>
+                    <li class="nav-item"><a class="nav-link py-1 text-ute-dark" href="${pageContext.request.contextPath}/hub/delivery-assignments">Phân công giao / hoàn hàng</a></li>
+<li class="nav-item"><a class="nav-link py-1 text-ute-dark" href="${pageContext.request.contextPath}/hub/return-collection">Bàn giao hàng hoàn tại hub</a></li>
+</ul>
                 </div>
             </div>
         </div>
@@ -44,6 +45,9 @@
                     <ul class="nav flex-column small">
                         <li class="nav-item"><a class="nav-link py-1 text-ute-dark" href="${pageContext.request.contextPath}/user/shipments/create"><i class="bi bi-plus-circle me-2 text-ute-accent"></i>Tạo vận đơn gửi</a></li>
                         <li class="nav-item"><a class="nav-link py-1 text-ute-dark" href="${pageContext.request.contextPath}/user/shipments"><i class="bi bi-boxes me-2 text-ute-accent"></i>Quản lý đơn hàng</a></li>
+                        <li class="nav-item"><a class="nav-link py-1 text-ute-dark" href="${pageContext.request.contextPath}/user/incoming"><i class="bi bi-inbox me-2 text-ute-accent"></i>Đơn đang đến</a></li>
+                        <li class="nav-item"><a class="nav-link py-1 text-ute-dark" href="${pageContext.request.contextPath}/hub/pickups"><i class="bi bi-person-check me-2 text-ute-accent"></i>Phân công lấy hàng</a></li>
+                        <li class="nav-item"><a class="nav-link py-1 text-ute-dark" href="${pageContext.request.contextPath}/user/wallet"><i class="bi bi-wallet2 me-2 text-ute-accent"></i>Ví điện tử</a></li>
                         <li class="nav-item"><a class="nav-link py-1 text-ute-dark" href="${pageContext.request.contextPath}/shipper/tasks"><i class="bi bi-bicycle me-2 text-ute-accent"></i>Ca Shipper Lấy/Giao</a></li>
                     </ul>
                 </div>
@@ -65,7 +69,8 @@
                         <li class="nav-item"><a class="nav-link py-1 text-ute-dark" href="${pageContext.request.contextPath}/manager/reconciliation"><i class="bi bi-wallet2 me-2 text-secondary"></i>Đối soát ca Shipper</a></li>
                         <li class="nav-item"><a class="nav-link py-1 text-ute-dark" href="${pageContext.request.contextPath}/manager/daily-report"><i class="bi bi-file-earmark-bar-graph me-2 text-secondary"></i>Báo cáo ca ngày</a></li>
                         <li class="nav-item"><a class="nav-link py-1 text-ute-dark" href="${pageContext.request.contextPath}/admin/withdrawals"><i class="bi bi-bank me-2 text-secondary"></i>Duyệt lệnh rút tiền</a></li>
-                    </ul>
+                    <li class="nav-item"><a class="nav-link py-1 text-ute-dark" href="${pageContext.request.contextPath}/manager/overdue-returns">Hàng hoàn quá hạn</a></li>
+</ul>
                 </div>
             </div>
         </div>

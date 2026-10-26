@@ -2,6 +2,7 @@ package vn.iotstar.config;
 
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,17 +18,19 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import vn.iotstar.security.JwtAuthenticationFilter;
+import vn.iotstar.security.GoogleLoginSuccessHandler;
 
 /** Preserves the canonical session/JSP and stateless JWT/API security split. */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-@EnableConfigurationProperties(JwtProperties.class)
+@EnableConfigurationProperties({JwtProperties.class, LogisticsProperties.class})
 public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
@@ -62,15 +65,18 @@ public class SecurityConfig {
     }
 
     @Bean @Order(2)
-    public SecurityFilterChain webSecurityFilterChain(HttpSecurity http, AuthenticationProvider authenticationProvider)
+    public SecurityFilterChain webSecurityFilterChain(HttpSecurity http, AuthenticationProvider authenticationProvider,
+            ObjectProvider<ClientRegistrationRepository> clientRegistrations,
+            ObjectProvider<GoogleLoginSuccessHandler> googleHandlers)
             throws Exception {
         http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .csrf(Customizer.withDefaults())
                 .authenticationProvider(authenticationProvider)
                 .authorizeHttpRequests(auth -> auth
-                        .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
+                        .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.INCLUDE, DispatcherType.ERROR).permitAll()
                         .requestMatchers("/", "/home", "/tracking/**", "/calculator/**", "/auth/**", "/login",
-                                "/register", "/assets/**", "/webjars/**", "/error").permitAll()
+                                "/register", "/oauth2/authorization/google", "/login/oauth2/code/google",
+                                "/assets/**", "/webjars/**", "/error").permitAll()
                         .requestMatchers("/ws", "/ws/**").authenticated()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/manager/**").hasAnyRole("ADMIN", "MANAGER")
@@ -83,6 +89,13 @@ public class SecurityConfig {
                 .logout(logout -> logout.logoutUrl("/logout").logoutSuccessUrl("/login?logout=true")
                         .deleteCookies("UTEEXPRESS_SESSION", "JSESSIONID").invalidateHttpSession(true)
                         .clearAuthentication(true).permitAll());
+        ClientRegistrationRepository registrations = clientRegistrations.getIfAvailable();
+        if (registrations != null && registrations.findByRegistrationId("google") != null) {
+            GoogleLoginSuccessHandler handler = googleHandlers.getObject();
+            http.oauth2Login(oauth -> oauth.loginPage("/login")
+                    .successHandler(handler)
+                    .failureHandler((request, response, exception) -> handler.reject(request, response)));
+        }
         return http.build();
     }
 

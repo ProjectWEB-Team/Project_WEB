@@ -1,65 +1,61 @@
 ---
 gsd_state_version: "1.0"
-current_phase: 04
-current_phase_name: Last-mile & Finance
-status: executing
-stopped_at: Phase 04 context gathered
-last_updated: "2026-10-13T08:33:29.611Z"
-last_activity: 2026-10-07
-last_activity_desc: Phase 1 complete, transitioned to Phase 02
+current_phase: "05.1"
+current_phase_name: manual-functional-test-guide
+status: Phase01–05 implementation complete; guide delivered; TV3 review and TV2 Phase06 pending in parallel.
+last_updated: "2026-10-26"
+last_activity: 2026-10-26
+last_activity_desc: Correct planning branch and completed implementation statuses per project owner; synchronize project-plans from main.
 progress:
-  total_phases: 6
-  completed_phases: 1
-  total_plans: 27
-  completed_plans: 3
-  percent: 11
+  total_phases: 7
+  completed_phases: 5
+  total_plans: 33
+  completed_plans: 32
+  percent: 71
+  summary_files: 15
+needs_replan: false
+stopped_at: Guide delivered; TV3 manual assessment and TV2 Phase06 remain to be performed.
 ---
 
 # Project State
 
-## Project Reference
+## Current position
 
-See: `.planning/PROJECT.md` (updated 2026-10-07)
+Phase01–05 implementation is **complete**, confirmed by the owner on 2026-10-26. The source slices and integration fixes are merged into main, including source commit `e99257c`. Do not reopen these phases merely because original per-phase SUMMARY/VERIFICATION files are absent. Such missing files are documentation debt; do not invent historical verification results or completion dates.
 
-**Core value:** Vận đơn đi đúng workflow logistics có thể theo dõi/kiểm soát end-to-end với authorization theo ngữ cảnh và dữ liệu tài chính nhất quán.
-**Current focus:** Phase 01 — Shared Walking Skeleton (ready to plan, not executing).
+Phase05.1 contains exactly one manual guide, `05.1-01-PLAN.md`. GUIDE-01 is complete because the guide is delivered. TV3 uses **Spring Tools Suite**, independently judges results and reports inconsistencies. No source/test/script/schema changes are Phase05.1 tasks; Codex has not executed or graded this guide. TV2 may perform Phase06 in parallel. The owner reviews both outputs last. Neither TV3's results nor Phase06 completion is claimed here.
 
-**Current focus correction:** Phase 02 — User & Shipment Intake is ready for discussion and planning; Phase 01 has been verified and completed.
+Progress counts 5/7 implementation/review phases and 32 completed implementation plans out of 33 listed plans; the remaining listed plan is the manual guide whose document is delivered but whose review is not executed. Fifteen historical summaries remain an inventory, not the completion count. Phase00 bootstrap is historical and excluded from these counts; Phase06 has no plan yet.
 
-## Current Position
+## Branch policy
 
-Phase: 04 (Last-mile & Finance) — READY TO EXECUTE
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-10-07 — Phase 1 complete, transitioned to Phase 02
+- `main`: application source, tests, runtime resources and source setup documentation.
+- `project-plans`: requirements, roadmap, state, context/research, plans, summaries and manual testing guides.
+- Synchronization direction: `main → project-plans`. Never merge `project-plans` wholesale into `main`.
+- The erroneous planning publication was `7b6ab31`; repair it with a new cleanup commit, preserving source commit `e99257c` and shared history. See `BRANCH_POLICY.md` for recovery/reading instructions.
 
-Progress: [█░░░░░░░░░] 11%
+## Decisions retained
 
-## Accumulated Context
+- Authority: ADR > Workflow > ERD > Knowledge Base > Engineering Standards. Brownfield maps are implementation evidence, not domain authority.
+- Preserve Spring Boot/JPA/SQL Server/JSP, six roles, exactly 13 shipment statuses, operational events, separate wallet balance/locked_balance, static routing and contextual authorization.
+- Return fee defaults to 25,000 VND and remains configurable per the owner.
+- Electronic COD reconciliation uses manual/demo evidence; real bank/VNPay-provider verification is not claimed.
+- Existing local SQL/JWT settings stay private and ignored. Do not publish passwords, OTP, tokens, cookies or raw Surefire XML.
+- Registration/OTP, nationwide 34-province/3,321-ward address selection and fee/detail UI fixes remain part of delivered source. No rollback of those source changes is requested.
 
-### Decisions
+## Latest existing verification evidence
 
-- Canonical documentation is the target state; `.planning/codebase/` is current-state brownfield evidence only.
-- Phase 01 precedes three maximally independent vertical slices: Phase 02 (Person A), Phase 03 (Person B), and Phase 04 (Person C).
-- Phase 01 validated the session/JWT security split, exact six-role baseline, 13-status/event separation, service ownership seam, SQL Server persistence, and authenticated STOMP event seam.
+- 2026-10-26 10:03:37 +07: clean regression BUILD SUCCESS; 85 suites, 516 tests, zero failures/errors/skips.
+- Includes 50 real SQL Server cases across 15 integration suites on the existing dedicated verification database, not a reset of the application database.
+- Both shipment JavaScript files passed node syntax checks. Source under test was the reviewed working tree later published in `e99257c`.
+- See `docs/PHASE_05_1_PREPLAN_REGRESSION.md`. Earlier 504-pass reports and skipped SQL runs are historical, not the latest aggregate.
+- The user confirmed shipment creation/payment. Full manual multi-role browser and multi-session STOMP observations are still to be collected by TV3/TV2; no new application tests were run for this documentation/branch repair.
 
-### Pending Todos
+## Follow-up and continuity
 
-None yet.
+1. TV3 reads `phases/05.1-full-functional-acceptance/05.1-01-PLAN.md` and starts the source checkout from main with Spring Tools. Record missing prerequisites instead of resetting or forcing data.
+2. TV2 plans/executes Phase06 hardening in parallel; no dependency on TV3 finishing first.
+3. Retain `phases/05-cross-slice-integration/05-UAT.md` and the historical verifier's human-needed result as follow-up evidence. Do not label unobserved checks passed.
+4. Submit both workstreams to the owner for final review.
 
-### Blockers/Concerns
-
-- `OPEN-002` in `docs/ARCHITECTURE_DECISIONS.md` remains open: `docs/rule.md` is a non-canonical legacy duplicate and must not be used as authority.
-- Do not plan or execute changes that redesign canonical roles, fixed ShipmentStatus, wallet model, routing model, JSP/JSTL frontend, SQL Server database, or contextual authorization.
-
-## Deferred Items
-
-| Category | Item | Status | Deferred At | Milestone |
-|----------|------|--------|-------------|-----------|
-| External integration | Real bank/VNPay integration, AI routing, realtime GPS, and fraud detection | Deferred | 2026-10-01 | v1 |
-
-## Session Continuity
-
-Last session: 2026-10-13T07:46:19.174Z
-Stopped at: Phase 04 context gathered
-Resume file: .planning/phases/04-last-mile-finance/04-CONTEXT.md
+Deferred: real banking payout/VNPay refund integration, AI routing, realtime GPS and fraud detection.

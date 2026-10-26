@@ -1,7 +1,4 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ taglib prefix="c" uri="https://jakarta.ee/tags/jstl/core" %>
-<%@ taglib prefix="fmt" uri="https://jakarta.ee/tags/jstl/fmt" %>
-<%@ taglib prefix="fn" uri="https://jakarta.ee/tags/jstl/functions" %>
 
 <jsp:include page="layout/header.jsp" />
 
@@ -10,17 +7,17 @@
     <!-- Hero Section: Tra cứu nhanh & Giới thiệu -->
     <div class="row g-4 mb-4">
         <div class="col-lg-8">
-            <div class="card-ute p-4 p-lg-5 text-white" style="background: linear-gradient(135deg, var(--ute-primary) 0%, var(--ute-primary-dark) 100%);">
+            <div class="card-ute p-4 p-lg-5 text-white ute-hero-gradient">
                 <div class="d-inline-block px-3 py-1 rounded-pill bg-white bg-opacity-20 small fw-semibold mb-3">
                     <i class="bi bi-shield-check text-ute-accent me-1"></i> Logistics Chuẩn Doanh Nghiệp HCMUTE
                 </div>
                 <h1 class="display-6 fw-bold mb-3">Giao Hàng Nhanh Chóng, <br>Theo Dõi Vận Đơn Thời Gian Thực</h1>
-                <p class="lead opacity-90 mb-4" style="max-width: 620px;">
+                <p class="lead opacity-90 mb-4 ute-hero-lead">
                     Hệ thống quản lý chuỗi logistics 3 phân hệ dọc: Trung chuyển Liên Hub & Linehaul xe tải, Cổng Khách hàng & Shipper hiện trường, Quản trị Mạng lưới & Đối soát tài chính.
                 </p>
 
                 <!-- Form tra cứu nhanh -->
-                <form action="${pageContext.request.contextPath}/tracking" method="get" class="row g-2 align-items-center bg-white p-2 rounded-3 shadow" style="max-width: 580px;">
+                <form action="${pageContext.request.contextPath}/tracking" method="get" class="row g-2 align-items-center bg-white p-2 rounded-3 shadow ute-hero-form">
                     <div class="col-sm-8">
                         <div class="input-group">
                             <span class="input-group-text bg-white border-0 text-muted ps-2"><i class="bi bi-search"></i></span>
@@ -59,7 +56,7 @@
         </div>
 
         <div class="col-md-4">
-            <div class="card-ute p-3 border-start border-4" style="border-left-color: var(--ute-accent) !important;">
+            <div class="card-ute p-3 border-start border-4 ute-accent-border-start">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <span class="text-ute-muted small fw-semibold">PHÂN HỆ 2 (THÀNH VIÊN 2)</span>
@@ -105,7 +102,7 @@
             <table class="table table-hover table-ute align-middle mb-0">
                 <thead>
                     <tr>
-                        <th style="width: 50px;">STT</th>
+                        <th class="ute-index-number">STT</th>
                         <th>Mã Enum ShipmentStatus</th>
                         <th>Nhãn Tiếng Việt</th>
                         <th class="text-center">Mẫu Badge Trực quan</th>

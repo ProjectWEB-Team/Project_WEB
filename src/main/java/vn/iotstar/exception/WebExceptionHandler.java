@@ -24,6 +24,12 @@ public class WebExceptionHandler {
         return "error/403";
     }
 
+    @ExceptionHandler(HubOperationAccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public String hubForbidden(HubOperationAccessDeniedException exception) {
+        return "error/403";
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public String notFound(ResourceNotFoundException exception) {

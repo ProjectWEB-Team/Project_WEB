@@ -1,0 +1,45 @@
+/* FK-safe cleanup of ONE generated ownership namespace. No TRUNCATE, no global business DELETE. */
+DECLARE @fixture NVARCHAR(40)=CAST(SESSION_CONTEXT(N'phase05_fixture') AS NVARCHAR(40));
+IF DB_NAME() NOT LIKE N'uteexpress[_]phase05[_]test[_]%' OR @fixture IS NULL OR LEN(@fixture)<>15
+   OR LEFT(@fixture,3)<>N'p05' OR SUBSTRING(@fixture,4,12) LIKE N'%[^0-9a-f]%'
+    THROW 51100, 'Dedicated test database and generated fixture identity required.', 1;
+SET XACT_ABORT ON;
+BEGIN TRANSACTION;
+DECLARE @users TABLE(id BIGINT PRIMARY KEY);
+INSERT @users SELECT id FROM dbo.users WHERE LEFT(username,16)=@fixture+N'_';
+DECLARE @shipments TABLE(id BIGINT PRIMARY KEY);
+INSERT @shipments SELECT id FROM dbo.shipments WHERE sender_user_id IN(SELECT id FROM @users);
+DECLARE @containers TABLE(id BIGINT PRIMARY KEY);
+INSERT @containers SELECT id FROM dbo.parcel_containers WHERE created_by IN(SELECT id FROM @users);
+DECLARE @trips TABLE(id BIGINT PRIMARY KEY);
+INSERT @trips SELECT id FROM dbo.transport_trips WHERE driver_user_id IN(SELECT id FROM @users);
+DELETE FROM dbo.shipper_reconciliation_items WHERE shipment_id IN(SELECT id FROM @shipments);
+DELETE FROM dbo.shipper_reconciliations WHERE shipper_id IN(SELECT id FROM @users);
+DELETE FROM dbo.wallet_transactions WHERE user_id IN(SELECT id FROM @users);
+DELETE FROM dbo.withdrawal_requests WHERE user_id IN(SELECT id FROM @users);
+DELETE FROM dbo.wallets WHERE user_id IN(SELECT id FROM @users);
+DELETE FROM dbo.refund_settlement_outbox WHERE shipment_id IN(SELECT id FROM @shipments);
+DELETE FROM dbo.incidents WHERE shipment_id IN(SELECT id FROM @shipments) OR trip_id IN(SELECT id FROM @trips);
+DELETE FROM dbo.routing_exceptions WHERE shipment_id IN(SELECT id FROM @shipments);
+DELETE FROM dbo.cod_transactions WHERE shipment_id IN(SELECT id FROM @shipments);
+DELETE FROM dbo.payments WHERE shipment_id IN(SELECT id FROM @shipments);
+DELETE FROM dbo.delivery_attempts WHERE shipment_id IN(SELECT id FROM @shipments);
+DELETE FROM dbo.pickup_attempts WHERE shipment_id IN(SELECT id FROM @shipments);
+DELETE FROM dbo.shipment_assignments WHERE shipment_id IN(SELECT id FROM @shipments);
+DELETE FROM dbo.handover_containers WHERE container_id IN(SELECT id FROM @containers);
+UPDATE dbo.handovers SET transport_trip_id=NULL WHERE transport_trip_id IN(SELECT id FROM @trips);
+DELETE FROM dbo.transport_trips WHERE id IN(SELECT id FROM @trips);
+DELETE FROM dbo.handovers WHERE sender_employee_id IN(SELECT id FROM dbo.employee_profiles WHERE user_id IN(SELECT id FROM @users));
+DELETE FROM dbo.container_items WHERE container_id IN(SELECT id FROM @containers);
+DELETE FROM dbo.parcel_containers WHERE id IN(SELECT id FROM @containers);
+DELETE FROM dbo.shipment_routes WHERE shipment_id IN(SELECT id FROM @shipments);
+DELETE FROM dbo.shipment_events WHERE shipment_id IN(SELECT id FROM @shipments);
+DELETE FROM dbo.shipments WHERE id IN(SELECT id FROM @shipments);
+DELETE FROM dbo.employee_profiles WHERE user_id IN(SELECT id FROM @users);
+DELETE FROM dbo.users WHERE id IN(SELECT id FROM @users);
+DELETE FROM dbo.hub_routing_rules WHERE current_hub_id IN(SELECT id FROM dbo.hubs WHERE LEFT(code,16)=@fixture+N'_');
+DELETE FROM dbo.hubs WHERE LEFT(code,16)=@fixture+N'_' AND parent_hub_id IS NOT NULL;
+DELETE FROM dbo.hubs WHERE LEFT(code,16)=@fixture+N'_';
+DELETE FROM dbo.vehicles WHERE plate_number IN(@fixture,@fixture+N'_2');
+DELETE FROM dbo.pricing_policies WHERE service_code=@fixture;
+COMMIT TRANSACTION;

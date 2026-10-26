@@ -1,0 +1,121 @@
+﻿{
+    "finished_at":  "2026-10-25T21:38:37+07:00",
+    "command":  "rtk proxy powershell -NoProfile -ExecutionPolicy Bypass -File .local/phase05-sql.ps1 -Action All",
+    "maven_command":  "rtk mvn clean test",
+    "database":  "uteexpress_phase05_test_20261025_codex_01a17279",
+    "totals":  {
+                   "failures":  0,
+                   "errors":  0,
+                   "skipped":  0,
+                   "tests":  504,
+                   "suites":  84
+               },
+    "sql_test_cases":  50,
+    "sql_suites":  [
+                       {
+                           "name":  "vn.iotstar.integration.Phase03CustodySqlServerIntegrationTest",
+                           "tests":  1,
+                           "failures":  0,
+                           "errors":  0,
+                           "skipped":  0
+                       },
+                       {
+                           "name":  "vn.iotstar.integration.Phase03ManagerScopeSqlServerIntegrationTest",
+                           "tests":  1,
+                           "failures":  0,
+                           "errors":  0,
+                           "skipped":  0
+                       },
+                       {
+                           "name":  "vn.iotstar.integration.Phase03ReceiptSqlServerIntegrationTest",
+                           "tests":  1,
+                           "failures":  0,
+                           "errors":  0,
+                           "skipped":  0
+                       },
+                       {
+                           "name":  "vn.iotstar.integration.Phase03RoutingSqlServerIntegrationTest",
+                           "tests":  2,
+                           "failures":  0,
+                           "errors":  0,
+                           "skipped":  0
+                       },
+                       {
+                           "name":  "vn.iotstar.integration.Phase03TripSqlServerIntegrationTest",
+                           "tests":  1,
+                           "failures":  0,
+                           "errors":  0,
+                           "skipped":  0
+                       },
+                       {
+                           "name":  "vn.iotstar.integration.Phase04FinanceSqlServerIntegrationTest",
+                           "tests":  1,
+                           "failures":  0,
+                           "errors":  0,
+                           "skipped":  0
+                       },
+                       {
+                           "name":  "vn.iotstar.integration.Phase04WalletSqlServerIntegrationTest",
+                           "tests":  4,
+                           "failures":  0,
+                           "errors":  0,
+                           "skipped":  0
+                       },
+                       {
+                           "name":  "vn.iotstar.integration.Phase05CustodySqlServerIntegrationTest",
+                           "tests":  2,
+                           "failures":  0,
+                           "errors":  0,
+                           "skipped":  0
+                       },
+                       {
+                           "name":  "vn.iotstar.integration.Phase05DeliveryReturnSqlServerIntegrationTest",
+                           "tests":  4,
+                           "failures":  0,
+                           "errors":  0,
+                           "skipped":  0
+                       },
+                       {
+                           "name":  "vn.iotstar.integration.Phase05FinanceSqlServerIntegrationTest",
+                           "tests":  9,
+                           "failures":  0,
+                           "errors":  0,
+                           "skipped":  0
+                       },
+                       {
+                           "name":  "vn.iotstar.integration.Phase05ManagerScopeSqlServerIntegrationTest",
+                           "tests":  2,
+                           "failures":  0,
+                           "errors":  0,
+                           "skipped":  0
+                       },
+                       {
+                           "name":  "vn.iotstar.integration.Phase05NormalJourneySqlServerIntegrationTest",
+                           "tests":  1,
+                           "failures":  0,
+                           "errors":  0,
+                           "skipped":  0
+                       },
+                       {
+                           "name":  "vn.iotstar.integration.Phase05SchemaConvergenceSqlServerIntegrationTest",
+                           "tests":  9,
+                           "failures":  0,
+                           "errors":  0,
+                           "skipped":  0
+                       },
+                       {
+                           "name":  "vn.iotstar.integration.RegistrationSqlServerIntegrationTest",
+                           "tests":  6,
+                           "failures":  0,
+                           "errors":  0,
+                           "skipped":  0
+                       },
+                       {
+                           "name":  "vn.iotstar.integration.ShipmentSqlServerIntegrationTest",
+                           "tests":  6,
+                           "failures":  0,
+                           "errors":  0,
+                           "skipped":  0
+                       }
+                   ]
+}
