@@ -43,6 +43,12 @@ public class WebExceptionHandler {
         return "error/404";
     }
 
+    @ExceptionHandler(org.springframework.dao.OptimisticLockingFailureException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public String conflict(org.springframework.dao.OptimisticLockingFailureException exception) {
+        return "error/409";
+    }
+
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public String unexpected(Exception exception) {

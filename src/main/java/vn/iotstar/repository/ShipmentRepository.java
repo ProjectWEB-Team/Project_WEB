@@ -37,4 +37,8 @@ public interface ShipmentRepository extends JpaRepository<Shipment, Long> {
     List<Shipment> findPendingPickups(@Param("hubId") Long hubId, @Param("status") ShipmentStatus status);
     @Query("select s.id from Shipment s where s.pickupMethod = 'SELF_DROPOFF' and s.currentStatus = :status and s.waitingForHandoverAt <= :cutoff")
     List<Long> findExpiredDropoffIds(@Param("status") ShipmentStatus status, @Param("cutoff") LocalDateTime cutoff);
+
+    /** Online-prepaid shipments still unpaid since creation (the status is set at creation). */
+    @Query("select s.id from Shipment s where s.currentStatus = :status and s.createdAt <= :cutoff")
+    List<Long> findExpiredPaymentIds(@Param("status") ShipmentStatus status, @Param("cutoff") LocalDateTime cutoff);
 }

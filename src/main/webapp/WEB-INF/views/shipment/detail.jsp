@@ -22,12 +22,29 @@
         <p class="mb-1">Trạng thái: <span class="badge text-bg-primary"><c:out value="${shipment.currentStatus}"/></span></p>
         <p class="mb-1">Cước phí: <strong><fmt:formatNumber value="${shipment.shippingFee}" pattern="#,##0" var="shippingFormatted"/>${fn:replace(shippingFormatted, ',', '.')}đ</strong> (<c:out value="${shipment.paymentStatus}"/>)</p>
         <p class="text-ute-muted mb-0">Tạo lúc: <c:out value="${shipment.createdAt}"/></p>
+        <c:if test="${shipment.currentStatus == 'CANCELLED'}">
+            <c:forEach items="${shipment.events}" var="event">
+                <c:if test="${event.eventType == 'SHIPMENT_CANCELLED'}">
+                    <div class="alert alert-warning mt-3 mb-0" role="status">
+                        <c:choose>
+                            <c:when test="${fn:contains(event.description, 'PAYMENT_TIMEOUT')}">Đơn đã tự hủy vì quá hạn thanh toán trực tuyến.</c:when>
+                            <c:when test="${fn:contains(event.description, 'PICKUP_SERVICE_FAILURE')}">Đơn đã bị hủy do lỗi dịch vụ lấy hàng của UTEExpress.</c:when>
+                            <c:when test="${fn:contains(event.description, 'PICKUP_TIMEOUT')}">Đơn đã tự hủy vì shipper không lấy được hàng trong thời hạn.</c:when>
+                            <c:when test="${fn:contains(event.description, 'DROPOFF_TIMEOUT')}">Đơn đã tự hủy vì kiện hàng chưa được mang tới bưu cục trong thời hạn.</c:when>
+                            <c:when test="${fn:contains(event.description, 'SENDER_REQUEST')}">Bạn đã hủy đơn này.</c:when>
+                            <c:otherwise>Đơn hàng đã bị hủy.</c:otherwise>
+                        </c:choose>
+                        Nếu cước đã được thanh toán trước, tiền sẽ được hoàn vào ví của bạn.
+                    </div>
+                </c:if>
+            </c:forEach>
+        </c:if>
     </section>
     <section class="card-ute p-4 mb-3">
         <h2 class="h5 text-ute-primary">Bước tiếp theo</h2>
         <c:choose>
             <c:when test="${shipment.currentStatus == 'WAITING_FOR_PAYMENT'}">
-                <p>Thanh toán cước trực tuyến để đơn chuyển sang chờ bàn giao.</p>
+                <p>Thanh toán cước trực tuyến để đơn chuyển sang chờ bàn giao. Đơn chưa thanh toán sẽ tự hủy khi quá hạn thanh toán.</p>
                 <form method="post" action="${pageContext.request.contextPath}/user/shipments/${shipment.id}/confirm-payment">
                     <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                     <button class="btn btn-ute-accent" type="submit">Xác nhận thanh toán (demo)</button>

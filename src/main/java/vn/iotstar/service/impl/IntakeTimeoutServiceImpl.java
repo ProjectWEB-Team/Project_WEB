@@ -16,7 +16,8 @@ import java.time.LocalDateTime;
 
 /**
  * HOME_PICKUP: 48h from assigned_at. SELF_DROPOFF: 48h from waiting_for_handover_at (never created_at).
- * The demo profile shortens both through the *-minutes properties.
+ * WAITING_FOR_PAYMENT (online prepaid): payment-hours from creation, then PAYMENT_TIMEOUT.
+ * The demo profile shortens all three through the *-minutes properties.
  */
 @Service
 public class IntakeTimeoutServiceImpl implements IntakeTimeoutService {
@@ -26,19 +27,23 @@ public class IntakeTimeoutServiceImpl implements IntakeTimeoutService {
     private final Clock clock;
     private final Duration pickupWindow;
     private final Duration dropoffWindow;
+    private final Duration paymentWindow;
 
     public IntakeTimeoutServiceImpl(ShipmentRepository shipmentRepository, ShipmentAssignmentRepository assignmentRepository,
                                     ShipmentCancellation cancellation, Clock clock,
                                     @Value("${uteexpress.timeout.pickup-hours:48}") long pickupHours,
                                     @Value("${uteexpress.timeout.pickup-minutes:0}") long pickupMinutes,
                                     @Value("${uteexpress.timeout.dropoff-hours:48}") long dropoffHours,
-                                    @Value("${uteexpress.timeout.dropoff-minutes:0}") long dropoffMinutes) {
+                                    @Value("${uteexpress.timeout.dropoff-minutes:0}") long dropoffMinutes,
+                                    @Value("${uteexpress.timeout.payment-hours:24}") long paymentHours,
+                                    @Value("${uteexpress.timeout.payment-minutes:0}") long paymentMinutes) {
         this.shipmentRepository = shipmentRepository;
         this.assignmentRepository = assignmentRepository;
         this.cancellation = cancellation;
         this.clock = clock;
         this.pickupWindow = Duration.ofHours(pickupHours).plusMinutes(pickupMinutes);
         this.dropoffWindow = Duration.ofHours(dropoffHours).plusMinutes(dropoffMinutes);
+        this.paymentWindow = Duration.ofHours(paymentHours).plusMinutes(paymentMinutes);
     }
 
     @Override
@@ -53,6 +58,14 @@ public class IntakeTimeoutServiceImpl implements IntakeTimeoutService {
         LocalDateTime dropoffCutoff = now.minus(dropoffWindow);
         for (Long id : shipmentRepository.findExpiredDropoffIds(ShipmentStatus.WAITING_FOR_HANDOVER, dropoffCutoff)) {
             cancelled += cancelIfStillWaiting(id, "SELF_DROPOFF", "DROPOFF_TIMEOUT");
+        }
+        for (Long id : shipmentRepository.findExpiredPaymentIds(ShipmentStatus.WAITING_FOR_PAYMENT, now.minus(paymentWindow))) {
+            Shipment shipment = shipmentRepository.findByIdForUpdate(id).orElse(null);
+            // A confirmation committed meanwhile moved it out of WAITING_FOR_PAYMENT; skip it.
+            if (shipment != null && shipment.getCurrentStatus() == ShipmentStatus.WAITING_FOR_PAYMENT) {
+                cancellation.cancel(shipment, "PAYMENT_TIMEOUT", null);
+                cancelled++;
+            }
         }
         return cancelled;
     }

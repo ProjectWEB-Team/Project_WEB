@@ -36,7 +36,7 @@ class RefundProducerConsumerTest {
         when(ledger.creditRefund(anyLong(),any(),anyLong(),anyLong(),anyString())).thenAnswer(a->{Long id=a.getArgument(2);BigDecimal amount=a.getArgument(1);var tx=WalletTransaction.create(1L,"REFUND",amount,BigDecimal.ZERO,amount,id,"PAYMENT","refund");credits.put(id,tx);return tx;});
         when(transactions.findFirstByTransactionTypeAndReferenceTypeAndReferenceId(eq("REFUND"),eq("PAYMENT"),anyLong())).thenAnswer(a->Optional.ofNullable(credits.get(a.getArgument(2))));
         var cancellation=new ShipmentCancellation(assignments,payments,outbox,events,mock(ShipmentEventPublisher.class),clock);
-        if(expired){when(shipments.findExpiredDropoffIds(eq(ShipmentStatus.WAITING_FOR_HANDOVER),any())).thenReturn(List.of(1L));assertThat(new IntakeTimeoutServiceImpl(shipments,assignments,cancellation,clock,48,0,48,0).cancelExpired()).isEqualTo(1);}
+        if(expired){when(shipments.findExpiredDropoffIds(eq(ShipmentStatus.WAITING_FOR_HANDOVER),any())).thenReturn(List.of(1L));assertThat(new IntakeTimeoutServiceImpl(shipments,assignments,cancellation,clock,48,0,48,0,24,0).cancelExpired()).isEqualTo(1);}
         else cancellation.cancel(s,"SENDER_REQUEST",sender);
         assertThat(pending).hasSize(2);
         var finance=new ShipmentFinanceServiceImpl(payments,shipments,mock(IncidentRepository.class),events,mock(UserRepository.class),ledger,notifications,outbox,transactions,mock(FinanceAccess.class),clock);

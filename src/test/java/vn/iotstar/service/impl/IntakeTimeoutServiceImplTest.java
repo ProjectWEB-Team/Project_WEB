@@ -62,10 +62,26 @@ class IntakeTimeoutServiceImplTest {
         verify(cancellation, never()).cancel(eq(pickedUp), any(), any());
     }
 
+    @Test
+    void unpaidOnlineShipmentIsCancelledAfterThePaymentWindowButAPaidOneIsSkipped() {
+        Shipment unpaid = shipment(3L, "HOME_PICKUP", ShipmentStatus.WAITING_FOR_PAYMENT);
+        Shipment paidMeanwhile = shipment(4L, "HOME_PICKUP", ShipmentStatus.WAITING_FOR_HANDOVER);
+        when(shipmentRepository.findExpiredPaymentIds(ShipmentStatus.WAITING_FOR_PAYMENT, NOW.minusHours(24)))
+                .thenReturn(List.of(3L, 4L));
+        when(shipmentRepository.findByIdForUpdate(3L)).thenReturn(Optional.of(unpaid));
+        when(shipmentRepository.findByIdForUpdate(4L)).thenReturn(Optional.of(paidMeanwhile));
+
+        Clock clock = Clock.fixed(NOW.atZone(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());
+        assertThat(new IntakeTimeoutServiceImpl(shipmentRepository, assignmentRepository, cancellation, clock,
+                48, 0, 48, 0, 24, 0).cancelExpired()).isEqualTo(1);
+        verify(cancellation).cancel(unpaid, "PAYMENT_TIMEOUT", null);
+        verify(cancellation, never()).cancel(eq(paidMeanwhile), any(), any());
+    }
+
     private IntakeTimeoutServiceImpl service(long hours, long minutes) {
         Clock clock = Clock.fixed(NOW.atZone(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());
         return new IntakeTimeoutServiceImpl(shipmentRepository, assignmentRepository, cancellation, clock,
-                hours, minutes, hours, minutes);
+                hours, minutes, hours, minutes, hours, minutes);
     }
 
     private static Shipment shipment(Long id, String method, ShipmentStatus status) {

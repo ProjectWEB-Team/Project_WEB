@@ -54,6 +54,15 @@ class ExceptionHandlingTest {
     }
 
     @Test
+    void staleConcurrentUpdateUsesConflictView() throws Exception {
+        when(shipmentService.getDetail(409L)).thenThrow(new org.springframework.orm.ObjectOptimisticLockingFailureException("Shipment", 409L));
+
+        mockMvc.perform(get("/user/shipments/409"))
+                .andExpect(status().isConflict())
+                .andExpect(view().name("error/409"));
+    }
+
+    @Test
     void unexpectedFailureUsesGenericServerErrorView() throws Exception {
         when(shipmentService.getDetail(500L)).thenThrow(new IllegalStateException("jdbc password leaked"));
 
