@@ -23,19 +23,9 @@
                     <h6 class="fw-bold mb-2 text-white">Tra cứu nhanh</h6>
                     <ul class="list-unstyled small text-light opacity-75">
                         <li class="mb-1"><a href="${pageContext.request.contextPath}/tracking" class="text-light text-decoration-none">Theo dõi đơn hàng</a></li>
-                        <li class="mb-1"><a href="${pageContext.request.contextPath}/calculator" class="text-light text-decoration-none">Bảng giá cước</a></li>
-                        <li class="mb-1"><a href="${pageContext.request.contextPath}/network" class="text-light text-decoration-none">Điểm gửi hàng</a></li>
                     </ul>
                 </div>
 
-                <div class="col-lg-3 col-md-6 col-6">
-                    <h6 class="fw-bold mb-2 text-white">Chính sách & Hỗ trợ</h6>
-                    <ul class="list-unstyled small text-light opacity-75">
-                        <li class="mb-1"><a href="#" class="text-light text-decoration-none">Quy định bồi thường hàng mất</a></li>
-                        <li class="mb-1"><a href="#" class="text-light text-decoration-none">Chính sách đồng kiểm hàng</a></li>
-                        <li class="mb-1"><a href="#" class="text-light text-decoration-none">Quy chuẩn chuyển hoàn</a></li>
-                    </ul>
-                </div>
 
                 <div class="col-lg-3 col-md-6">
                     <h6 class="fw-bold mb-2 text-white">Tổng đài Hỗ trợ 24/7</h6>
