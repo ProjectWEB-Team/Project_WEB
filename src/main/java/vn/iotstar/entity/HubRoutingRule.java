@@ -48,6 +48,8 @@ public class HubRoutingRule {
         rule.updatedAt = rule.createdAt;
         return rule;
     }
+    public void deactivate() { status = "INACTIVE"; updatedAt = LocalDateTime.now(); }
+
     public Long getId() { return id; }
     public Hub getCurrentHub() { return currentHub; }
     public String getDestinationRegion() { return destinationRegion; }

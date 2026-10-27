@@ -54,6 +54,12 @@ public class Hub {
         return hub;
     }
 
+    /** Code, type and level stay fixed after creation; staff scope and routing are keyed on them. */
+    public void edit(String name, String province, String district, String address, Hub parent) {
+        this.name = name; this.province = province; this.district = district; this.address = address; this.parentHub = parent;
+    }
+    public void changeStatus(String newStatus) { this.status = newStatus; }
+
     public Long getId() { return id; }
     public String getCode() { return code; }
     public String getName() { return name; }
