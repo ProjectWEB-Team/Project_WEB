@@ -3,9 +3,16 @@
 <%-- Shared top navigation: role links and logout. No JavaScript, so it also works on pages without the Bootstrap bundle. --%>
 <c:set var="ctx" value="${pageContext.request.contextPath}" />
 <c:set var="me" value="${pageContext.request.userPrincipal}" />
-<nav class="navbar navbar-expand navbar-dark bg-ute-primary shadow-sm py-2" style="background-color:#0b3d6e" aria-label="Điều hướng chính">
+<%-- Pages with their own <head> (no layout/header.jsp) still get the full skin from here. --%>
+<c:if test="${empty uteAssetsLoaded}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="${ctx}/assets/css/ute-express.css">
+    <link rel="stylesheet" href="${ctx}/assets/css/ute-modern.css">
+</c:if>
+<nav class="navbar navbar-expand ute-nav py-2" aria-label="Điều hướng chính">
     <div class="container-fluid flex-wrap gap-2 px-lg-4">
-        <a class="navbar-brand fw-bold" href="${ctx}/">UTE<span style="color:#f26722">EXPRESS</span></a>
+        <a class="navbar-brand fw-bold" href="${ctx}/">UTE<span>EXPRESS</span></a>
         <ul class="navbar-nav flex-wrap me-auto">
             <li class="nav-item"><a class="nav-link" href="${ctx}/tracking">Tra cứu</a></li>
             <c:if test="${pageContext.request.isUserInRole('USER')}">

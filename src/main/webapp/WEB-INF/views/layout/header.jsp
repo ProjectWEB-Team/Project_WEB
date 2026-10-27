@@ -24,7 +24,9 @@
 
     <!-- UTEExpress Logistics Brand CSS -->
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/ute-express.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/ute-modern.css">
 </head>
 <body>
+<c:set var="uteAssetsLoaded" value="true" scope="request" />
 
     <jsp:include page="/WEB-INF/views/layout/navbar.jsp" />
