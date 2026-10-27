@@ -93,7 +93,7 @@ class AuthenticationJspRenderingTest {
         for (String path : new String[]{"/", "/home"}) {
             assertThat(html(path)).contains(
                     "<title>UTEExpress - Hệ thống Quản lý Chuỗi Giao nhận Logistics HCMUTE</title>",
-                    "id=\"navbarMain\"", "id=\"sidebarAccordion\"", "<footer", "</html>");
+                    "aria-label=\"Điều hướng chính\"", "id=\"sidebarAccordion\"", "<footer", "</html>");
         }
         verifyNoInteractions(registrationService, phoneSessionService, googleAccounts);
     }
