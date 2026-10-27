@@ -56,7 +56,7 @@ public class AdminWithdrawalController {
                          BindingResult bindingResult,
                          RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Validation error: invalid rejection request");
+            redirectAttributes.addFlashAttribute("errorMessage", "Yêu cầu từ chối chưa hợp lệ.");
             return "redirect:/admin/withdrawals";
         }
         try {

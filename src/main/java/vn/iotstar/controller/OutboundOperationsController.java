@@ -36,24 +36,24 @@ public class OutboundOperationsController {
     @PostMapping("/containers")
     public String createContainer(@Valid @ModelAttribute CreateContainerCommand command, BindingResult errors, RedirectAttributes redirect) {
         if (errors.hasErrors()) return invalid(redirect);
-        containerHandoverService.createContainer(command); redirect.addFlashAttribute("operationMessage", "Container created."); return "redirect:/hub/outbound";
+        containerHandoverService.createContainer(command); redirect.addFlashAttribute("operationMessage", "Đã tạo bao."); return "redirect:/hub/outbound";
     }
     @PostMapping("/load")
     public String load(@Valid @ModelAttribute LoadContainerCommand command, BindingResult errors, RedirectAttributes redirect) {
         if (errors.hasErrors()) return invalid(redirect);
-        containerHandoverService.loadShipment(command); redirect.addFlashAttribute("operationMessage", "Shipment loaded for outbound custody."); return "redirect:/hub/outbound";
+        containerHandoverService.loadShipment(command); redirect.addFlashAttribute("operationMessage", "Đã cho đơn vào bao."); return "redirect:/hub/outbound";
     }
     @PostMapping("/handovers")
     public String createHandover(@Valid @ModelAttribute CreateHandoverCommand command, BindingResult errors, RedirectAttributes redirect) {
         if (errors.hasErrors()) return invalid(redirect);
-        containerHandoverService.createHandover(command); redirect.addFlashAttribute("operationMessage", "Handover prepared for assigned driver."); return "redirect:/hub/outbound";
+        containerHandoverService.createHandover(command); redirect.addFlashAttribute("operationMessage", "Đã tạo phiếu bàn giao cho tài xế được giao."); return "redirect:/hub/outbound";
     }
     @PostMapping("/handovers/correct")
     public String correct(@Valid @ModelAttribute CorrectHandoverCommand command, BindingResult errors, RedirectAttributes redirect) {
         if (errors.hasErrors()) return invalid(redirect);
         containerHandoverService.correctByCancellationAndRecreation(command);
-        redirect.addFlashAttribute("operationMessage", "Custody correction recorded as a replacement handover.");
+        redirect.addFlashAttribute("operationMessage", "Đã tạo phiếu bàn giao thay thế.");
         return "redirect:/hub/outbound";
     }
-    private String invalid(RedirectAttributes redirect) { redirect.addFlashAttribute("operationMessage", "Enter valid operational identifiers."); return "redirect:/hub/outbound"; }
+    private String invalid(RedirectAttributes redirect) { redirect.addFlashAttribute("operationMessage", "Nhập đúng các ID nghiệp vụ."); return "redirect:/hub/outbound"; }
 }

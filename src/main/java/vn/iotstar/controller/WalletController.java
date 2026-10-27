@@ -48,7 +48,7 @@ public class WalletController {
                                     BindingResult bindingResult,
                                     RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Validation error: invalid withdrawal request");
+            redirectAttributes.addFlashAttribute("errorMessage", "Yêu cầu rút tiền chưa hợp lệ.");
             return "redirect:/user/wallet";
         }
         try {

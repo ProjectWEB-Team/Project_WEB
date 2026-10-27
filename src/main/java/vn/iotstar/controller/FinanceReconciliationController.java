@@ -63,7 +63,7 @@ public class FinanceReconciliationController {
     @PostMapping("/manager/reconciliation/refund")
     public String refund(@RequestParam Long paymentId, RedirectAttributes redirectAttributes) {
         shipmentFinance.refundShipmentPayment(paymentId, "Pending cancellation obligation");
-        redirectAttributes.addFlashAttribute("successMessage", "Refund completed");
+        redirectAttributes.addFlashAttribute("successMessage", "Đã hoàn tiền.");
         return "redirect:/manager/reconciliation";
     }
 
@@ -71,10 +71,10 @@ public class FinanceReconciliationController {
     public String compensate(@Valid @ModelAttribute CompensationRequest request, BindingResult errors,
                              RedirectAttributes redirectAttributes) {
         if (errors.hasErrors()) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Invalid compensation request");
+            redirectAttributes.addFlashAttribute("errorMessage", "Yêu cầu bồi thường không hợp lệ.");
         } else {
             shipmentFinance.compensateLostShipment(request.shipmentId(), request.incidentId(), request.reason());
-            redirectAttributes.addFlashAttribute("successMessage", "Compensation completed");
+            redirectAttributes.addFlashAttribute("successMessage", "Đã bồi thường xong.");
         }
         return "redirect:/manager/reconciliation";
     }
@@ -84,7 +84,7 @@ public class FinanceReconciliationController {
                                        BindingResult bindingResult,
                                        RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Validation error: invalid reconciliation request");
+            redirectAttributes.addFlashAttribute("errorMessage", "Yêu cầu đối soát chưa hợp lệ.");
             return "redirect:/manager/reconciliation";
         }
         try {
@@ -92,7 +92,7 @@ public class FinanceReconciliationController {
             redirectAttributes.addFlashAttribute("successMessage",
                     "Reconciliation #" + rec.getId() + " completed with status: " + rec.getStatus());
         } catch (IllegalArgumentException | IllegalStateException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "The reconciliation could not be completed. Refresh the recorded sources and try again.");
+            redirectAttributes.addFlashAttribute("errorMessage", "Chưa đối soát được. Hãy tải lại dữ liệu rồi thử lại.");
         }
         return "redirect:/manager/reconciliation";
     }
@@ -105,7 +105,7 @@ public class FinanceReconciliationController {
             redirectAttributes.addFlashAttribute("successMessage",
                     "COD transaction #" + codTransactionId + " was paid out to the sender wallet");
         } catch (IllegalArgumentException | IllegalStateException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "The COD source is not eligible for payout.");
+            redirectAttributes.addFlashAttribute("errorMessage", "Khoản COD này chưa đủ điều kiện chi trả.");
         }
         return "redirect:/manager/reconciliation";
     }

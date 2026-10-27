@@ -39,7 +39,7 @@ public class HubOperationsController {
     public String receive(@Valid @ModelAttribute InboundShipmentCommand command, BindingResult errors,
                           RedirectAttributes redirectAttributes) {
         if (errors.hasErrors()) {
-            redirectAttributes.addFlashAttribute("operationMessage", "Enter a shipment identifier.");
+            redirectAttributes.addFlashAttribute("operationMessage", "Nhập ID đơn hàng.");
             return "redirect:/hub/sorter";
         }
         try {
@@ -48,7 +48,7 @@ public class HubOperationsController {
             redirectAttributes.addFlashAttribute("operationMessage", exception.getMessage());
             return "redirect:/hub/sorter";
         }
-        redirectAttributes.addFlashAttribute("operationMessage", "Inbound request completed.");
+        redirectAttributes.addFlashAttribute("operationMessage", "Đã nhận hàng vào hub.");
         return "redirect:/hub/sorter";
     }
 
@@ -56,14 +56,14 @@ public class HubOperationsController {
     public String sort(@Valid @ModelAttribute SortShipmentCommand command, BindingResult errors,
                        RedirectAttributes redirectAttributes) {
         if (errors.hasErrors()) {
-            redirectAttributes.addFlashAttribute("operationMessage", "Enter a shipment identifier.");
+            redirectAttributes.addFlashAttribute("operationMessage", "Nhập ID đơn hàng.");
             return "redirect:/hub/sorter";
         }
         try {
             redirectAttributes.addFlashAttribute("sortingDecision", hubOperationsService.sortAtHub(command));
-            redirectAttributes.addFlashAttribute("operationMessage", "Static next-hop decision is ready.");
+            redirectAttributes.addFlashAttribute("operationMessage", "Đã xác định hub kế tiếp.");
         } catch (RouteConfigurationException exception) {
-            redirectAttributes.addFlashAttribute("operationMessage", "Sorting is temporarily unavailable.");
+            redirectAttributes.addFlashAttribute("operationMessage", "Tạm thời chưa phân loại được.");
         }
         return "redirect:/hub/sorter";
     }

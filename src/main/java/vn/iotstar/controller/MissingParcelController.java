@@ -28,10 +28,10 @@ public class MissingParcelController {
     @PostMapping("/resolve")
     public String resolve(@Valid @ModelAttribute MissingParcelResolutionCommand command, BindingResult errors, RedirectAttributes redirect) {
         if (errors.hasErrors()) {
-            redirect.addFlashAttribute("operationMessage", "Enter the full custody reference and bounded investigation evidence.");
+            redirect.addFlashAttribute("operationMessage", "Nhập đủ tham chiếu bàn giao và bằng chứng điều tra.");
         } else {
             receiptService.resolveMissing(command);
-            redirect.addFlashAttribute("operationMessage", "Investigation recorded. Confirmed loss awaits financial settlement.");
+            redirect.addFlashAttribute("operationMessage", "Đã ghi nhận kết quả điều tra. Trường hợp thất lạc sẽ chờ xử lý tài chính.");
         }
         return "redirect:/manager/incidents/missing";
     }

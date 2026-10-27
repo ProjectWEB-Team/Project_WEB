@@ -1,28 +1,28 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Origin Hub Return Collection | UTEExpress</title>
+    <title>Nhận lại hàng hoàn tại hub | UTEExpress</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
 <jsp:include page="/WEB-INF/views/layout/navbar.jsp" />
 <main class="container py-4 ute-page-narrow">
-    <h1 class="h3 mb-4">Origin Hub Return Self-Pickup</h1>
+    <h1 class="h3 mb-4">Người gửi nhận lại hàng hoàn tại hub gốc</h1>
 
     <c:if test="${not empty successMessage}">
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <c:out value="${successMessage}"/>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
         </div>
     </c:if>
     <c:if test="${not empty errorMessage}">
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <c:out value="${errorMessage}"/>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
         </div>
     </c:if>
 
@@ -32,14 +32,14 @@
                 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
                 <input type="hidden" name="handoverType" value="SELF_PICKUP"/>
                 <div class="mb-3">
-                    <label for="shipmentId" class="form-label">Shipment ID</label>
+                    <label for="shipmentId" class="form-label">ID đơn</label>
                     <input type="number" class="form-control" id="shipmentId" name="shipmentId" required>
                 </div>
                 <div class="mb-3">
-                    <label for="identityProof" class="form-label">Identity Proof / OTP</label>
-                    <input type="text" class="form-control" id="identityProof" name="identityProof" placeholder="Citizen ID or Pickup OTP" required>
+                    <label for="identityProof" class="form-label">Giấy tờ / mã OTP</label>
+                    <input type="text" class="form-control" id="identityProof" name="identityProof" placeholder="Số CCCD hoặc mã OTP nhận hàng" required>
                 </div>
-                <button type="submit" class="btn btn-primary w-100">Collect Returned Package</button>
+                <button type="submit" class="btn btn-primary w-100">Trả hàng hoàn cho người gửi</button>
             </form>
         </div>
     </div>

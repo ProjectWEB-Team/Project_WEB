@@ -35,29 +35,29 @@ public class DriverOperationsController {
     @PostMapping("/driver/handovers/accept")
     public String accept(@RequestParam Long handoverId, @RequestParam Long vehicleId, RedirectAttributes redirect) {
         linehaulTripService.acceptHandover(handoverId, vehicleId);
-        redirect.addFlashAttribute("operationMessage", "Assigned handover accepted for linehaul.");
+        redirect.addFlashAttribute("operationMessage", "Đã nhận bàn giao để chạy chuyến.");
         return "redirect:/driver";
     }
 
     @PostMapping("/driver/trips/start")
     public String start(@RequestParam Long tripId, RedirectAttributes redirect) {
         linehaulTripService.startTrip(tripId);
-        redirect.addFlashAttribute("operationMessage", "Trip start recorded.");
+        redirect.addFlashAttribute("operationMessage", "Đã bắt đầu chuyến.");
         return "redirect:/driver";
     }
 
     @PostMapping("/driver/trips/arrive")
     public String arrive(@RequestParam Long tripId, RedirectAttributes redirect) {
         linehaulTripService.arriveTrip(tripId);
-        redirect.addFlashAttribute("operationMessage", "Destination arrival recorded; inbound receipt remains required.");
+        redirect.addFlashAttribute("operationMessage", "Đã báo tới nơi; hub đích vẫn cần xác nhận nhận hàng.");
         return "redirect:/driver";
     }
 
     @PostMapping("/driver/trips/delay")
     public String delay(@Valid @ModelAttribute TripDelayCommand command, BindingResult errors, RedirectAttributes redirect) {
-        if (errors.hasErrors()) { redirect.addFlashAttribute("operationMessage", "Enter a bounded trip-delay note."); return "redirect:/driver"; }
+        if (errors.hasErrors()) { redirect.addFlashAttribute("operationMessage", "Nhập ghi chú trễ chuyến (không quá dài)."); return "redirect:/driver"; }
         linehaulTripService.reportTripDelay(command);
-        redirect.addFlashAttribute("operationMessage", "Trip-delay evidence recorded.");
+        redirect.addFlashAttribute("operationMessage", "Đã ghi nhận chuyến bị trễ.");
         return "redirect:/driver";
     }
 

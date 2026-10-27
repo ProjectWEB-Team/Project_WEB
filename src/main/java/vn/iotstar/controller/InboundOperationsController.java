@@ -29,17 +29,17 @@ public class InboundOperationsController {
 
     @PostMapping("/receive")
     public String receive(@Valid @ModelAttribute DestinationReceiptCommand command, BindingResult errors, RedirectAttributes redirect) {
-        if (errors.hasErrors()) { redirect.addFlashAttribute("operationMessage", "Enter valid arrival, container and shipment identifiers."); return "redirect:/hub/inbound"; }
+        if (errors.hasErrors()) { redirect.addFlashAttribute("operationMessage", "Nhập đúng ID chuyến, bao và đơn hàng."); return "redirect:/hub/inbound"; }
         destinationReceiptService.receiveItem(command);
-        redirect.addFlashAttribute("operationMessage", "Destination receipt recorded.");
+        redirect.addFlashAttribute("operationMessage", "Đã ghi nhận nhận hàng tại hub đích.");
         return "redirect:/hub/inbound";
     }
 
     @PostMapping("/reconcile")
     public String reconcile(@Valid @ModelAttribute DestinationReconciliationCommand command, BindingResult errors, RedirectAttributes redirect) {
-        if (errors.hasErrors()) { redirect.addFlashAttribute("operationMessage", "Enter valid reconciliation scans."); return "redirect:/hub/inbound"; }
+        if (errors.hasErrors()) { redirect.addFlashAttribute("operationMessage", "Nhập đúng kết quả quét để đối chiếu."); return "redirect:/hub/inbound"; }
         destinationReceiptService.reconcileContainer(command);
-        redirect.addFlashAttribute("operationMessage", "Container reconciliation recorded.");
+        redirect.addFlashAttribute("operationMessage", "Đã ghi nhận đối chiếu bao.");
         return "redirect:/hub/inbound";
     }
 
@@ -47,10 +47,10 @@ public class InboundOperationsController {
     public String reconcileEmpty(@RequestParam Long handoverId, @RequestParam Long containerId,
                                  @RequestParam(defaultValue = "false") boolean confirmAllMissing, RedirectAttributes redirect) {
         if (!confirmAllMissing) {
-            redirect.addFlashAttribute("operationMessage", "Confirm that no expected parcel was physically received.");
+            redirect.addFlashAttribute("operationMessage", "Hãy xác nhận là không nhận được kiện nào trong danh sách.");
         } else {
             destinationReceiptService.reconcileContainer(new DestinationReconciliationCommand(handoverId, containerId, java.util.List.of()));
-            redirect.addFlashAttribute("operationMessage", "Missing container contents recorded for investigation.");
+            redirect.addFlashAttribute("operationMessage", "Đã ghi nhận bao thiếu hàng để điều tra.");
         }
         return "redirect:/hub/inbound";
     }

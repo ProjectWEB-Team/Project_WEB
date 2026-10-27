@@ -18,9 +18,9 @@ public class DriverHandoverController {
     public DriverHandoverController(ContainerHandoverService containerHandoverService) { this.containerHandoverService = containerHandoverService; }
     @PostMapping("/scan")
     public String scan(@Valid @ModelAttribute ScanHandoverContainerCommand command, BindingResult errors, RedirectAttributes redirect) {
-        if (errors.hasErrors()) { redirect.addFlashAttribute("operationMessage", "Enter valid handover and container identifiers."); return "redirect:/driver"; }
+        if (errors.hasErrors()) { redirect.addFlashAttribute("operationMessage", "Nhập đúng ID phiếu bàn giao và bao."); return "redirect:/driver"; }
         containerHandoverService.scanAndAccept(command);
-        redirect.addFlashAttribute("operationMessage", "Container scan recorded.");
+        redirect.addFlashAttribute("operationMessage", "Đã ghi nhận quét bao.");
         return "redirect:/driver";
     }
 }

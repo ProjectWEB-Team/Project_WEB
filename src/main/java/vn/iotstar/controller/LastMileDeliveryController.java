@@ -41,12 +41,12 @@ public class LastMileDeliveryController {
                                   BindingResult bindingResult,
                                   RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Validation error: invalid scan parameters");
+            redirectAttributes.addFlashAttribute("errorMessage", "Thông tin quét chưa hợp lệ.");
             return "redirect:/shipper/delivery-tasks";
         }
         try {
             lastMileDeliveryService.scanForDelivery(request);
-            redirectAttributes.addFlashAttribute("successMessage", "Shipment scanned successfully into OUT_FOR_DELIVERY");
+            redirectAttributes.addFlashAttribute("successMessage", "Đã quét, đơn chuyển sang đang giao.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", FlashMessages.of(e));
         }
@@ -58,12 +58,12 @@ public class LastMileDeliveryController {
                                    BindingResult bindingResult,
                                    RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Validation error: invalid collection parameters");
+            redirectAttributes.addFlashAttribute("errorMessage", "Thông tin thu tiền chưa hợp lệ.");
             return "redirect:/shipper/delivery-tasks";
         }
         try {
             lastMileDeliveryService.recordCollection(request);
-            redirectAttributes.addFlashAttribute("successMessage", "Payment collection recorded successfully");
+            redirectAttributes.addFlashAttribute("successMessage", "Đã ghi nhận thu tiền.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", FlashMessages.of(e));
         }
@@ -75,7 +75,7 @@ public class LastMileDeliveryController {
                                   RedirectAttributes redirectAttributes) {
         try {
             lastMileDeliveryService.confirmDelivery(shipmentId);
-            redirectAttributes.addFlashAttribute("successMessage", "Shipment confirmed DELIVERED");
+            redirectAttributes.addFlashAttribute("successMessage", "Đã xác nhận giao thành công.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", FlashMessages.of(e));
         }
@@ -87,12 +87,12 @@ public class LastMileDeliveryController {
                                 BindingResult bindingResult,
                                 RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Validation error: invalid failure parameters");
+            redirectAttributes.addFlashAttribute("errorMessage", "Thông tin giao không thành công chưa hợp lệ.");
             return "redirect:/shipper/delivery-tasks";
         }
         try {
             lastMileDeliveryService.recordFailure(request);
-            redirectAttributes.addFlashAttribute("successMessage", "Delivery failure recorded");
+            redirectAttributes.addFlashAttribute("successMessage", "Đã ghi nhận giao không thành công.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", FlashMessages.of(e));
         }
@@ -119,7 +119,7 @@ public class LastMileDeliveryController {
                                         RedirectAttributes redirectAttributes) {
         try {
             lastMileDeliveryService.confirmReturnDelivery(shipmentId);
-            redirectAttributes.addFlashAttribute("successMessage", "Return delivery confirmed completed");
+            redirectAttributes.addFlashAttribute("successMessage", "Đã xác nhận trả hàng hoàn.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", FlashMessages.of(e));
         }
@@ -131,12 +131,12 @@ public class LastMileDeliveryController {
                                         BindingResult bindingResult,
                                         RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Validation error on return pickup");
+            redirectAttributes.addFlashAttribute("errorMessage", "Thông tin nhận hàng hoàn chưa hợp lệ.");
             return "redirect:/hub/return-collection";
         }
         try {
             lastMileDeliveryService.processReturnHandover(request);
-            redirectAttributes.addFlashAttribute("successMessage", "Return parcel collected successfully");
+            redirectAttributes.addFlashAttribute("successMessage", "Đã trả hàng hoàn cho người gửi.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", FlashMessages.of(e));
         }
