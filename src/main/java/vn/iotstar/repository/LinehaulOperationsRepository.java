@@ -45,5 +45,18 @@ public class LinehaulOperationsRepository {
         return entityManager.createQuery("select ci from ContainerItem ci join fetch ci.shipment s join HandoverContainer hc on hc.container = ci.container where hc.handover.id = :id order by s.id", ContainerItem.class)
                 .setParameter("id", handoverId).setLockMode(LockModeType.PESSIMISTIC_WRITE).getResultList();
     }
+    /** Picker rows for the driver page. */
+    public List<Object[]> driverHandoverPicks(String username) {
+        return entityManager.createQuery("select h.id, h.fromHub.code, h.toHub.code from Handover h where h.receiverDriver.username = :u and h.status in ('PENDING_ACCEPTANCE','ACCEPTED') order by h.id desc", Object[].class)
+                .setParameter("u", username).setMaxResults(50).getResultList();
+    }
+    public List<Object[]> driverContainerPicks(String username) {
+        return entityManager.createQuery("select hc.handover.id, hc.container.id, hc.container.containerCode from HandoverContainer hc where hc.handover.receiverDriver.username = :u and hc.handover.status = 'PENDING_ACCEPTANCE' and hc.status = 'EXPECTED' order by hc.handover.id desc, hc.container.id", Object[].class)
+                .setParameter("u", username).setMaxResults(200).getResultList();
+    }
+    public List<Object[]> driverTripPicks(String username) {
+        return entityManager.createQuery("select t.id, t.tripCode, t.status, t.destinationHub.code from TransportTrip t where t.driver.username = :u and t.status in ('SCHEDULED','IN_TRANSIT','ARRIVED') order by t.id desc", Object[].class)
+                .setParameter("u", username).setMaxResults(50).getResultList();
+    }
     public void persist(Object entity) { entityManager.persist(entity); }
 }

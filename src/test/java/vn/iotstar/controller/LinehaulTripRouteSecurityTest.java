@@ -25,6 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class LinehaulTripRouteSecurityTest {
     @Autowired private MockMvc mockMvc;
     @MockBean private LinehaulTripService linehaulTripService;
+    @MockBean private vn.iotstar.repository.LinehaulOperationsRepository linehaulOperationsRepository;
     @MockBean private JwtService jwtService;
     @MockBean private UserDetailsService userDetailsService;
     @Test void anonymousDriverWorkspaceRedirectsToLogin() throws Exception { mockMvc.perform(get("/driver")).andExpect(status().is3xxRedirection()); }

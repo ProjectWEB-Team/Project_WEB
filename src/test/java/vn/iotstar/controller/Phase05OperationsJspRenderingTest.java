@@ -50,6 +50,7 @@ class Phase05OperationsJspRenderingTest {
     @MockBean JwtService jwt;
     @MockBean ManagerOperationsService managers;
     @MockBean LinehaulTripService trips;
+    @MockBean vn.iotstar.repository.LinehaulOperationsRepository linehaulOps;
     @MockBean DestinationReceiptService receipts;
     @MockBean HubOperationsService hubs;
     @MockBean OperationsAuditService audits;

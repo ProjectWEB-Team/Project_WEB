@@ -23,10 +23,18 @@ import vn.iotstar.service.LinehaulTripService;
 public class DriverOperationsController {
     private final LinehaulTripService linehaulTripService;
 
-    public DriverOperationsController(LinehaulTripService linehaulTripService) { this.linehaulTripService = linehaulTripService; }
+    private final vn.iotstar.repository.LinehaulOperationsRepository picks;
+
+    public DriverOperationsController(LinehaulTripService linehaulTripService, vn.iotstar.repository.LinehaulOperationsRepository picks) {
+        this.linehaulTripService = linehaulTripService; this.picks = picks;
+    }
 
     @GetMapping("/driver")
-    public String trips(Model model) {
+    public String trips(Model model, java.security.Principal principal) {
+        String me = principal == null ? "" : principal.getName();
+        model.addAttribute("handoverPicks", picks.driverHandoverPicks(me));
+        model.addAttribute("containerPicks", picks.driverContainerPicks(me));
+        model.addAttribute("tripPicks", picks.driverTripPicks(me));
         model.addAttribute("vehicles", linehaulTripService.availableVehicles());
         if (!model.containsAttribute("tripDelayCommand")) model.addAttribute("tripDelayCommand", new TripDelayCommand(null, null, null));
         return "driver/trips";
