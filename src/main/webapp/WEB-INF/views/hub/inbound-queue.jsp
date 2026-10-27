@@ -6,6 +6,17 @@
 <main class="container">
 <h1>Nhận hàng tại hub đích</h1>
 <c:if test="${not empty operationMessage}"><p><c:out value="${operationMessage}"/></p></c:if>
+<h2>Phiếu bàn giao đang chờ nhận <c:if test="${not empty handoverPicks}">(<c:out value="${handoverPicks.size()}"/>)</c:if></h2>
+<c:choose>
+  <c:when test="${empty handoverPicks}"><p class="text-muted">Chưa có phiếu nào đang trên đường tới bưu cục của bạn.</p></c:when>
+  <c:otherwise>
+    <table><thead><tr><th>Phiếu</th><th>Từ bưu cục</th><th>Số bao</th></tr></thead><tbody>
+    <c:forEach items="${handoverPicks}" var="h">
+      <tr><td>#<c:out value="${h[0]}"/></td><td><c:out value="${h[1]}"/></td>
+        <td><c:set var="n" value="0"/><c:forEach items="${containerPicks}" var="cp"><c:if test="${cp[0] == h[0]}"><c:set var="n" value="${n + 1}"/></c:if></c:forEach><c:out value="${n}"/></td></tr>
+    </c:forEach></tbody></table>
+  </c:otherwise>
+</c:choose>
 <form method="post" action="${pageContext.request.contextPath}/hub/inbound/receive">
   <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
   <label>Bàn giao <select name="handoverId" required><option value="">Chọn phiếu</option><c:forEach items="${handoverPicks}" var="p"><option value="${p[0]}">#<c:out value="${p[0]}"/> từ <c:out value="${p[1]}"/></option></c:forEach></select></label>

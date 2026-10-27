@@ -29,16 +29,16 @@
                     <c:if test="${googleLoginEnabled}">
                         <a class="btn btn-outline-secondary w-100 mb-3" href="${pageContext.request.contextPath}/oauth2/authorization/google">Đăng nhập bằng Google</a>
                     </c:if>
-                    <details class="border-top pt-3 mt-1">
-                        <summary class="text-ute-primary">Đăng nhập bằng mật khẩu</summary>
+                    <section class="ute-password-login" aria-labelledby="pw-title">
+                        <h2 id="pw-title" class="h6 text-muted mb-0">Hoặc đăng nhập bằng mật khẩu</h2>
                         <form method="post" action="${pageContext.request.contextPath}/login" class="mt-3">
                             <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                             <div class="mb-3"><label class="form-label" for="username">Tên đăng nhập</label><input class="form-control" id="username" name="username" type="text" autocomplete="username" required></div>
                             <div class="mb-4"><label class="form-label" for="password">Mật khẩu</label><input class="form-control" id="password" name="password" type="password" autocomplete="current-password" required></div>
-                            <button class="btn btn-outline-primary w-100" type="submit">Đăng nhập</button>
+                            <button class="btn btn-primary w-100" type="submit">Đăng nhập</button>
                         </form>
                         <p class="small mt-2 mb-0"><a href="${pageContext.request.contextPath}/auth/forgot-password">Quên mật khẩu?</a></p>
-                    </details>
+                    </section>
                     <p class="text-center small mb-0 mt-4">Chưa có tài khoản? <a href="${pageContext.request.contextPath}/register">Đăng ký</a></p>
                 </div>
             </section>

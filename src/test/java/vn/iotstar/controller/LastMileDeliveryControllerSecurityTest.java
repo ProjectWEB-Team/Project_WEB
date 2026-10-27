@@ -28,6 +28,7 @@ class LastMileDeliveryControllerSecurityTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @MockBean private vn.iotstar.repository.HubRepository hubRepository;
     @MockBean
     private LastMileDeliveryService lastMileDeliveryService;
 

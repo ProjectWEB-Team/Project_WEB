@@ -137,6 +137,7 @@
                     <dt>Cước phí đã báo</dt><dd data-summary="fee"></dd>
                 </dl>
             </div>
+            <c:if test="${empty quote}"><div class="alert alert-warning mt-3" role="status">Bạn cần xem báo giá trước khi tạo đơn. <button type="submit" formaction="${pageContext.request.contextPath}/user/shipments/quote" class="btn btn-ute-accent ms-sm-2 mt-2 mt-sm-0">Xem báo giá rồi tạo đơn</button></div></c:if>
             <c:if test="${not empty quote}"><button id="shipment-create-button" type="submit" class="btn btn-ute-accent">Xác nhận tạo vận đơn</button></c:if>
         </section>
         <div id="shipment-step-actions" hidden>

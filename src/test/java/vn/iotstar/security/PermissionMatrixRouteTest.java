@@ -171,6 +171,7 @@ class PermissionMatrixRouteTest {
             new Route("POST", "/shipper/delivery-tasks/scan", SHIPPER),
             new Route("POST", "/shipper/delivery-tasks/collect", SHIPPER),
             new Route("POST", "/shipper/delivery-tasks/confirm", SHIPPER),
+            new Route("POST", "/shipper/delivery-tasks/deliver", SHIPPER),
             new Route("POST", "/shipper/delivery-tasks/failure", SHIPPER),
             new Route("GET", "/shipper/return-tasks", SHIPPER),
             new Route("POST", "/shipper/return-tasks/scan", SHIPPER),

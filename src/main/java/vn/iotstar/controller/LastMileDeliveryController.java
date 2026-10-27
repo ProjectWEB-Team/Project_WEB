@@ -25,14 +25,18 @@ public class LastMileDeliveryController {
 
     private final LastMileDeliveryService lastMileDeliveryService;
 
-    public LastMileDeliveryController(LastMileDeliveryService lastMileDeliveryService) {
+    private final vn.iotstar.repository.HubRepository hubs;
+
+    public LastMileDeliveryController(LastMileDeliveryService lastMileDeliveryService, vn.iotstar.repository.HubRepository hubs) {
         this.lastMileDeliveryService = lastMileDeliveryService;
+        this.hubs = hubs;
     }
 
     @GetMapping("/shipper/delivery-tasks")
     public String listDeliveryTasks(Model model) {
         List<DeliveryTaskResponse> tasks = lastMileDeliveryService.getAssignedDeliveryTasks();
         model.addAttribute("tasks", tasks);
+        model.addAttribute("hubs", hubs.findByStatusOrderByCode("ACTIVE"));
         return "shipper/delivery-tasks";
     }
 
@@ -64,6 +68,24 @@ public class LastMileDeliveryController {
         try {
             lastMileDeliveryService.recordCollection(request);
             redirectAttributes.addFlashAttribute("successMessage", "Đã ghi nhận thu tiền.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", FlashMessages.of(e));
+        }
+        return "redirect:/shipper/delivery-tasks";
+    }
+
+    /** One tap for the shipper: record what was collected, then confirm the delivery. */
+    @PostMapping("/shipper/delivery-tasks/deliver")
+    public String deliver(@Valid @ModelAttribute("collectionRequest") DeliveryCollectionRequest request,
+                          BindingResult bindingResult, RedirectAttributes redirectAttributes) {
+        if (bindingResult.hasErrors()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Thông tin thu tiền chưa hợp lệ.");
+            return "redirect:/shipper/delivery-tasks";
+        }
+        try {
+            lastMileDeliveryService.recordCollection(request);
+            lastMileDeliveryService.confirmDelivery(request.getShipmentId());
+            redirectAttributes.addFlashAttribute("successMessage", "Đã thu tiền và xác nhận giao thành công.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", FlashMessages.of(e));
         }

@@ -30,7 +30,17 @@
       <td><input class="form-control" aria-label="Số tiền thực tế" type="number" min="0" step="1" required name="items[${row.index}].actualAmount"></td>
       <td><input class="form-control" aria-label="Ghi chú" maxlength="255" name="items[${row.index}].note"></td>
     </tr></c:forEach></tbody></table></div>
+    <button type="button" class="btn btn-outline-secondary me-2" id="fill-expected">Điền đủ số tiền kỳ vọng</button>
     <button class="btn btn-primary">Xác nhận đối soát</button>
+    <script>
+      document.getElementById('fill-expected').addEventListener('click', function () {
+        document.querySelectorAll('input[name$=".actualAmount"]').forEach(function (input) {
+          var expected = input.closest('tr').children[2].textContent.trim();
+          var n = Math.round(parseFloat(expected));
+          if (!isNaN(n)) input.value = n;
+        });
+      });
+    </script>
   </form></c:if>
   <h2 class="h4 mt-4">COD đã đối soát, chờ trả người gửi</h2>
   <c:forEach items="${readyForPayout}" var="item">
