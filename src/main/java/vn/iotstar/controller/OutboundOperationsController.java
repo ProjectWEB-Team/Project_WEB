@@ -22,7 +22,12 @@ import java.util.List;
 @RequestMapping("/hub/outbound")
 public class OutboundOperationsController {
     private final ContainerHandoverService containerHandoverService;
-    public OutboundOperationsController(ContainerHandoverService containerHandoverService) { this.containerHandoverService = containerHandoverService; }
+    private final vn.iotstar.repository.HubRepository hubs;
+    private final vn.iotstar.repository.UserRepository users;
+    public OutboundOperationsController(ContainerHandoverService containerHandoverService, vn.iotstar.repository.HubRepository hubs,
+                                        vn.iotstar.repository.UserRepository users) {
+        this.containerHandoverService = containerHandoverService; this.hubs = hubs; this.users = users;
+    }
 
     @GetMapping
     public String queue(Model model) {
@@ -30,6 +35,8 @@ public class OutboundOperationsController {
         if (!model.containsAttribute("loadContainerCommand")) model.addAttribute("loadContainerCommand", new LoadContainerCommand(null, null));
         if (!model.containsAttribute("createHandoverCommand")) model.addAttribute("createHandoverCommand", new CreateHandoverCommand(null, null, List.of()));
         if (!model.containsAttribute("correctHandoverCommand")) model.addAttribute("correctHandoverCommand", new CorrectHandoverCommand(null, List.of()));
+        model.addAttribute("hubs", hubs.findByStatusOrderByCode("ACTIVE"));
+        model.addAttribute("drivers", users.findByRoleAndStatusOrderByFullName(vn.iotstar.entity.UserRole.ROLE_LINEHAUL_DRIVER, "ACTIVE"));
         return "hub/outbound-queue";
     }
 

@@ -30,6 +30,8 @@ import org.springframework.security.test.context.support.WithMockUser;
 class HandoverControllerSecurityTest {
     @Autowired private MockMvc mockMvc;
     @MockBean private ContainerHandoverService containerHandoverService;
+    @MockBean private vn.iotstar.repository.HubRepository hubRepository;
+    @MockBean private vn.iotstar.repository.UserRepository userRepository;
     @MockBean private JwtService jwtService;
     @MockBean private UserDetailsService userDetailsService;
 
