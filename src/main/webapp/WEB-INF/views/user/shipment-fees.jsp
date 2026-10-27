@@ -13,6 +13,7 @@
     <link href="${pageContext.request.contextPath}/assets/css/ute-express.css" rel="stylesheet">
 </head>
 <body class="bg-ute-canvas">
+<jsp:include page="/WEB-INF/views/layout/navbar.jsp" />
 <main class="container shipment-form-container py-4">
     <nav class="d-flex flex-wrap gap-2 mb-4" aria-label="Điều hướng vận đơn">
         <a class="btn btn-outline-secondary" href="${pageContext.request.contextPath}/user/shipments/${fees.shipmentId()}">← Quay lại chi tiết vận đơn</a>

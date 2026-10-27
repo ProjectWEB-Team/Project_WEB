@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html><html lang="en"><head><title>Missing parcel investigation</title></head><body>
+<jsp:include page="/WEB-INF/views/layout/navbar.jsp" />
 <h1>Missing parcel investigation</h1>
 <c:if test="${not empty operationMessage}"><p><c:out value="${operationMessage}"/></p></c:if>
 <c:forEach items="${cases}" var="item"><p><a href="${pageContext.request.contextPath}/manager/incidents/missing/${item.incidentId}">Incident #<c:out value="${item.incidentId}"/></a> — Shipment #<c:out value="${item.shipmentId}"/></p></c:forEach>

@@ -8,6 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
+<jsp:include page="/WEB-INF/views/layout/navbar.jsp" />
 <main class="container py-4">
     <h1 class="h3">Hub sorter workspace</h1>
     <p class="text-muted">Receive at your assigned hub, then request the server-derived static next hop.</p>

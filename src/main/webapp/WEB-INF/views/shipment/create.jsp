@@ -16,6 +16,7 @@
     <script src="${pageContext.request.contextPath}/assets/js/shipment-address.js" defer></script>
 </head>
 <body class="bg-ute-canvas">
+<jsp:include page="/WEB-INF/views/layout/navbar.jsp" />
 <main class="container shipment-form-container py-4">
     <a class="d-inline-block text-ute-primary fw-bold text-decoration-none mb-3" href="${pageContext.request.contextPath}/">UTEExpress</a>
     <h1 class="h3 mb-1">Tạo vận đơn</h1>

@@ -11,6 +11,7 @@
     <link href="${pageContext.request.contextPath}/assets/css/ute-express.css" rel="stylesheet">
 </head>
 <body class="bg-ute-canvas">
+<jsp:include page="/WEB-INF/views/layout/navbar.jsp" />
 <main class="container py-5">
     <div class="row justify-content-center">
         <div class="col-12 col-md-8 col-lg-6">

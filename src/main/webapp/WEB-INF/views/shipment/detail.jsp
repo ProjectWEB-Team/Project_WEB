@@ -12,6 +12,7 @@
     <link href="${pageContext.request.contextPath}/assets/css/ute-express.css" rel="stylesheet">
 </head>
 <body class="bg-ute-canvas">
+<jsp:include page="/WEB-INF/views/layout/navbar.jsp" />
 <main class="container py-4" style="max-width: 860px">
     <a class="btn btn-outline-secondary btn-sm mb-3" href="${pageContext.request.contextPath}/user/shipments">Đơn đã gửi</a>
     <a class="btn btn-outline-secondary btn-sm mb-3" href="${pageContext.request.contextPath}/user/shipments/create">Tạo đơn khác</a>

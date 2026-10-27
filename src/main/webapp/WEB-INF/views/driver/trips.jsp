@@ -2,7 +2,8 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
 <html lang="en"><head><title>Driver trips</title><link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/ute-express.css"></head>
-<body><main class="container py-4"><h1>Assigned linehaul trips</h1>
+<body>
+<jsp:include page="/WEB-INF/views/layout/navbar.jsp" /><main class="container py-4"><h1>Assigned linehaul trips</h1>
 <c:if test="${not empty operationMessage}"><div class="alert alert-info"><c:out value="${operationMessage}"/></div></c:if>
 <p>Actions are permitted only for your assigned, accepted custody. Arrival does not complete destination receipt.</p>
 <form method="post" action="${pageContext.request.contextPath}/driver/handovers/scan"><input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/><label>Handover id <input name="handoverId" type="number" required></label><label>Container id <input name="containerId" type="number" required></label><button type="submit">Scan container</button></form>

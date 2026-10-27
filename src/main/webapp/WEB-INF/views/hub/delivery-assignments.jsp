@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html><html lang="vi"><head><title>Phân công giao hàng</title></head><body>
+<jsp:include page="/WEB-INF/views/layout/navbar.jsp" />
 <h1>Phân công giao / hoàn hàng</h1>
 <c:forEach items="${candidates}" var="item"><form method="post" action="${pageContext.request.contextPath}/hub/delivery-assignments">
 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">

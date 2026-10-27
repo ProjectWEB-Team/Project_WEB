@@ -2,7 +2,8 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
 <html lang="en"><head><title>Outbound custody</title><link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/ute-express.css"></head>
-<body><main class="container py-4"><h1>Outbound container custody</h1>
+<body>
+<jsp:include page="/WEB-INF/views/layout/navbar.jsp" /><main class="container py-4"><h1>Outbound container custody</h1>
 <c:if test="${not empty operationMessage}"><div class="alert alert-info"><c:out value="${operationMessage}"/></div></c:if>
 <p>All hub, route, driver and custody checks are completed server-side.</p>
 <form method="post" action="${pageContext.request.contextPath}/hub/outbound/containers"><input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/><label>Container code <input name="containerCode" required></label><label>Destination hub id <input name="destinationHubId" type="number" required></label><button type="submit">Create container</button></form>

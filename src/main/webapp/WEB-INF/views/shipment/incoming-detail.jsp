@@ -11,6 +11,7 @@
     <link href="${pageContext.request.contextPath}/assets/css/ute-express.css" rel="stylesheet">
 </head>
 <body class="bg-ute-canvas">
+<jsp:include page="/WEB-INF/views/layout/navbar.jsp" />
 <main class="container py-4" style="max-width: 960px">
     <c:if test="${not empty message}"><div class="alert alert-success" role="status"><c:out value="${message}"/></div></c:if>
     <c:if test="${not empty error}"><div class="alert alert-danger" role="alert"><c:out value="${error}"/></div></c:if>

@@ -9,6 +9,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
+<jsp:include page="/WEB-INF/views/layout/navbar.jsp" />
 <main class="container py-4 ute-page-narrow">
     <h1 class="h3 mb-4">Origin Hub Return Self-Pickup</h1>
 
