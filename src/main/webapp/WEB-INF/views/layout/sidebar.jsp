@@ -62,6 +62,7 @@
         <c:if test="${rq.isUserInRole('ADMIN')}">
             <ul class="nav flex-column small">
                 <li class="nav-item"><a class="nav-link py-1 text-ute-dark" href="${ctx}/admin/users"><i class="bi bi-people me-2 text-secondary"></i>Người dùng và nhân viên</a></li>
+                <li class="nav-item"><a class="nav-link py-1 text-ute-dark" href="${ctx}/admin/pricing"><i class="bi bi-tag me-2 text-secondary"></i>Bảng giá cước</a></li>
                 <li class="nav-item"><a class="nav-link py-1 text-ute-dark" href="${ctx}/admin/withdrawals"><i class="bi bi-bank me-2 text-secondary"></i>Duyệt lệnh rút tiền</a></li>
             </ul>
         </c:if>
