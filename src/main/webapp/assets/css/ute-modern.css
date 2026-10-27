@@ -288,3 +288,16 @@ main .ute-tablist button[aria-selected="true"] { background: var(--ink) !importa
 .ute-route-arrow { text-align: center; font-weight: 700; color: var(--muted); line-height: 1.6; }
 .ute-mock p { margin: 0 0 0.6rem; }
 @media (max-width: 991.98px) { .ute-tabpanel { grid-template-columns: 1fr; gap: 1.5rem; padding: 1.25rem; } .ute-topbar-inner { padding: 0.45rem 16px; } }
+
+/* Public price page */
+.ute-pricing { max-width: 1100px; }
+.ute-pricing h2 { font-size: 1.4rem; margin: 0 0 1rem; }
+.ute-estimate { background: var(--surface); border-radius: 20px; padding: 1.75rem; margin: 2rem 0 3rem; }
+main .ute-estimate-form { background: transparent !important; padding: 0 !important; margin: 0 !important; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0 1rem; align-items: end; }
+.ute-estimate-form label { display: flex; margin: 0 0 1rem; }
+.ute-estimate-form .btn { margin-bottom: 1rem; }
+.ute-estimate-result { background: var(--ground); border-radius: 14px; padding: 1.25rem; margin-top: 0.5rem; }
+.ute-estimate-label { margin: 0; font-weight: 600; color: var(--muted); }
+.ute-estimate-fee { font-size: 2.5rem; font-weight: 700; letter-spacing: -0.03em; margin: 0.15rem 0 0.5rem; }
+.ute-svc-title { font-size: 1.1rem; margin: 1.75rem 0 0.6rem; letter-spacing: -0.01em; }
+.ute-pricing .table th, .ute-pricing .table td { white-space: nowrap; }

@@ -118,4 +118,6 @@ Mở http://localhost:8081. Tài khoản demo: `demo_admin`, `demo_manager`, `de
 - Thẻ ví dụ trang theo dõi (bên phải đầu trang) có thêm nhãn trạng thái, nơi gửi, nơi nhận, dịch vụ, tiền thu hộ COD.
 - Tham khảo spx.vn và các trang giao nhận khác về bố cục (thanh thông tin, ô tra cứu nổi bật, dịch vụ, các bước, câu hỏi thường gặp); mình **không** sao chép nhận diện hay nội dung của họ. Mình chưa tải trang spx.vn để đối chiếu từng chi tiết.
 
+**Thêm cuối ngày:** trang công khai **Bảng giá cước** (`/pricing`, không cần đăng nhập): ô ước tính cước nhanh (dịch vụ, tuyến, khối lượng, giá trị khai báo, COD) dùng đúng công thức tạo đơn, và bảng giá đang áp dụng chia theo 3 dịch vụ. Mã: `PublicPricingController`, `service/impl/PublicPricingService`, `pricing/public.jsp`; đã mở quyền công khai ở `SecurityConfig` và thêm dòng vào ma trận quyền. Thanh menu công khai thêm: Bảng giá, Dịch vụ, Cách gửi hàng, Hỏi đáp, Liên hệ. Theo yêu cầu của bạn, đợt này chỉ sửa giao diện và **không chạy lại test** (lần chạy đủ gần nhất: 1932 đạt, trước các thay đổi này). Nhớ chạy lại `mvn test` đầy đủ trước khi push.
+
 **Chưa làm (bạn có thể giao tiếp cho phiên sau):** xem mục 4 và mục 5 ở trên. Nếu quota hết giữa chừng, tình trạng nhánh luôn nằm ở `git log -1` và `git status` (không có file dở khi báo cáo này được cập nhật).

@@ -27,6 +27,13 @@
         <div class="collapse navbar-collapse" id="uteNav">
             <ul class="navbar-nav">
                 <u:navlink href="/tracking">Tra cứu</u:navlink>
+                <u:navlink href="/pricing">Bảng giá</u:navlink>
+                <c:if test="${empty me}">
+                    <li class="nav-item"><a class="nav-link" href="${ctx}/#services-title">Dịch vụ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="${ctx}/#how-title">Cách gửi hàng</a></li>
+                    <li class="nav-item"><a class="nav-link" href="${ctx}/#faq">Hỏi đáp</a></li>
+                    <li class="nav-item"><a class="nav-link" href="mailto:support@uteexpress.edu.vn">Liên hệ</a></li>
+                </c:if>
                 <c:if test="${pageContext.request.isUserInRole('USER')}">
                     <u:navlink href="/user/shipments/create">Tạo đơn</u:navlink>
                     <u:navlink href="/user/shipments">Đơn của tôi</u:navlink>

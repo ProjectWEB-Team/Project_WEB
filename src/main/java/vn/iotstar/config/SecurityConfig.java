@@ -74,7 +74,7 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider)
                 .authorizeHttpRequests(auth -> auth
                         .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.INCLUDE, DispatcherType.ERROR).permitAll()
-                        .requestMatchers("/", "/home", "/tracking/**", "/calculator/**", "/auth/**", "/login",
+                        .requestMatchers("/", "/home", "/tracking/**", "/pricing", "/calculator/**", "/auth/**", "/login",
                                 "/register", "/oauth2/authorization/google", "/login/oauth2/code/google",
                                 "/assets/**", "/webjars/**", "/error").permitAll()
                         .requestMatchers("/ws", "/ws/**").authenticated()

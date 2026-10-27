@@ -24,8 +24,8 @@
                     </div>
                     <div class="ute-action-card">
                         <h2>Muốn gửi hàng?</h2>
-                        <a class="btn btn-ute-accent" href="${ctx}/user/shipments/create">Tạo đơn gửi hàng</a>
-                        <p>Báo giá hiện ngay trước khi bạn xác nhận. Cần đăng nhập để tạo đơn.</p>
+                        <div class="d-flex flex-wrap gap-2"><a class="btn btn-ute-accent" href="${ctx}/user/shipments/create">Tạo đơn gửi hàng</a><a class="btn btn-outline-secondary" href="${ctx}/pricing">Xem bảng giá</a></div>
+                        <p>Báo giá hiện ngay trước khi bạn xác nhận. Cần đăng nhập để tạo đơn; xem bảng giá thì không cần.</p>
                     </div>
                 </div>
             </div>
@@ -55,7 +55,7 @@
     <section class="ute-home-sec" aria-labelledby="services-title">
         <div class="ute-wrap">
             <h2 id="services-title">Chọn dịch vụ phù hợp</h2>
-            <p class="ute-sec-lead">Bạn chọn dịch vụ khi tạo đơn và thấy cước phí ngay, không phải chờ báo giá.</p>
+            <p class="ute-sec-lead">Bạn chọn dịch vụ khi tạo đơn và thấy cước phí ngay. <a href="${ctx}/pricing">Xem bảng giá và ước tính cước</a> không cần đăng nhập.</p>
             <div class="ute-grid-3">
                 <div class="ute-card-plain"><i class="bi bi-box-seam" aria-hidden="true"></i><h3>Tiêu chuẩn</h3><p>Phù hợp phần lớn đơn hàng, cước tính theo vùng, khối lượng và kích thước.</p></div>
                 <div class="ute-card-plain"><i class="bi bi-lightning-charge" aria-hidden="true"></i><h3>Nhanh</h3><p>Dành cho đơn cần đến sớm hơn, chọn ngay khi tạo đơn.</p></div>
