@@ -27,7 +27,7 @@ class ShipmentFinanceServiceImplTest {
     WalletTransactionRepository transactions=mock(WalletTransactionRepository.class);
     ManagerOperationsRepository managers=mock(ManagerOperationsRepository.class);
     EmployeeProfileRepository employees=mock(EmployeeProfileRepository.class);
-    Clock clock=Clock.fixed(Instant.parse("2026-10-25T10:00:00Z"),ZoneId.of("Asia/Ho_Chi_Minh"));
+    Clock clock=Clock.fixed(Instant.parse("2026-10-25T10:00:00Z"),ZoneId.systemDefault());
     ShipmentFinanceServiceImpl service=new ShipmentFinanceServiceImpl(payments,shipments,incidents,events,users,ledger,notifications,outbox,transactions,new FinanceAccess(managers,employees),clock);
     User admin=new User(100L,"admin","hash",UserRole.ROLE_ADMIN,"ACTIVE");
     User sender=new User(1L,"sender","hash",UserRole.ROLE_USER,"ACTIVE");

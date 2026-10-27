@@ -15,6 +15,8 @@ Job `Build and test` không cần secrets. Mật khẩu SQL/JWT xuất hiện tr
 
 Đã kiểm tra qua SSH: Java 21; service `uteexpress` chạy với user `uteexpress`, working directory `/opt/uteexpress`, WAR `/opt/uteexpress/app.war`, cổng nội bộ `127.0.0.1:8080`; có sẵn `curl`, `jq`, `flock`. Secrets ứng dụng ở `/etc/uteexpress.env`.
 
+Đã đăng nhập thử thành công bằng khóa CI riêng và xác minh quyền gọi helper. Hai file cấu hình Nginx mẫu đã qua `nginx -t` với cấu hình kiểm tra riêng trên EC2, chưa áp dụng vào site. Cấu hình app hiện tại vẫn là `prod,demo`; cần hoàn tất bước chuyển sang chạy thật trong `DEPLOY_AWS.md` trước khi phục vụ khách hàng thật.
+
 CI dùng tài khoản SSH riêng `uteexpress-deploy`. Không đưa khóa quản trị `uteexpress-web.pem` vào GitHub. `/opt/uteexpress` và script cài release thuộc root; chỉ thư mục `uploads` cần app được ghi. Pipeline không build trên VPS và không sửa file cấu hình bí mật.
 
 Thiết lập ngày 2026-10-28: đã cài helper và tài khoản triển khai trên EC2; đã lưu hai SSH secrets và các biến host/user/port trên GitHub. `ENABLE_PRODUCTION_DEPLOY` đang là `false`. Tài khoản GitHub hiện có quyền ghi code và secrets, nhưng không có quyền tạo/cấu hình environment qua API hoặc quản trị bảo vệ nhánh; chủ repo cần hoàn tất các mục này. Chưa thay WAR đang phục vụ website.
