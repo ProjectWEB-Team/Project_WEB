@@ -184,10 +184,6 @@ table:not(.table) { width: 100%; border-collapse: collapse; margin-bottom: 1.25r
 .ute-card-plain i { font-size: 1.5rem; color: var(--accent-press); }
 .ute-card-plain h3 { font-size: 1.1rem; margin: 0.75rem 0 0.4rem; letter-spacing: -0.01em; }
 .ute-card-plain p { margin: 0; color: var(--muted); }
-.ute-steps { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.25rem; counter-reset: step; }
-.ute-steps li::before { counter-increment: step; content: counter(step); display: inline-flex; width: 2.25rem; height: 2.25rem; border-radius: 50%; background: var(--ink); color: #fff; justify-content: center; align-items: center; font-weight: 700; margin-bottom: 0.75rem; }
-.ute-steps h3 { font-size: 1.1rem; margin: 0 0 0.35rem; letter-spacing: -0.01em; }
-.ute-steps p { margin: 0; color: var(--muted); }
 .ute-faq-list { max-width: 52rem; }
 .ute-faq-list details { background: var(--surface); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 0.75rem; }
 .ute-faq-list summary { font-weight: 600; cursor: pointer; }
@@ -222,15 +218,13 @@ main .ute-task-form { background: transparent !important; padding: 0 !important;
     .ute-home-hero .ute-wrap { grid-template-columns: 1fr; gap: 2rem; }
     .ute-home-sec { padding: 3rem 0; }
     .ute-grid-3 { grid-template-columns: 1fr; }
-    .ute-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .ute-wrap { padding: 0 16px; }
+        .ute-wrap { padding: 0 16px; }
     main.container, main.container-fluid { padding-top: 1.75rem !important; }
 }
 @media (max-width: 767.98px) {
     .ute-footer-inner { grid-template-columns: 1fr 1fr; padding: 2.5rem 16px 1.5rem; }
     .ute-footer-inner > :first-child { grid-column: 1 / -1; }
-    .ute-steps { grid-template-columns: 1fr; }
-}
+    }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
 
 /* ---------- Tracking ---------- */
@@ -263,3 +257,34 @@ table td, table th { vertical-align: middle; }
 /* Plain pages built from bare headings: keep type proportionate */
 main > h1:not([class]) { font-size: clamp(1.6rem, 1.2rem + 1.2vw, 2.1rem); margin-bottom: 1.25rem; }
 main h2:not([class]) { font-size: clamp(1.15rem, 1rem + 0.5vw, 1.4rem); margin: 2rem 0 0.75rem; letter-spacing: -0.015em; }
+
+/* Landing: info bar, richer example, tabbed steps */
+.ute-topbar { background: var(--ink); color: #fff; font-size: 0.875rem; }
+.ute-topbar-inner { max-width: 1180px; margin: 0 auto; padding: 0.45rem 24px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.25rem 1.5rem; }
+.ute-topbar a { color: #fff; text-decoration: none; font-weight: 600; }
+.ute-topbar a:hover { color: var(--accent); text-decoration: underline; }
+.ute-example-top { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.ute-example-facts { margin: 1rem 0 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem 1rem; }
+.ute-example-facts dt { font-size: 0.8rem; font-weight: 600; color: var(--muted); }
+.ute-example-facts dd { margin: 0; font-weight: 600; }
+.ute-tablist { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; }
+main .ute-tablist button { background: var(--surface) !important; color: var(--ink) !important; display: inline-flex; align-items: center; gap: 0.6rem; background: var(--surface); color: var(--ink); border: 1px solid var(--line-strong) !important; border-radius: 999px; padding: 0.55rem 1.25rem 0.55rem 0.6rem; min-height: 48px; font-weight: 600; cursor: pointer; }
+.ute-tablist button span { color: var(--ink); display: inline-flex; width: 2rem; height: 2rem; border-radius: 50%; align-items: center; justify-content: center; background: var(--tint); font-weight: 700; }
+main .ute-tablist button[aria-selected="true"] { background: var(--ink) !important; color: #fff !important; border-color: var(--ink) !important; }
+.ute-tablist button[aria-selected="true"] span { background: var(--accent); color: var(--ink); }
+.ute-tabpanel { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 2.5rem; align-items: start; background: var(--surface); border-radius: 20px; padding: 2rem; margin-bottom: 1rem; }
+.ute-tabpanel[hidden] { display: none; }
+.ute-tabpanel h3 { font-size: 1.35rem; margin: 0 0 0.9rem; letter-spacing: -0.02em; }
+.ute-ticks { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.7rem; }
+.ute-ticks li { position: relative; padding-left: 1.75rem; }
+.ute-ticks li::before { content: "✓"; position: absolute; left: 0; top: 0; font-weight: 700; color: var(--accent-press); }
+.ute-mock { background: var(--ground); border-radius: 16px; padding: 1.25rem; }
+.ute-mock-row, .ute-mock-total { display: flex; justify-content: space-between; gap: 1rem; padding: 0.4rem 0; }
+.ute-mock-total { border-top: 1px solid var(--line-strong); margin-top: 0.4rem; padding-top: 0.75rem; font-size: 1.25rem; }
+.ute-mock-choice { background: var(--surface); border-radius: 12px; padding: 0.9rem 1rem; margin-bottom: 0.6rem; display: grid; }
+.ute-mock-choice span { color: var(--muted); font-size: 0.92rem; }
+.ute-route { background: var(--surface); border-radius: 12px; padding: 0.8rem 1rem; display: grid; }
+.ute-route span { color: var(--muted); font-size: 0.92rem; }
+.ute-route-arrow { text-align: center; font-weight: 700; color: var(--muted); line-height: 1.6; }
+.ute-mock p { margin: 0 0 0.6rem; }
+@media (max-width: 991.98px) { .ute-tabpanel { grid-template-columns: 1fr; gap: 1.5rem; padding: 1.25rem; } .ute-topbar-inner { padding: 0.45rem 16px; } }

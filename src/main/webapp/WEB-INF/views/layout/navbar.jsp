@@ -14,6 +14,12 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
 </c:if>
 <a class="ute-skip" href="#main">Bỏ qua điều hướng</a>
+<c:if test="${uteTopBar}">
+    <div class="ute-topbar"><div class="ute-topbar-inner">
+        <span>Tổng đài 24/7: <a href="tel:1900UTEEXPRESS">1900-UTE-EXPRESS</a> · <a href="mailto:support@uteexpress.edu.vn">support@uteexpress.edu.vn</a></span>
+        <span><a href="${ctx}/tracking">Tra cứu vận đơn</a> · <a href="${ctx}/#faq">Câu hỏi thường gặp</a></span>
+    </div></div>
+</c:if>
 <nav class="navbar navbar-expand-lg ute-nav${rail ? ' ute-nav-rail' : ''}" aria-label="Điều hướng chính">
     <div class="ute-nav-inner">
         <a class="navbar-brand" href="${ctx}/">UTE<span>EXPRESS</span></a>

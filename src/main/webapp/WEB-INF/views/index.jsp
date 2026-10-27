@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <c:set var="ctx" value="${pageContext.request.contextPath}" />
+<c:set var="uteTopBar" value="true" scope="request" />
 
 <jsp:include page="layout/header.jsp" />
 
@@ -30,7 +31,10 @@
             </div>
             <div class="ute-example" aria-label="Ví dụ trang theo dõi">
                 <p class="ute-example-tag">Ví dụ minh họa: trang theo dõi một đơn</p>
-                <p class="ute-example-code">UTX-20261027-0001</p>
+                <div class="ute-example-top">
+                    <p class="ute-example-code">UTX-20261027-0001</p>
+                    <span class="badge badge-in-transit">Đang trung chuyển</span>
+                </div>
                 <p class="mb-3 text-muted">Dự kiến giao trước 31/10/2026</p>
                 <ol class="ute-timeline">
                     <li><strong>Đã lấy hàng</strong><span>27/10 09:12 · Bưu cục Thủ Đức</span></li>
@@ -38,6 +42,12 @@
                     <li class="is-now"><strong>Đang trung chuyển</strong><span>27/10 14:40 · Chạy liên tỉnh</span></li>
                     <li><strong>Giao tận tay</strong><span>Dự kiến trước 31/10</span></li>
                 </ol>
+                <dl class="ute-example-facts">
+                    <div><dt>Gửi từ</dt><dd>Thủ Đức, TP. Hồ Chí Minh</dd></div>
+                    <div><dt>Giao đến</dt><dd>Hà Đông, Hà Nội</dd></div>
+                    <div><dt>Dịch vụ</dt><dd>Tiêu chuẩn</dd></div>
+                    <div><dt>Thu hộ COD</dt><dd>250.000 đ</dd></div>
+                </dl>
             </div>
         </div>
     </section>
@@ -57,13 +67,109 @@
     <section class="ute-home-sec alt" aria-labelledby="how-title">
         <div class="ute-wrap">
             <h2 id="how-title">Gửi hàng gồm 4 bước</h2>
-            <p class="ute-sec-lead">Mỗi bước đều có mốc thời gian trên trang theo dõi.</p>
-            <ol class="ute-steps">
-                <li><h3>Tạo đơn</h3><p>Điền thông tin người gửi, người nhận, kiện hàng và xem báo giá.</p></li>
-                <li><h3>Bàn giao</h3><p>Shipper đến lấy tại nhà, hoặc bạn mang hàng ra bưu cục gần nhất.</p></li>
-                <li><h3>Vận chuyển</h3><p>Hàng đi qua mạng lưới bưu cục và xe trung chuyển tới nơi nhận.</p></li>
-                <li><h3>Giao hàng</h3><p>Shipper giao tận tay, thu hộ tiền COD nếu có.</p></li>
-            </ol>
+            <p class="ute-sec-lead">Bấm từng bước để xem bạn làm gì và hệ thống làm gì.</p>
+            <div class="ute-tabs" data-tabs>
+                <div class="ute-tablist" role="tablist" aria-label="Các bước gửi hàng">
+                    <button type="button" role="tab" id="tab-1" aria-controls="panel-1" aria-selected="true"><span>1</span> Tạo đơn</button>
+                    <button type="button" role="tab" id="tab-2" aria-controls="panel-2" aria-selected="false"><span>2</span> Bàn giao</button>
+                    <button type="button" role="tab" id="tab-3" aria-controls="panel-3" aria-selected="false"><span>3</span> Vận chuyển</button>
+                    <button type="button" role="tab" id="tab-4" aria-controls="panel-4" aria-selected="false"><span>4</span> Giao hàng</button>
+                </div>
+
+                <div class="ute-tabpanel" role="tabpanel" id="panel-1" aria-labelledby="tab-1">
+                    <div>
+                        <h3>Điền thông tin và xem giá ngay</h3>
+                        <ul class="ute-ticks">
+                            <li>Người gửi và người nhận: chọn tỉnh, phường/xã từ danh sách có sẵn.</li>
+                            <li>Kiện hàng: khối lượng, kích thước, giá trị khai báo, tiền thu hộ COD nếu có.</li>
+                            <li>Chọn dịch vụ Tiêu chuẩn, Nhanh hoặc Hỏa tốc.</li>
+                            <li>Bấm "Xem báo giá": cước hiện ngay trước khi bạn xác nhận.</li>
+                        </ul>
+                        <a class="btn btn-ute-accent mt-3" href="${ctx}/user/shipments/create">Tạo đơn gửi hàng</a>
+                    </div>
+                    <div class="ute-mock" aria-label="Ví dụ báo giá">
+                        <p class="ute-example-tag">Ví dụ minh họa: màn báo giá</p>
+                        <div class="ute-mock-row"><span>Cước vận chuyển</span><b>34.000 đ</b></div>
+                        <div class="ute-mock-row"><span>Phụ phí khối lượng</span><b>0 đ</b></div>
+                        <div class="ute-mock-row"><span>Phí thu hộ COD</span><b>4.000 đ</b></div>
+                        <div class="ute-mock-total"><span>Tổng cước</span><b>38.000 đ</b></div>
+                    </div>
+                </div>
+
+                <div class="ute-tabpanel" role="tabpanel" id="panel-2" aria-labelledby="tab-2">
+                    <div>
+                        <h3>Chọn cách đưa hàng cho bưu cục</h3>
+                        <ul class="ute-ticks">
+                            <li>Lấy tại nhà: bưu cục phân công shipper đến địa chỉ của bạn.</li>
+                            <li>Tự mang ra bưu cục: mang kiện hàng và mã vận đơn đến bưu cục gần nhất.</li>
+                            <li>Khi nhận hàng, trạng thái đơn đổi thành "Đã lấy hàng".</li>
+                        </ul>
+                    </div>
+                    <div class="ute-mock" aria-label="Ví dụ hai cách bàn giao">
+                        <p class="ute-example-tag">Ví dụ minh họa: hai cách bàn giao</p>
+                        <div class="ute-mock-choice"><b>Lấy tại nhà</b><span>Shipper đến địa chỉ người gửi</span></div>
+                        <div class="ute-mock-choice"><b>Tự mang ra bưu cục</b><span>Bạn đến bưu cục, đưa mã vận đơn</span></div>
+                        <p class="mb-0 mt-2"><span class="badge badge-picked-up">Đã lấy hàng</span></p>
+                    </div>
+                </div>
+
+                <div class="ute-tabpanel" role="tabpanel" id="panel-3" aria-labelledby="tab-3">
+                    <div>
+                        <h3>Hàng đi qua mạng lưới bưu cục</h3>
+                        <ul class="ute-ticks">
+                            <li>Bưu cục gốc nhận, kiểm tra và phân loại theo tuyến.</li>
+                            <li>Hàng được đóng bao, bàn giao cho tài xế xe trung chuyển.</li>
+                            <li>Bưu cục nhận đối chiếu từng bao, báo ngay nếu thiếu kiện.</li>
+                            <li>Mỗi mốc đều hiện trên trang theo dõi của bạn.</li>
+                        </ul>
+                    </div>
+                    <div class="ute-mock" aria-label="Ví dụ hành trình qua mạng lưới">
+                        <p class="ute-example-tag">Ví dụ minh họa: mạng lưới 3 cấp</p>
+                        <div class="ute-route"><b>Bưu cục gốc</b><span>nhận và phân loại</span></div>
+                        <div class="ute-route-arrow" aria-hidden="true">↓</div>
+                        <div class="ute-route"><b>Hub vùng</b><span>đóng bao, chờ xe</span></div>
+                        <div class="ute-route-arrow" aria-hidden="true">↓</div>
+                        <div class="ute-route"><b>Bưu cục phát</b><span>chuẩn bị giao</span></div>
+                        <p class="mb-0 mt-2"><span class="badge badge-in-transit">Đang trung chuyển</span></p>
+                    </div>
+                </div>
+
+                <div class="ute-tabpanel" role="tabpanel" id="panel-4" aria-labelledby="tab-4">
+                    <div>
+                        <h3>Shipper giao tận tay</h3>
+                        <ul class="ute-ticks">
+                            <li>Shipper nhận kiện tại bưu cục phát và đi giao.</li>
+                            <li>Có thu hộ COD thì shipper thu tiền khi giao, quản lý đối soát theo ca.</li>
+                            <li>Không giao được: đơn có thể giao lại, nếu vẫn không được thì hoàn về người gửi.</li>
+                        </ul>
+                    </div>
+                    <div class="ute-mock" aria-label="Ví dụ các kết quả giao hàng">
+                        <p class="ute-example-tag">Ví dụ minh họa: kết quả giao hàng</p>
+                        <p><span class="badge badge-out-delivery">Đang phát hàng</span></p>
+                        <p><span class="badge badge-delivered">Giao thành công</span></p>
+                        <p><span class="badge badge-failed">Giao thất bại</span></p>
+                        <p class="mb-0"><span class="badge badge-return">Đang chuyển hoàn</span></p>
+                    </div>
+                </div>
+            </div>
+            <script>
+                (function () {
+                    var root = document.querySelector('[data-tabs]'); if (!root) return;
+                    var tabs = root.querySelectorAll('[role=tab]'), panels = root.querySelectorAll('[role=tabpanel]');
+                    function show(i) {
+                        tabs.forEach(function (t, k) { t.setAttribute('aria-selected', k === i ? 'true' : 'false'); t.tabIndex = k === i ? 0 : -1; });
+                        panels.forEach(function (p, k) { p.hidden = k !== i; });
+                    }
+                    tabs.forEach(function (t, i) {
+                        t.addEventListener('click', function () { show(i); });
+                        t.addEventListener('keydown', function (e) {
+                            var n = e.key === 'ArrowRight' ? (i + 1) % tabs.length : e.key === 'ArrowLeft' ? (i + tabs.length - 1) % tabs.length : -1;
+                            if (n >= 0) { show(n); tabs[n].focus(); e.preventDefault(); }
+                        });
+                    });
+                    show(0);
+                })();
+            </script>
         </div>
     </section>
 
