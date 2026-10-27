@@ -101,6 +101,10 @@ class PermissionMatrixRouteTest {
             new Route("POST", "/user/wallet/withdraw", ALL),
             // Administrator only.
             new Route("GET", "/admin/withdrawals", ADMIN),
+            new Route("GET", "/admin/users", ADMIN),
+            new Route("POST", "/admin/users", ADMIN),
+            new Route("POST", "/admin/users/{userId}/lock", ADMIN),
+            new Route("POST", "/admin/users/{userId}/assign", ADMIN),
             new Route("POST", "/admin/withdrawals/{requestId}/approve", ADMIN),
             new Route("POST", "/admin/withdrawals/{requestId}/reject", ADMIN),
             new Route("GET", "/admin/overdue-returns", ADMIN),

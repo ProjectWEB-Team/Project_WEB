@@ -16,6 +16,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByUsername(String username);
     boolean existsByPhone(String phone);
     boolean existsByEmail(String email);
+    @Query("select u from User u where :q = '' or lower(u.username) like lower(concat('%', :q, '%'))"
+            + " or lower(u.fullName) like lower(concat('%', :q, '%')) or u.phone like concat('%', :q, '%') order by u.id desc")
+    org.springframework.data.domain.Page<User> search(@Param("q") String q, org.springframework.data.domain.Pageable page);
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select u from User u where u.phone = :phone")
     Optional<User> findByPhoneForUpdate(@Param("phone") String phone);

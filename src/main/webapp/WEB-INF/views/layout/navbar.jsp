@@ -37,6 +37,7 @@
                 <li class="nav-item"><a class="nav-link" href="${ctx}/manager/overdue-returns">Hoàn quá hạn</a></li>
             </c:if>
             <c:if test="${pageContext.request.isUserInRole('ADMIN')}">
+                <li class="nav-item"><a class="nav-link" href="${ctx}/admin/users">Người dùng</a></li>
                 <li class="nav-item"><a class="nav-link" href="${ctx}/admin/withdrawals">Duyệt rút tiền</a></li>
             </c:if>
         </ul>

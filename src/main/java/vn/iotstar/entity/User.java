@@ -80,6 +80,14 @@ public class User implements UserDetails {
         status = "ACTIVE";
     }
     public void changePassword(String newPasswordHash) { this.passwordHash = newPasswordHash; }
+    public void changeRole(UserRole newRole) { this.role = newRole; }
+    public void changeStatus(String newStatus) { this.status = newStatus; }
+    public static User staff(String username, String passwordHash, String fullName, String phone, String email,
+                             UserRole role, Instant now) {
+        User user = registerPending(username, passwordHash, fullName, phone, email, now);
+        user.role = role; user.status = "ACTIVE";
+        return user;
+    }
     public UserRole getRole() { return role; }
     public String getStatus() { return status; }
     @Override public Collection<? extends GrantedAuthority> getAuthorities() { return List.of(new SimpleGrantedAuthority(role.name())); }

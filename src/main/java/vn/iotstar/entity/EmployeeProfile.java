@@ -63,6 +63,10 @@ public class EmployeeProfile {
         return profile;
     }
 
+    public void reassign(Hub newHub, String newPosition) {
+        hub = newHub; hubId = newHub.getId(); position = newPosition; status = "ACTIVE";
+    }
+
     public Long getId() { return id; }
     public User getUser() { return user; }
     public Hub getHub() { return hub; }
