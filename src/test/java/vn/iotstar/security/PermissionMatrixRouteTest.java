@@ -103,6 +103,7 @@ class PermissionMatrixRouteTest {
             new Route("GET", "/admin/withdrawals", ADMIN),
             new Route("GET", "/admin/users", ADMIN),
             new Route("GET", "/admin/pricing", ADMIN),
+            new Route("GET", "/admin/network", ADMIN),
             new Route("POST", "/admin/pricing/{policyId}", ADMIN),
             new Route("POST", "/admin/users", ADMIN),
             new Route("POST", "/admin/users/{userId}/lock", ADMIN),
