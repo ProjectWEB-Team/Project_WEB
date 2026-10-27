@@ -7,23 +7,23 @@
 <c:if test="${not empty operationMessage}"><p><c:out value="${operationMessage}"/></p></c:if>
 <form method="post" action="${pageContext.request.contextPath}/hub/inbound/receive">
   <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
-  <label>Bàn giao <input name="handoverId" required /></label>
-  <label>Bao hàng <input name="containerId" required /></label>
-  <label>Đơn hàng <input name="shipmentId" required /></label>
+  <label>Bàn giao <select name="handoverId" required><option value="">Chọn phiếu</option><c:forEach items="${handoverPicks}" var="p"><option value="${p[0]}">#<c:out value="${p[0]}"/> từ <c:out value="${p[1]}"/></option></c:forEach></select></label>
+  <label>Bao hàng <select name="containerId" required><option value="">Chọn bao</option><c:forEach items="${containerPicks}" var="p"><option value="${p[1]}">Phiếu #<c:out value="${p[0]}"/> – bao <c:out value="${p[2]}"/></option></c:forEach></select></label>
+  <label>Đơn hàng <select name="shipmentId" required><option value="">Chọn đơn</option><c:forEach items="${shipmentPicks}" var="p"><option value="${p[1]}">Bao #<c:out value="${p[0]}"/> – <c:out value="${p[2]}"/></option></c:forEach></select></label>
   <button type="submit">Ghi nhận đã nhận hàng</button>
 </form>
 <h2>Mở bao xong và đối chiếu danh sách</h2>
 <form method="post" action="${pageContext.request.contextPath}/hub/inbound/reconcile">
   <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
-  <label>Bàn giao <input name="handoverId" type="number" min="1" required /></label>
-  <label>Bao hàng <input name="containerId" type="number" min="1" required /></label>
-  <label>ID các đơn đã nhận, cách nhau bằng dấu phẩy <input name="receivedShipmentIds" required /></label>
+  <label>Bàn giao <select name="handoverId" required><option value="">Chọn phiếu</option><c:forEach items="${handoverPicks}" var="p"><option value="${p[0]}">#<c:out value="${p[0]}"/> từ <c:out value="${p[1]}"/></option></c:forEach></select></label>
+  <label>Bao hàng <select name="containerId" required><option value="">Chọn bao</option><c:forEach items="${containerPicks}" var="p"><option value="${p[1]}">Phiếu #<c:out value="${p[0]}"/> – bao <c:out value="${p[2]}"/></option></c:forEach></select></label>
+  <label>Các đơn đã nhận (giữ Ctrl để chọn nhiều) <select name="receivedShipmentIds" multiple size="6" required><c:forEach items="${shipmentPicks}" var="p"><option value="${p[1]}">Bao #<c:out value="${p[0]}"/> – <c:out value="${p[2]}"/></option></c:forEach></select></label>
   <button type="submit">Ghi nhận kiện đã nhận và kiện thiếu</button>
 </form>
 <form method="post" action="${pageContext.request.contextPath}/hub/inbound/reconcile-empty">
   <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
-  <label>Bàn giao <input name="handoverId" type="number" min="1" required /></label>
-  <label>Bao hàng <input name="containerId" type="number" min="1" required /></label>
+  <label>Bàn giao <select name="handoverId" required><option value="">Chọn phiếu</option><c:forEach items="${handoverPicks}" var="p"><option value="${p[0]}">#<c:out value="${p[0]}"/> từ <c:out value="${p[1]}"/></option></c:forEach></select></label>
+  <label>Bao hàng <select name="containerId" required><option value="">Chọn bao</option><c:forEach items="${containerPicks}" var="p"><option value="${p[1]}">Phiếu #<c:out value="${p[0]}"/> – bao <c:out value="${p[2]}"/></option></c:forEach></select></label>
   <label><input type="checkbox" name="confirmAllMissing" value="true" required /> Không nhận được kiện nào trong danh sách</label>
   <button type="submit">Báo thiếu toàn bộ</button>
 </form>

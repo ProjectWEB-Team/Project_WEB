@@ -7,7 +7,7 @@
   <c:if test="${not empty successMessage}"><p class="alert alert-success"><c:out value="${successMessage}"/></p></c:if>
   <c:if test="${not empty errorMessage}"><p class="alert alert-danger"><c:out value="${errorMessage}"/></p></c:if>
   <form method="get" action="${pageContext.request.contextPath}/manager/reconciliation" class="card p-3 mb-4">
-    <label>Mã tài khoản shipper <input class="form-control" name="shipperId" type="number" min="1" required value="${shipperId}"></label>
+    <label>Shipper <select class="form-select" name="shipperId" required><option value="">Chọn shipper</option><c:forEach items="${shippers}" var="sh"><option value="${sh.id}" ${sh.id == shipperId ? 'selected' : ''}><c:out value="${sh.fullName}"/> (<c:out value="${sh.phone}"/>)</option></c:forEach></select></label>
     <label>Ngày thu tiền <input class="form-control" name="date" type="date" value="${selectedDate}"></label>
     <label>Phương thức thu <select class="form-select" name="method"><option value="CASH" ${selectedMethod == 'CASH' ? 'selected' : ''}>Tiền mặt</option><option value="VNPAY" ${selectedMethod == 'VNPAY' ? 'selected' : ''}>VNPAY</option><option value="TRANSFER" ${selectedMethod == 'TRANSFER' ? 'selected' : ''}>Chuyển khoản</option></select></label>
     <button class="btn btn-primary mt-2">Tải khoản thu đã ghi nhận</button>

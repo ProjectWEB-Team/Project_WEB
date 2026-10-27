@@ -19,10 +19,17 @@ import vn.iotstar.service.DestinationReceiptService;
 @RequestMapping("/hub/inbound")
 public class InboundOperationsController {
     private final DestinationReceiptService destinationReceiptService;
-    public InboundOperationsController(DestinationReceiptService destinationReceiptService) { this.destinationReceiptService = destinationReceiptService; }
+    private final vn.iotstar.repository.DestinationReceiptRepository picks;
+    public InboundOperationsController(DestinationReceiptService destinationReceiptService, vn.iotstar.repository.DestinationReceiptRepository picks) {
+        this.destinationReceiptService = destinationReceiptService; this.picks = picks;
+    }
 
     @GetMapping
-    public String queue(Model model) {
+    public String queue(Model model, java.security.Principal principal) {
+        String me = principal == null ? "" : principal.getName();
+        model.addAttribute("handoverPicks", picks.inboundHandoverPicks(me));
+        model.addAttribute("containerPicks", picks.inboundContainerPicks(me));
+        model.addAttribute("shipmentPicks", picks.inboundShipmentPicks(me));
         if (!model.containsAttribute("destinationReceiptCommand")) model.addAttribute("destinationReceiptCommand", new DestinationReceiptCommand(null, null, null));
         return "hub/inbound-queue";
     }

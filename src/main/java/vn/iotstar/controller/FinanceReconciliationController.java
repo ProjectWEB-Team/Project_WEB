@@ -28,7 +28,11 @@ public class FinanceReconciliationController {
     private final FinanceReconciliationService reconciliationService;
     private final ShipmentFinanceService shipmentFinance;
 
-    public FinanceReconciliationController(FinanceReconciliationService reconciliationService, ShipmentFinanceService shipmentFinance) {
+    private final vn.iotstar.repository.UserRepository users;
+
+    public FinanceReconciliationController(FinanceReconciliationService reconciliationService, ShipmentFinanceService shipmentFinance,
+                                           vn.iotstar.repository.UserRepository users) {
+        this.users = users;
         this.reconciliationService = reconciliationService;
         this.shipmentFinance = shipmentFinance;
     }
@@ -46,6 +50,7 @@ public class FinanceReconciliationController {
                     reconciliationService.getShiftExpectedItems(shipperId, date, method);
             model.addAttribute("expectedItems", expectedItems);
         }
+        model.addAttribute("shippers", users.findByRoleAndStatusOrderByFullName(vn.iotstar.entity.UserRole.ROLE_SHIPPER, "ACTIVE"));
         model.addAttribute("shipperId", shipperId);
         model.addAttribute("selectedDate", date);
         model.addAttribute("selectedMethod", method);

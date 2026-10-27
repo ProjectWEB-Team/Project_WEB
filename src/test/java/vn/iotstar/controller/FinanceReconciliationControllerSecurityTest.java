@@ -27,6 +27,7 @@ class FinanceReconciliationControllerSecurityTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @MockBean private vn.iotstar.repository.UserRepository userRepository;
     @MockBean
     private FinanceReconciliationService reconciliationService;
     @MockBean private vn.iotstar.service.ShipmentFinanceService shipmentFinance;

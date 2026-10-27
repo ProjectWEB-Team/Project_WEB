@@ -26,6 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import({SecurityConfig.class, JwtAuthenticationFilter.class})
 class DestinationReceiptControllerSecurityTest {
     @Autowired private MockMvc mockMvc;
+    @MockBean private vn.iotstar.repository.DestinationReceiptRepository destinationReceiptRepository;
     @MockBean private DestinationReceiptService destinationReceiptService;
     @MockBean private JwtService jwtService;
     @MockBean private UserDetailsService userDetailsService;

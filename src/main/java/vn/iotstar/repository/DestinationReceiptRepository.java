@@ -35,4 +35,22 @@ public class DestinationReceiptRepository {
         return entityManager.createQuery("select hc from HandoverContainer hc join fetch hc.container where hc.handover.id = :handoverId", HandoverContainer.class)
                 .setParameter("handoverId", handoverId).setLockMode(LockModeType.PESSIMISTIC_WRITE).getResultList();
     }
+
+    private static final String AT_MY_HUB = " and h.toHub.id in (select p.hub.id from EmployeeProfile p where p.user.username = :u and p.status = 'ACTIVE')"
+            + " and h.status = 'IN_TRANSIT'";
+    /** Picker rows for the inbound page, scoped to the staff member's own destination hub: {handoverId, fromHubCode}. */
+    public List<Object[]> inboundHandoverPicks(String username) {
+        return entityManager.createQuery("select h.id, h.fromHub.code from Handover h where 1 = 1" + AT_MY_HUB + " order by h.id desc", Object[].class)
+                .setParameter("u", username).setMaxResults(50).getResultList();
+    }
+    /** {handoverId, containerId, containerCode}. */
+    public List<Object[]> inboundContainerPicks(String username) {
+        return entityManager.createQuery("select hc.handover.id, hc.container.id, hc.container.containerCode from HandoverContainer hc join hc.handover h where 1 = 1" + AT_MY_HUB + " order by h.id desc, hc.container.id", Object[].class)
+                .setParameter("u", username).setMaxResults(200).getResultList();
+    }
+    /** {containerId, shipmentId, trackingNumber}. */
+    public List<Object[]> inboundShipmentPicks(String username) {
+        return entityManager.createQuery("select ci.container.id, ci.shipment.id, ci.shipment.trackingNumber from ContainerItem ci, HandoverContainer hc join hc.handover h where hc.container = ci.container" + AT_MY_HUB + " order by ci.container.id, ci.shipment.id", Object[].class)
+                .setParameter("u", username).setMaxResults(500).getResultList();
+    }
 }
