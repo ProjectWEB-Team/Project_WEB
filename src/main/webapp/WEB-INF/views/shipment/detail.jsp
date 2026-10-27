@@ -2,6 +2,7 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%@ taglib prefix="u" tagdir="/WEB-INF/tags" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -19,7 +20,7 @@
     <c:if test="${not empty error}"><div class="alert alert-danger" role="alert"><c:out value="${error}"/></div></c:if>
     <section class="card-ute p-4 mb-3">
         <h1 class="h3">Vận đơn <span class="font-monospace"><c:out value="${shipment.trackingNumber}"/></span></h1>
-        <p class="mb-1">Trạng thái: <span class="badge text-bg-primary"><c:out value="${shipment.currentStatus}"/></span></p>
+        <p class="mb-1">Trạng thái: <u:statusbadge status="${shipment.currentStatus}"/></p>
         <p class="mb-1">Cước phí: <strong><fmt:formatNumber value="${shipment.shippingFee}" pattern="#,##0" var="shippingFormatted"/>${fn:replace(shippingFormatted, ',', '.')}đ</strong> (<c:out value="${shipment.paymentStatus}"/>)</p>
         <p class="text-ute-muted mb-0">Tạo lúc: <c:out value="${shipment.createdAt}"/></p>
         <c:if test="${not empty shipment.estimatedDelivery}"><p class="mb-0">Dự kiến giao trước: <strong><c:out value="${shipment.estimatedDelivery}"/></strong></p></c:if>

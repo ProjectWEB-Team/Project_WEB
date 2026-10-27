@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%@ taglib prefix="u" tagdir="/WEB-INF/tags" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -40,7 +41,7 @@
                         <tr>
                             <td><a class="font-monospace" href="${pageContext.request.contextPath}/user/shipments/${s.id}"><c:out value="${s.trackingNumber}"/></a></td>
                             <td><c:out value="${s.receiverName}"/></td>
-                            <td><span class="badge text-bg-primary"><c:out value="${s.currentStatus}"/></span></td>
+                            <td><u:statusbadge status="${s.currentStatus}"/></td>
                             <td class="text-end"><fmt:formatNumber value="${s.shippingFee}" pattern="#,##0"/></td>
                             <td class="small text-ute-muted"><c:out value="${s.createdAt}"/></td>
                         </tr>

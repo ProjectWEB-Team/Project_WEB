@@ -1,8 +1,9 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
-<html><head><title>Nhận hàng vào hub</title></head><body>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Nhận hàng vào hub</title></head><body>
 <jsp:include page="/WEB-INF/views/layout/navbar.jsp" />
+<main class="container">
 <h1>Nhận hàng tại hub đích</h1>
 <c:if test="${not empty operationMessage}"><p><c:out value="${operationMessage}"/></p></c:if>
 <form method="post" action="${pageContext.request.contextPath}/hub/inbound/receive">
@@ -30,4 +31,4 @@
 <h2>Nhận lại kiện giao thất bại từ shipper</h2><form method="post" action="${pageContext.request.contextPath}/hub/delivery-returns/receive">
 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"><label>Mã ID vận đơn<input name="shipmentId" type="number" required></label>
 <label>Quét mã vận đơn<input name="trackingNumber" required></label><button>Xác nhận nhận kiện vật lý</button></form>
-</body></html>
+</main></body></html>

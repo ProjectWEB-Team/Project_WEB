@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%@ taglib prefix="u" tagdir="/WEB-INF/tags" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -18,7 +19,7 @@
     <a class="btn btn-outline-secondary btn-sm mb-3" href="${pageContext.request.contextPath}/user/incoming">Danh sách đơn đến</a>
     <section class="card-ute p-4 mb-3">
         <h1 class="h3">Vận đơn <span class="font-monospace"><c:out value="${shipment.trackingNumber}"/></span></h1>
-        <p class="mb-1">Trạng thái: <span class="badge text-bg-primary"><c:out value="${shipment.currentStatus}"/></span></p>
+        <p class="mb-1">Trạng thái: <u:statusbadge status="${shipment.currentStatus}"/></p>
         <p class="mb-1">Người gửi: <c:out value="${shipment.senderName}"/></p>
         <p class="mb-1">Người nhận: <c:out value="${shipment.receiverName}"/></p>
         <c:if test="${shipment.unlocked}">

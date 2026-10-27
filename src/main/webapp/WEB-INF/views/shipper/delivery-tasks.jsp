@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="u" tagdir="/WEB-INF/tags" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -119,7 +120,7 @@
                             <c:forEach items="${tasks}" var="task">
                                 <tr>
                                     <td><strong><c:out value="${task.trackingNumber}"/></strong></td>
-                                    <td><span class="badge text-bg-secondary"><c:out value="${task.currentStatus}"/></span></td>
+                                    <td><u:statusbadge status="${task.currentStatus}"/></td>
                                     <td><c:out value="${task.receiverName}"/><br><small class="text-muted"><c:out value="${task.receiverPhone}"/></small></td>
                                     <td><c:out value="${task.receiverAddress}"/></td>
                                     <td>

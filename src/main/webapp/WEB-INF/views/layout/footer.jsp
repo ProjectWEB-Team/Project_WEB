@@ -1,28 +1,38 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 
-    <!-- Footer -->
-    <footer class="ute-footer mt-auto py-4">
-        <div class="container-fluid px-lg-4" style="max-width:1180px">
-            <div class="row g-4 mb-3">
-                <div class="col-lg-5 col-md-6">
-                    <h6 class="mb-2 fw-bold text-dark">UTE<span class="text-ute-accent">EXPRESS</span></h6>
-                    <p class="small mb-0">Giao nhận thông minh, theo dõi vận đơn theo thời gian thực từ bưu cục gốc đến tận tay người nhận.</p>
-                </div>
-                <div class="col-lg-3 col-md-6 col-6">
-                    <h6 class="fw-bold mb-2 text-dark">Dịch vụ</h6>
-                    <ul class="list-unstyled small mb-0">
-                        <li class="mb-1"><a href="${pageContext.request.contextPath}/tracking" class="text-decoration-none">Theo dõi đơn hàng</a></li>
-                        <li class="mb-1"><a href="${pageContext.request.contextPath}/user/shipments/create" class="text-decoration-none">Tạo đơn hàng</a></li>
-                    </ul>
-                </div>
-                <div class="col-lg-4 col-md-6">
-                    <h6 class="fw-bold mb-2 text-dark">Hỗ trợ</h6>
-                    <p class="small mb-1">Tổng đài 24/7: <strong class="text-ute-accent">1900-UTE-EXPRESS</strong></p>
-                    <p class="small mb-0">support@uteexpress.edu.vn</p>
-                </div>
+    <footer class="ute-footer">
+        <div class="ute-footer-inner">
+            <div>
+                <div class="ute-wordmark">UTE<span>EXPRESS</span></div>
+                <p class="mt-2 mb-3 small text-white">Giao nhận và theo dõi vận đơn từ bưu cục gốc đến tay người nhận.</p>
+                <div class="small text-white">Tổng đài 24/7</div>
+                <div class="ute-hotline">1900-UTE-EXPRESS</div>
+                <div class="small text-white">support@uteexpress.edu.vn</div>
             </div>
-            <hr class="my-3 opacity-25">
-            <p class="small mb-0">&copy; 2026 UTEExpress. Đồ án Lập trình Web, Trường Đại học Sư phạm Kỹ thuật TP. Hồ Chí Minh.</p>
+            <div>
+                <h6 class="fw-bold mb-0">Dịch vụ</h6>
+                <ul>
+                    <li><a href="${pageContext.request.contextPath}/tracking">Tra cứu vận đơn</a></li>
+                    <li><a href="${pageContext.request.contextPath}/user/shipments/create">Tạo đơn</a></li>
+                    <li><a href="${pageContext.request.contextPath}/user/wallet">Ví</a></li>
+                </ul>
+            </div>
+            <div>
+                <h6 class="fw-bold mb-0">Tài khoản</h6>
+                <ul>
+                    <li><a href="${pageContext.request.contextPath}/login">Đăng nhập</a></li>
+                    <li><a href="${pageContext.request.contextPath}/register">Đăng ký</a></li>
+                    <li><a href="${pageContext.request.contextPath}/auth/forgot-password">Quên mật khẩu</a></li>
+                </ul>
+            </div>
+            <div>
+                <h6 class="fw-bold mb-0">Hỗ trợ</h6>
+                <ul>
+                    <li><a href="${pageContext.request.contextPath}/#faq">Câu hỏi thường gặp</a></li>
+                    <li><a href="mailto:support@uteexpress.edu.vn">Liên hệ</a></li>
+                </ul>
+            </div>
+            <p class="ute-legal text-white">&copy; 2026 UTEExpress. Đồ án Lập trình Web, Trường Đại học Sư phạm Kỹ thuật TP. Hồ Chí Minh.</p>
         </div>
     </footer>
 

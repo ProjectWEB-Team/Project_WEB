@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="u" tagdir="/WEB-INF/tags" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -55,7 +56,7 @@
                                 <tr>
                                     <td><strong><c:out value="${task.trackingNumber}"/></strong></td>
                                     <td><c:out value="${task.senderName}"/><br><small class="text-muted"><c:out value="${task.senderPhone}"/></small></td>
-                                    <td><span class="badge text-bg-warning"><c:out value="${task.currentStatus}"/></span></td>
+                                    <td><u:statusbadge status="${task.currentStatus}"/></td>
                                     <td><c:out value="${task.outstandingFee}"/> (<c:out value="${task.feeSettled ? 'Settled' : 'Unpaid'}"/>)</td>
                                     <td>
                                         <form method="post" action="${pageContext.request.contextPath}/shipper/return-tasks/scan"><input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"><input name="shipmentId" type="hidden" value="${task.shipmentId}"><button>Quét xuất kho</button></form>
