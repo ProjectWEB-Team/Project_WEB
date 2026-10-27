@@ -55,7 +55,7 @@ public class RegistrationServiceImpl implements RegistrationService {
             if (!"REGISTRATION".equals(existing.getPurpose()) || existing.getConsumedAt() != null) throw invalidRegistration();
             return issue(existing, "REGISTRATION");
         }
-        if (users.existsByUsername(username) || users.existsByPhone(phone) || users.existsByEmail(email)) throw invalidRegistration();
+        if (users.existsByUsername(username) || users.existsByPhone(phone) || users.existsByEmail(email)) throw alreadyUsed();
         User user = users.saveAndFlush(User.registerPending(username, encoder.encode(password), name, phone, email, clock.instant()));
         String code = newCode();
         PhoneOtpChallenge challenge = PhoneOtpChallenge.create(user, "REGISTRATION", encoder.encode(code), clock.instant(), policy);
@@ -134,6 +134,9 @@ public class RegistrationServiceImpl implements RegistrationService {
     private String required(String text, int max) {
         if (text == null || text.isBlank() || text.strip().length() > max) throw invalidRegistration();
         return text.strip();
+    }
+    private RegistrationException alreadyUsed() {
+        return new RegistrationException("Số điện thoại, email hoặc tên đăng nhập đã được sử dụng. Nếu bạn đã có tài khoản, hãy đăng nhập.");
     }
     private RegistrationException invalidRegistration() {
         return new RegistrationException("Không thể đăng ký với thông tin này. Vui lòng kiểm tra lại.");

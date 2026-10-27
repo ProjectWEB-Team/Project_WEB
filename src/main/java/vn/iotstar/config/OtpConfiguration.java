@@ -41,7 +41,7 @@ public class OtpConfiguration {
         }
         if (!"disabled".equals(properties.getDeliveryMode())) throw new IllegalArgumentException("Unsupported OTP delivery mode");
         return (id, phone, code, expiry) -> {
-            throw new RegistrationException("Gửi mã điện thoại chưa khả dụng. Vui lòng chọn cách đăng nhập khác hoặc thử lại sau.");
+            throw new RegistrationException("Đăng ký và đăng nhập bằng mã điện thoại đang tạm đóng. Vui lòng dùng tài khoản đã có.");
         };
     }
 }

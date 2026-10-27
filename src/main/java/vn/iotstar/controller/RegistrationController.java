@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Controller;
@@ -37,15 +38,24 @@ public class RegistrationController {
     static final String CHALLENGE_PURPOSE = "phoneVerificationPurpose";
     private static final String REGISTRATION = "REGISTRATION";
     private static final String LOGIN = "LOGIN";
-    private static final String SEND_ERROR = "Không thể gửi mã. Kiểm tra thông tin hoặc thử lại sau.";
+    static final String DUPLICATE_ERROR = "Số điện thoại, email hoặc tên đăng nhập đã được sử dụng. Nếu bạn đã có tài khoản, hãy đăng nhập.";
+    static final String CLOSED_NOTICE = "Đăng ký và đăng nhập bằng mã điện thoại đang tạm đóng. Vui lòng dùng tài khoản đã có.";
     private static final String VERIFY_ERROR = "Mã không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra hoặc yêu cầu mã mới.";
 
     private final RegistrationService registrationService;
     private final PhoneSessionService phoneSessionService;
+    private final boolean otpAvailable;
 
-    public RegistrationController(RegistrationService registrationService, PhoneSessionService phoneSessionService) {
+    public RegistrationController(RegistrationService registrationService, PhoneSessionService phoneSessionService,
+                                  @Value("${uteexpress.otp.delivery-mode:disabled}") String otpDeliveryMode) {
         this.registrationService = registrationService;
         this.phoneSessionService = phoneSessionService;
+        this.otpAvailable = !"disabled".equals(otpDeliveryMode);
+    }
+
+    @ModelAttribute("otpClosedNotice")
+    String otpClosedNotice() {
+        return otpAvailable ? null : CLOSED_NOTICE;
     }
 
     @InitBinder("registerUserRequest")
@@ -87,8 +97,12 @@ public class RegistrationController {
         try {
             rememberChallenge(session, registrationService.register(form), REGISTRATION);
             return "redirect:/auth/verify-phone";
-        } catch (RegistrationException | DataIntegrityViolationException exception) {
-            model.addAttribute("error", SEND_ERROR);
+        } catch (RegistrationException exception) {
+            // Service messages are written to be safe to show (no secrets, no codes).
+            model.addAttribute("error", exception.getMessage());
+            return "auth/register";
+        } catch (DataIntegrityViolationException exception) {
+            model.addAttribute("error", DUPLICATE_ERROR);
             return "auth/register";
         } finally {
             form.setPassword("");
@@ -111,7 +125,7 @@ public class RegistrationController {
             rememberChallenge(session, registrationService.requestLogin(form), LOGIN);
             return "redirect:/auth/verify-phone";
         } catch (RegistrationException exception) {
-            model.addAttribute("error", SEND_ERROR);
+            model.addAttribute("error", exception.getMessage());
             return "auth/phone-login";
         }
     }

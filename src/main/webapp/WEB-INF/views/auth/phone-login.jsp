@@ -20,6 +20,7 @@
                 <div class="card-body p-4 p-md-5">
                     <h1 class="h3 mb-2">Đăng nhập bằng điện thoại</h1>
                     <p class="text-muted mb-4">Nhập số điện thoại đã xác thực của bạn để nhận mã đăng nhập.</p>
+                    <c:if test="${not empty otpClosedNotice}"><div class="alert alert-warning" role="status"><c:out value="${otpClosedNotice}"/></div></c:if>
                     <c:if test="${not empty error}"><div class="alert alert-danger" role="alert"><c:out value="${error}"/></div></c:if>
                     <form:form method="post" action="${pageContext.request.contextPath}/auth/phone-login" modelAttribute="phoneLoginRequest">
                         <div class="mb-3">

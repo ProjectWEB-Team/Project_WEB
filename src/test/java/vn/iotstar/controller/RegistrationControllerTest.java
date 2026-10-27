@@ -12,6 +12,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import vn.iotstar.exception.RegistrationException;
 import vn.iotstar.config.SecurityConfig;
 import vn.iotstar.dto.auth.RegisterUserRequest;
 import vn.iotstar.dto.auth.RegistrationChallengeResponse;
@@ -124,12 +125,24 @@ class RegistrationControllerTest {
                         .param("fullName", "Nguyen Van A").param("phone", "0901234567")
                         .param("email", "sender@example.test"))
                 .andExpect(status().isOk()).andExpect(view().name("auth/register"))
-                .andExpect(model().attribute("error", "Không thể gửi mã. Kiểm tra thông tin hoặc thử lại sau."))
+                .andExpect(model().attribute("error", RegistrationController.DUPLICATE_ERROR))
                 .andReturn();
         RegisterUserRequest form = (RegisterUserRequest) result.getModelAndView().getModel().get("registerUserRequest");
         assertThat(form.getPassword()).isEmpty();
         assertThat(result.getRequest().getSession(false).getAttribute(RegistrationController.CHALLENGE_ID)).isNull();
         verifyNoInteractions(phoneSessionService);
+    }
+
+    @Test
+    void serviceRefusalShowsItsOwnSafeMessageAndClosedOtpIsAnnounced() throws Exception {
+        when(registrationService.register(any())).thenThrow(new RegistrationException("Tài khoản đã được sử dụng."));
+        mockMvc.perform(post("/register").with(csrf())
+                        .param("username", "new-user").param("password", "LocalTestPassword123!")
+                        .param("fullName", "Nguyen Van A").param("phone", "0901234567")
+                        .param("email", "sender@example.test"))
+                .andExpect(status().isOk()).andExpect(view().name("auth/register"))
+                .andExpect(model().attribute("error", "Tài khoản đã được sử dụng."))
+                .andExpect(model().attribute("otpClosedNotice", RegistrationController.CLOSED_NOTICE));
     }
 
     @Test
