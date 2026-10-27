@@ -20,6 +20,7 @@
                 <li class="nav-item"><a class="nav-link" href="${ctx}/hub/sorter">Phân loại</a></li>
                 <li class="nav-item"><a class="nav-link" href="${ctx}/hub/outbound">Đóng bao</a></li>
                 <li class="nav-item"><a class="nav-link" href="${ctx}/hub/delivery-assignments">Phân công giao</a></li>
+                <li class="nav-item"><a class="nav-link" href="${ctx}/hub/return-collection">Hàng hoàn</a></li>
             </c:if>
             <c:if test="${pageContext.request.isUserInRole('SHIPPER')}">
                 <li class="nav-item"><a class="nav-link" href="${ctx}/shipper/tasks">Lấy hàng</a></li>
@@ -33,6 +34,7 @@
                 <li class="nav-item"><a class="nav-link" href="${ctx}/manager/operations">Vận hành</a></li>
                 <li class="nav-item"><a class="nav-link" href="${ctx}/manager/reconciliation">Đối soát</a></li>
                 <li class="nav-item"><a class="nav-link" href="${ctx}/manager/incidents/missing">Thất lạc</a></li>
+                <li class="nav-item"><a class="nav-link" href="${ctx}/manager/overdue-returns">Hoàn quá hạn</a></li>
             </c:if>
             <c:if test="${pageContext.request.isUserInRole('ADMIN')}">
                 <li class="nav-item"><a class="nav-link" href="${ctx}/admin/withdrawals">Duyệt rút tiền</a></li>

@@ -1,4 +1,9 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><title>Unexpected error | UTEExpress</title></head>
-<body><main><h1>Something went wrong</h1><p>Please try again later.</p></main></body></html>
+<html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Đã có lỗi xảy ra | UTEExpress</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"></head>
+<body class="bg-light">
+<jsp:include page="/WEB-INF/views/layout/navbar.jsp" />
+<main class="container py-5"><h1 class="h3">Đã có lỗi xảy ra</h1><p>Hệ thống gặp sự cố. Vui lòng thử lại sau.</p>
+<a class="btn btn-primary" href="${pageContext.request.contextPath}/">Về trang chủ</a></main></body></html>
