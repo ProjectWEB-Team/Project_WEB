@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import vn.iotstar.dto.auth.PhoneLoginRequest;
 import vn.iotstar.dto.auth.RegisterUserRequest;
@@ -38,6 +39,7 @@ public class RegistrationController {
     static final String CHALLENGE_PURPOSE = "phoneVerificationPurpose";
     private static final String REGISTRATION = "REGISTRATION";
     private static final String LOGIN = "LOGIN";
+    private static final String RESET = "PASSWORD_RESET";
     static final String DUPLICATE_ERROR = "Số điện thoại, email hoặc tên đăng nhập đã được sử dụng. Nếu bạn đã có tài khoản, hãy đăng nhập.";
     static final String CLOSED_NOTICE = "Đăng ký và đăng nhập bằng mã điện thoại đang tạm đóng. Vui lòng dùng tài khoản đã có.";
     private static final String VERIFY_ERROR = "Mã không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra hoặc yêu cầu mã mới.";
@@ -130,6 +132,62 @@ public class RegistrationController {
         }
     }
 
+    @GetMapping("/auth/forgot-password")
+    public String forgotPasswordForm(Model model) {
+        model.addAttribute("phoneLoginRequest", new PhoneLoginRequest());
+        return "auth/forgot-password";
+    }
+
+    @PostMapping("/auth/forgot-password")
+    public String forgotPassword(@Valid @ModelAttribute("phoneLoginRequest") PhoneLoginRequest form,
+                                 BindingResult errors, HttpSession session, Model model) {
+        if (errors.hasErrors()) {
+            return "auth/forgot-password";
+        }
+        try {
+            rememberChallenge(session, registrationService.requestPasswordReset(form), RESET);
+            return "redirect:/auth/reset-password";
+        } catch (RegistrationException exception) {
+            model.addAttribute("error", exception.getMessage());
+            return "auth/forgot-password";
+        }
+    }
+
+    @GetMapping("/auth/reset-password")
+    public String resetPasswordForm(HttpServletRequest request, Model model) {
+        HttpSession session = request.getSession(false);
+        if (resetChallengeId(session) == null) {
+            return "redirect:/auth/forgot-password";
+        }
+        model.addAttribute("maskedPhone", session.getAttribute(CHALLENGE_PHONE));
+        return "auth/reset-password";
+    }
+
+    @PostMapping("/auth/reset-password")
+    public String resetPassword(@RequestParam(defaultValue = "") String code,
+                                @RequestParam(defaultValue = "") String newPassword,
+                                HttpServletRequest request, Model model) {
+        HttpSession session = request.getSession(false);
+        UUID challengeId = resetChallengeId(session);
+        if (challengeId == null) {
+            return "redirect:/auth/forgot-password";
+        }
+        model.addAttribute("maskedPhone", session.getAttribute(CHALLENGE_PHONE));
+        if (newPassword.length() < 8) {
+            model.addAttribute("error", "Mật khẩu mới cần ít nhất 8 ký tự.");
+            return "auth/reset-password";
+        }
+        VerifyPhoneOtpRequest verification = new VerifyPhoneOtpRequest();
+        verification.setChallengeId(challengeId);
+        verification.setCode(code);
+        if (registrationService.resetPassword(verification, newPassword)) {
+            clearChallenge(session);
+            return "redirect:/login?reset=true";
+        }
+        model.addAttribute("error", VERIFY_ERROR);
+        return "auth/reset-password";
+    }
+
     @GetMapping("/auth/verify-phone")
     public String verificationForm(HttpServletRequest request, Model model) {
         HttpSession session = request.getSession(false);
@@ -211,6 +269,13 @@ public class RegistrationController {
         }
         Object purpose = session.getAttribute(CHALLENGE_PURPOSE);
         return LOGIN.equals(purpose) || REGISTRATION.equals(purpose) ? id : null;
+    }
+
+    private UUID resetChallengeId(HttpSession session) {
+        if (session == null || !(session.getAttribute(CHALLENGE_ID) instanceof UUID id)) {
+            return null;
+        }
+        return RESET.equals(session.getAttribute(CHALLENGE_PURPOSE)) ? id : null;
     }
 
     private void populateVerificationModel(HttpSession session, Model model) {

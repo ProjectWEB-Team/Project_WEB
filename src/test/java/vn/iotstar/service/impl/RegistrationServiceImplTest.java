@@ -191,6 +191,25 @@ class RegistrationServiceImplTest {
         assertThat(service.verifyLogin(proof(c,"123456"))).isEmpty();
         verifyNoInteractions(links);
     }
+    @Test void passwordResetChangesHashOnceAndRejectsShortOrLoginProofs() {
+        User user = registrationChallenge().getUser(); user.verifyPhone(now);
+        String before = user.getPassword();
+        PhoneOtpChallenge login = PhoneOtpChallenge.create(user, "LOGIN", encoder.encode("123456"), now, new OtpProperties());
+        when(challenges.findByIdForUpdate(login.getId())).thenReturn(Optional.of(login));
+        assertThat(service.resetPassword(proof(login,"123456"), "NewPassword123")).isFalse();
+        PhoneOtpChallenge reset = PhoneOtpChallenge.create(user, "PASSWORD_RESET", encoder.encode("654321"), now, new OtpProperties());
+        when(challenges.findByIdForUpdate(reset.getId())).thenReturn(Optional.of(reset));
+        assertThat(service.resetPassword(proof(reset,"654321"), "short")).isFalse();
+        assertThat(service.resetPassword(proof(reset,"654321"), "NewPassword123")).isTrue();
+        assertThat(user.getPassword()).isNotEqualTo(before);
+        assertThat(encoder.matches("NewPassword123", user.getPassword())).isTrue();
+        assertThat(service.resetPassword(proof(reset,"654321"), "OtherPassword123")).isFalse();
+    }
+    @Test void unknownPhoneGetsDecoyResetChallengeWithoutDelivery() {
+        PhoneLoginRequest r = new PhoneLoginRequest(); r.setPhone("0901234567");
+        assertThat(service.requestPasswordReset(r).maskedPhone()).isEqualTo("*******567");
+        verifyNoInteractions(delivery);
+    }
     @Test void deliveryFailureDoesNotReturnSuccessfulChallenge() {
         when(users.saveAndFlush(any())).thenAnswer(i -> i.getArgument(0));
         doThrow(new RegistrationException("Không thể gửi mã lúc này.")).when(delivery).send(any(),any(),any(),any());

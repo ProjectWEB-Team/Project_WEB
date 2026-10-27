@@ -23,6 +23,7 @@
                     <c:if test="${not empty param.googleError}"><div class="alert alert-danger" role="alert">Không thể đăng nhập bằng Google. Vui lòng thử lại hoặc chọn cách đăng nhập khác.</div></c:if>
                     <c:if test="${not empty param.phoneError}"><div class="alert alert-danger" role="alert">Không thể đăng nhập bằng điện thoại. Vui lòng thử lại hoặc chọn cách đăng nhập khác.</div></c:if>
                     <c:if test="${not empty param.logout}"><div class="alert alert-success" role="status">Bạn đã đăng xuất.</div></c:if>
+                    <c:if test="${not empty param.reset}"><div class="alert alert-success" role="status">Đã đặt lại mật khẩu. Hãy đăng nhập bằng mật khẩu mới.</div></c:if>
                     <c:if test="${not empty param.registered}"><div class="alert alert-success" role="status">Tài khoản đã được kích hoạt. Bạn có thể đăng nhập.</div></c:if>
                     <a class="btn btn-ute-accent w-100 mb-3" href="${pageContext.request.contextPath}/auth/phone-login">Đăng nhập bằng mã OTP điện thoại</a>
                     <c:if test="${googleLoginEnabled}">
@@ -36,6 +37,7 @@
                             <div class="mb-4"><label class="form-label" for="password">Mật khẩu</label><input class="form-control" id="password" name="password" type="password" autocomplete="current-password" required></div>
                             <button class="btn btn-outline-primary w-100" type="submit">Đăng nhập</button>
                         </form>
+                        <p class="small mt-2 mb-0"><a href="${pageContext.request.contextPath}/auth/forgot-password">Quên mật khẩu?</a></p>
                     </details>
                     <p class="text-center small mb-0 mt-4">Chưa có tài khoản? <a href="${pageContext.request.contextPath}/register">Đăng ký</a></p>
                 </div>

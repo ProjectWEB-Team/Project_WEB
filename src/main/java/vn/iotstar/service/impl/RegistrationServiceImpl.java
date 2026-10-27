@@ -80,7 +80,7 @@ public class RegistrationServiceImpl implements RegistrationService {
         User user = challenge.getUser();
         if (user.getRole() != UserRole.ROLE_USER
                 || ("REGISTRATION".equals(purpose) && !"INACTIVE".equals(user.getStatus()))
-                || ("LOGIN".equals(purpose) && (!user.isEnabled() || !user.isPhoneVerified()))) return Optional.empty();
+                || (!"REGISTRATION".equals(purpose) && (!user.isEnabled() || !user.isPhoneVerified()))) return Optional.empty();
         if (request.getCode() == null || !request.getCode().matches("[0-9]{6}")
                 || !encoder.matches(request.getCode(), challenge.getCodeHash())) {
             challenge.reject();
@@ -91,6 +91,17 @@ public class RegistrationServiceImpl implements RegistrationService {
         return Optional.of(user);
     }
     @Override public RegistrationChallengeResponse requestLogin(PhoneLoginRequest request) {
+        return requestPhoneChallenge(request, "LOGIN");
+    }
+    @Override public RegistrationChallengeResponse requestPasswordReset(PhoneLoginRequest request) {
+        return requestPhoneChallenge(request, "PASSWORD_RESET");
+    }
+    @Override public boolean resetPassword(VerifyPhoneOtpRequest request, String newPassword) {
+        if (newPassword == null || newPassword.length() < 8 || newPassword.getBytes(StandardCharsets.UTF_8).length > 72) return false;
+        return verifyBound(request, "PASSWORD_RESET").map(user -> { user.changePassword(encoder.encode(newPassword)); return true; })
+                .orElse(false);
+    }
+    private RegistrationChallengeResponse requestPhoneChallenge(PhoneLoginRequest request, String purpose) {
         String phone = VietnamPhoneNormalizer.normalize(request.getPhone());
         User user = users.findByPhoneForUpdate(phone).filter(User::isEnabled)
                 .filter(User::isAccountNonLocked).filter(User::isPhoneVerified).orElse(null);
@@ -101,9 +112,9 @@ public class RegistrationServiceImpl implements RegistrationService {
                     "*******" + phone.substring(phone.length() - 3));
         }
         PhoneOtpChallenge challenge = challenges.findByUserIdForUpdate(user.getId()).orElse(null);
-        if (challenge != null) return issue(challenge, "LOGIN");
+        if (challenge != null) return issue(challenge, purpose);
         String code = newCode();
-        challenge = PhoneOtpChallenge.create(user, "LOGIN", encoder.encode(code), clock.instant(), policy);
+        challenge = PhoneOtpChallenge.create(user, purpose, encoder.encode(code), clock.instant(), policy);
         challenges.saveAndFlush(challenge);
         delivery.send(challenge.getId(), phone, code, challenge.getExpiresAt());
         return response(challenge);
@@ -114,7 +125,7 @@ public class RegistrationServiceImpl implements RegistrationService {
         User user = challenge.getUser();
         if (challenge.getConsumedAt() != null || !user.isAccountNonLocked() || user.getRole() != UserRole.ROLE_USER
                 || ("REGISTRATION".equals(challenge.getPurpose()) && !"INACTIVE".equals(user.getStatus()))
-                || ("LOGIN".equals(challenge.getPurpose()) && (!user.isEnabled() || !user.isPhoneVerified()))) throw unavailable();
+                || (!"REGISTRATION".equals(challenge.getPurpose()) && (!user.isEnabled() || !user.isPhoneVerified()))) throw unavailable();
         return issue(challenge, challenge.getPurpose());
     }
     private RegistrationChallengeResponse issue(PhoneOtpChallenge challenge, String purpose) {

@@ -79,6 +79,7 @@ public class User implements UserDetails {
         phoneVerifiedAt = LocalDateTime.ofInstant(now, ZoneOffset.UTC);
         status = "ACTIVE";
     }
+    public void changePassword(String newPasswordHash) { this.passwordHash = newPasswordHash; }
     public UserRole getRole() { return role; }
     public String getStatus() { return status; }
     @Override public Collection<? extends GrantedAuthority> getAuthorities() { return List.of(new SimpleGrantedAuthority(role.name())); }
