@@ -1,0 +1,188 @@
+A bounded decision reason is required	Vui lòng nhập lý do quyết định (có giới hạn độ dài).
+A bounded disposal reason is required	Vui lòng nhập lý do xử lý (có giới hạn độ dài).
+A bounded investigation outcome and evidence are required	Vui lòng nhập kết quả điều tra và bằng chứng (có giới hạn độ dài).
+A matching confirmed-loss investigation and missing custody are required	Cần có kết luận điều tra xác nhận mất hàng và biên bản hàng thiếu tương ứng.
+A missing item cannot be received without corrective custody evidence	Không thể nhận kiện đang thiếu nếu chưa có chứng từ bàn giao điều chỉnh.
+A received item cannot be marked missing	Kiện đã nhận thì không thể đánh dấu là thiếu.
+Account is locked	Tài khoản đã bị khóa.
+Accountable investigation evidence required	Cần có bằng chứng điều tra có người chịu trách nhiệm.
+Active hub assignment required	Bạn chưa được gán vào bưu cục đang hoạt động.
+Active manager hub required	Quản lý chưa được gán bưu cục đang hoạt động.
+Actual origin receipt is required	Cần có xác nhận đã nhận hàng thực tế tại bưu cục gốc.
+Administrator required	Chỉ quản trị viên mới được thực hiện thao tác này.
+Assessed surcharge differs from measured obligation	Phụ phí đã đánh giá không khớp với khoản phải thu theo số đo thực tế.
+COD collection conflicts with recorded evidence	Khoản thu COD mâu thuẫn với chứng từ đã ghi nhận.
+COD collection required before delivery confirmation	Cần ghi nhận thu COD trước khi xác nhận giao hàng.
+COD has no matching verified settlement record	COD chưa có bản ghi quyết toán đã xác minh tương ứng.
+COD is not an eligible collected source for this shipper, method and date	Khoản COD này không hợp lệ để đối soát theo shipper, phương thức và ngày đã chọn.
+COD is not awaiting collection	COD không ở trạng thái chờ thu.
+COD is not ready for a new payout	COD chưa sẵn sàng để chi trả lần mới.
+COD obligation is not ready for reassignment	Khoản COD chưa sẵn sàng để giao lại.
+COD payout does not match its reconciled source	Khoản chi trả COD không khớp với nguồn đã đối soát.
+COD source does not match this task	Nguồn COD không khớp với nhiệm vụ này.
+Cannot cancel while recording collected cash	Không thể hủy khi đang ghi nhận tiền mặt đã thu.
+Cannot reprice a settled payment	Không thể tính lại giá cho khoản thanh toán đã quyết toán.
+Collected COD is immutable	COD đã thu không thể thay đổi.
+Collected cash must equal the outstanding intake amount	Tiền mặt thu phải bằng đúng số tiền còn phải thu khi nhận hàng.
+Collection must match authoritative amount	Số tiền thu phải khớp với số tiền chính thức.
+Compensation already credited for incident: 	Sự cố này đã được bồi thường:
+Conflicting withdrawal request with the same key	Yêu cầu rút tiền bị trùng khóa với yêu cầu khác nhưng nội dung khác.
+Container is not open for custody	Bao hàng không ở trạng thái mở để bàn giao.
+Container is not sealed	Bao hàng chưa được niêm phong.
+Container was not loaded	Bao hàng chưa được xếp hàng.
+Container was not scanned for custody	Bao hàng chưa được quét bàn giao.
+Credit amount must be positive	Số tiền cộng phải lớn hơn 0.
+Custody has not been accepted	Phiếu bàn giao chưa được chấp nhận.
+Debit amount must be positive	Số tiền trừ phải lớn hơn 0.
+Declared weight is missing	Chưa có khối lượng khai báo.
+Deduct amount must be positive	Số tiền khấu trừ phải lớn hơn 0.
+Demo VNPay confirmation required	Cần xác nhận thanh toán VNPay (bản demo).
+Do not collect cash while requesting online surcharge payment	Không thu tiền mặt khi đang yêu cầu thanh toán phụ phí trực tuyến.
+Electronic reconciliation accepts COD sources only	Đối soát điện tử chỉ nhận nguồn COD.
+Evidence must be a JPG, PNG or WEBP image	Bằng chứng phải là ảnh JPG, PNG hoặc WEBP.
+Existing surcharge must match physical assessment	Phụ phí hiện có phải khớp với đánh giá thực tế.
+Fee already debited for shipment: 	Cước phí đã được trừ cho vận đơn:
+Fee is not settleable	Khoản phí này chưa thể quyết toán.
+Finance resource is outside the permitted scope	Dữ liệu tài chính này nằm ngoài phạm vi bạn được phép xem.
+Handover is not awaiting acceptance	Phiếu bàn giao không ở trạng thái chờ chấp nhận.
+Hub must assess the surcharge first	Bưu cục cần đánh giá phụ phí trước.
+Incident is not awaiting compensation	Sự cố không ở trạng thái chờ bồi thường.
+Incident is not awaiting investigation	Sự cố không ở trạng thái chờ điều tra.
+Insufficient balance to lock funds	Số dư không đủ để khóa tiền.
+Insufficient balance to pay from wallet	Số dư ví không đủ để thanh toán.
+Insufficient locked balance to deduct	Số dư đang khóa không đủ để khấu trừ.
+Insufficient locked balance to refund	Số dư đang khóa không đủ để hoàn.
+Invalid assignment	Phân công không hợp lệ.
+Invalid completed task	Nhiệm vụ đã hoàn thành không hợp lệ.
+Invalid declared value	Giá trị khai báo không hợp lệ.
+Invalid failure reason: 	Lý do thất bại không hợp lệ:
+Invalid forward fee status	Trạng thái cước chiều đi không hợp lệ.
+Invalid or duplicate reconciliation item	Mục đối soát không hợp lệ hoặc bị trùng.
+Invalid outbound custody	Phiếu bàn giao chiều đi không hợp lệ.
+Invalid payment amount	Số tiền thanh toán không hợp lệ.
+Invalid return fee policy	Chính sách phí hoàn hàng không hợp lệ.
+Invalid return grace policy	Chính sách thời gian chờ hoàn hàng không hợp lệ.
+Invalid returned parcel scan	Quét kiện hoàn không hợp lệ.
+Invalid surcharge obligation	Khoản phụ phí không hợp lệ.
+Invalid weight pricing policy	Chính sách giá theo khối lượng không hợp lệ.
+Lock amount must be positive	Số tiền khóa phải lớn hơn 0.
+Loss was closed through another incident	Vụ mất hàng đã được đóng bằng một sự cố khác.
+Manager required	Chỉ quản lý mới được thực hiện thao tác này.
+Maximum one delivery attempt per day permitted	Mỗi ngày chỉ được giao tối đa một lần.
+Method and verified settlement evidence are required	Cần có phương thức và bằng chứng quyết toán đã xác minh.
+Negative fee policy	Chính sách phí không được âm.
+No active pricing policy for physical intake	Chưa có bảng giá đang áp dụng cho việc nhận hàng tại quầy.
+No assigned return task	Chưa có nhiệm vụ hoàn hàng được giao.
+No completed failed delivery task	Chưa có nhiệm vụ giao thất bại đã hoàn tất.
+No persisted refund obligation	Chưa có khoản hoàn tiền nào được ghi nhận.
+No preceding delivery custody	Chưa có bàn giao giao hàng trước đó.
+No reconciled source	Chưa có nguồn đã đối soát.
+Not assigned to this shipment	Bạn không được giao vận đơn này.
+Only PENDING withdrawals can be approved. Current: 	Chỉ duyệt được yêu cầu rút tiền đang chờ (PENDING). Trạng thái hiện tại:
+Only PENDING withdrawals can be rejected. Current: 	Chỉ từ chối được yêu cầu rút tiền đang chờ (PENDING). Trạng thái hiện tại:
+Only an actually paid, unsettled obligation can be refunded	Chỉ hoàn được khoản đã thanh toán thật và chưa quyết toán.
+Only an unresolved missing item can be recovered	Chỉ tìm lại được kiện đang thiếu chưa xử lý xong.
+Only custody without a trip can be corrected	Chỉ sửa được phiếu bàn giao chưa gắn chuyến xe.
+Only departed custody can be received at destination	Chỉ nhận được hàng của phiếu đã xuất phát tại bưu cục đích.
+Operational position required	Cần có chức vụ nghiệp vụ phù hợp.
+Operational role required	Cần có vai trò nghiệp vụ phù hợp.
+Original payer does not match shipment	Người trả cước ban đầu không khớp với vận đơn.
+Original shipping obligation does not match shipment	Khoản cước ban đầu không khớp với vận đơn.
+Original shipping obligation is missing	Không tìm thấy khoản cước ban đầu.
+Paid collection does not match replay	Khoản thu đã thanh toán không khớp với lần ghi nhận trước.
+Parcel already has an active task	Kiện hàng đã có nhiệm vụ đang xử lý.
+Parcel is not available for sender pickup	Kiện hàng chưa sẵn sàng để người gửi nhận lại.
+Parcel is not awaiting physical return	Kiện hàng không ở trạng thái chờ hoàn trả thực tế.
+Parcel is not in this hub's available inventory	Kiện hàng không nằm trong tồn kho khả dụng của bưu cục này.
+Parcel is not ready for local delivery	Kiện hàng chưa sẵn sàng để giao nội khu.
+Parcel is not ready for outbound scan	Kiện hàng chưa sẵn sàng để quét xuất kho.
+Parcel is not yet due for another delivery attempt	Chưa đến hạn giao lại kiện hàng này.
+Parcel must be ready for handover with positive measured weight and dimensions	Kiện hàng phải sẵn sàng bàn giao và có khối lượng, kích thước đo thực tế lớn hơn 0.
+Parcel unavailable	Không tìm thấy kiện hàng.
+Payment cannot be collected	Không thể thu khoản thanh toán này.
+Payment is not an eligible collected cash source for this shipper and date	Khoản thanh toán này không hợp lệ để đối soát tiền mặt theo shipper và ngày đã chọn.
+Payment is not eligible for receipt	Khoản thanh toán này chưa đủ điều kiện để ghi nhận.
+Payment method required	Vui lòng chọn phương thức thanh toán.
+Payment source type does not match	Loại nguồn thanh toán không khớp.
+Payout has no wallet evidence	Khoản chi trả chưa có chứng từ ví.
+Payout wallet evidence does not match	Chứng từ ví của khoản chi trả không khớp.
+Physical delivery custody required	Cần có bàn giao giao hàng thực tế.
+ROLE_ADMIN required	Chỉ quản trị viên mới được thực hiện thao tác này.
+ROLE_ADMIN required to approve withdrawals	Chỉ quản trị viên mới được duyệt yêu cầu rút tiền.
+ROLE_ADMIN required to reject withdrawals	Chỉ quản trị viên mới được từ chối yêu cầu rút tiền.
+ROLE_SHIPPER required to confirm delivery	Chỉ shipper mới được xác nhận giao hàng.
+ROLE_SHIPPER required to record collection	Chỉ shipper mới được ghi nhận thu tiền.
+ROLE_SHIPPER required to record failure	Chỉ shipper mới được ghi nhận giao thất bại.
+ROLE_SHIPPER required to scan for delivery	Chỉ shipper mới được quét để giao hàng.
+Receiver shipping fee collection required before delivery confirmation	Cần thu cước từ người nhận trước khi xác nhận giao hàng.
+Reconciliation hub must be set once	Bưu cục đối soát chỉ được đặt một lần.
+Record the verified sender identity reference	Vui lòng ghi lại thông tin giấy tờ đã xác minh của người gửi.
+Record verified settlement evidence for electronic COD	Vui lòng ghi bằng chứng quyết toán đã xác minh cho COD điện tử.
+Recorded collection must be reconciled before reporting failure	Cần đối soát khoản đã thu trước khi báo giao thất bại.
+Recorded investigation outcome cannot be changed	Kết quả điều tra đã ghi nhận không thể thay đổi.
+Refund already credited for payment: 	Khoản thanh toán này đã được hoàn tiền:
+Refund amount must be positive	Số tiền hoàn phải lớn hơn 0.
+Refund obligation does not match the cancelled shipment and payment	Khoản hoàn tiền không khớp với vận đơn đã hủy và khoản thanh toán.
+Refund obligation is not pending	Khoản hoàn tiền không ở trạng thái chờ xử lý.
+Rejection reason is required	Vui lòng nhập lý do từ chối.
+Return collection requires outbound assigned custody	Thu phí hoàn hàng cần có phiếu bàn giao chiều đi đã được giao.
+Return delivery requires scanned outbound custody	Giao hàng hoàn cần phiếu bàn giao chiều đi đã được quét.
+Return fee has not been priced	Phí hoàn hàng chưa được tính.
+Return fees cannot be settled in this state	Chưa thể quyết toán phí hoàn hàng ở trạng thái này.
+Return has not reached its origin	Hàng hoàn chưa về tới bưu cục gốc.
+Return is not overdue available origin inventory	Hàng hoàn không phải là hàng tồn quá hạn tại bưu cục gốc.
+Return is not ready for outbound scan	Hàng hoàn chưa sẵn sàng để quét xuất kho.
+Return is outside manager scope	Hàng hoàn nằm ngoài phạm vi quản lý của bạn.
+Route decision is no longer available for outbound loading	Quyết định tuyến này không còn dùng để xếp hàng chiều đi được nữa.
+Scan the parcel tracking number before receipt	Vui lòng quét mã vận đơn của kiện hàng trước khi nhận.
+Select a future rescheduled date	Vui lòng chọn ngày hẹn giao lại trong tương lai.
+Select an available vehicle for the trip	Vui lòng chọn xe còn trống cho chuyến.
+Select between 1 and 100 authoritative shift items	Vui lòng chọn từ 1 đến 100 khoản của ca làm việc.
+Sender must accept the weight surcharge	Người gửi cần đồng ý phụ phí khối lượng.
+Sender must settle all forward and return fees before release	Người gửi phải thanh toán đủ cước chiều đi và chiều về trước khi nhận lại hàng.
+Sender ownership required	Chỉ người gửi của vận đơn mới được thực hiện thao tác này.
+Settled payment does not match replay	Khoản đã quyết toán không khớp với lần ghi nhận trước.
+Settled payment evidence missing	Thiếu chứng từ của khoản đã quyết toán.
+Settled source has no wallet evidence	Nguồn đã quyết toán chưa có chứng từ ví.
+Shipment is not assigned to this delivery hub	Vận đơn không được giao cho bưu cục giao hàng này.
+Shipment is not held for the confirmed missing-parcel outcome	Vận đơn không bị giữ theo kết luận mất hàng đã xác nhận.
+Shipment must be OUT_FOR_DELIVERY to confirm delivered. Current: 	Vận đơn phải đang giao (OUT_FOR_DELIVERY) mới xác nhận đã giao được. Trạng thái hiện tại:
+Shipment must be OUT_FOR_DELIVERY to record collection	Vận đơn phải đang giao (OUT_FOR_DELIVERY) mới ghi nhận thu tiền được.
+Shipment must be OUT_FOR_DELIVERY to record failure	Vận đơn phải đang giao (OUT_FOR_DELIVERY) mới ghi nhận giao thất bại được.
+Shipment unavailable	Không tìm thấy vận đơn.
+Shipper has no active assignment for shipment: 	Shipper chưa được giao vận đơn:
+Shipper has no in-progress delivery task for shipment: 	Shipper không có nhiệm vụ giao đang thực hiện cho vận đơn:
+Shipper is not active at this hub	Shipper không còn hoạt động tại bưu cục này.
+Shipper is not assigned to deliver shipment: 	Shipper không được phân công giao vận đơn:
+Shipping collection conflicts with recorded evidence	Khoản thu cước mâu thuẫn với chứng từ đã ghi nhận.
+Shipping collection does not match obligation	Khoản thu cước không khớp với khoản phải thu.
+Shipping obligation does not match intake	Khoản cước không khớp với thông tin nhận hàng.
+Shipping payment is missing	Chưa có khoản thanh toán cước.
+Source is already reconciled	Nguồn này đã được đối soát.
+Stored fee does not match authoritative obligation	Phí đã lưu không khớp với khoản phải thu chính thức.
+Submitted shipment or expected amount does not match the source	Vận đơn hoặc số tiền kỳ vọng đã gửi không khớp với nguồn.
+Surcharge cannot be received	Không thể ghi nhận phụ phí này.
+Surcharge not payable now	Hiện chưa thể thanh toán phụ phí này.
+The shipment pricing service must be resolved before receipt	Cần xác định dịch vụ tính giá của vận đơn trước khi nhận hàng.
+Trip has not arrived	Chuyến xe chưa tới nơi.
+Trip is not in transit	Chuyến xe không ở trạng thái đang chạy.
+Trip is not ready to start	Chuyến xe chưa sẵn sàng để bắt đầu.
+Unknown fee obligation	Không xác định được khoản phí.
+Unknown linehaul transition	Chuyển trạng thái chuyến xe không hợp lệ.
+Unknown operational work item	Không tìm thấy mục công việc.
+Unsupported COD method	Phương thức COD không được hỗ trợ.
+Unsupported collection method	Phương thức thu tiền không được hỗ trợ.
+Unsupported fee payment method	Phương thức thanh toán phí không được hỗ trợ.
+Unsupported payment method	Phương thức thanh toán không được hỗ trợ.
+Unsupported receiver fee method	Phương thức thu cước từ người nhận không được hỗ trợ.
+Use assigned return-delivery workflow	Vui lòng dùng quy trình giao hàng hoàn đã được phân công.
+Use wallet or the explicitly confirmed demo VNPay action	Vui lòng dùng ví hoặc thao tác VNPay demo đã được xác nhận rõ ràng.
+Vehicle is not available	Xe không còn trống.
+Vehicle is not reserved	Xe chưa được giữ cho chuyến này.
+Wallet evidence does not match the settled source	Chứng từ ví không khớp với nguồn đã quyết toán.
+Wallet owner required	Chỉ chủ ví mới được thực hiện thao tác này.
+Withdrawal owner required	Chỉ người tạo yêu cầu rút tiền mới được thực hiện thao tác này.
+Wrong delivery hub	Sai bưu cục giao hàng.
+Wrong origin hub	Sai bưu cục gốc.
+Wrong return task	Sai nhiệm vụ hoàn hàng.
+Wrong scan hub	Quét sai bưu cục.

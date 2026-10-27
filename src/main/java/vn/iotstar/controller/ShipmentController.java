@@ -69,7 +69,7 @@ public class ShipmentController {
                     model.addAttribute("quote", quote);
                     model.addAttribute("quoteReference", reference);
                 } catch (IllegalArgumentException exception) {
-                    bindingResult.reject("quote.rejected", exception.getMessage());
+                    bindingResult.reject("quote.rejected", FlashMessages.text(exception));
                 }
             }
         }
@@ -85,7 +85,7 @@ public class ShipmentController {
         try {
             VietnamAddressCatalog.standard().normalize(request);
         } catch (IllegalArgumentException exception) {
-            bindingResult.reject("address.invalid", exception.getMessage());
+            bindingResult.reject("address.invalid", FlashMessages.text(exception));
             return createView(model);
         }
         // One reviewed draft per session; serialize final submits and consume after successful commit.
@@ -101,7 +101,7 @@ public class ShipmentController {
                 return "redirect:/user/shipments/" + shipmentId;
             } catch (IllegalArgumentException exception) {
                 session.removeAttribute(QUOTED_DRAFT);
-                bindingResult.reject("create.rejected", exception.getMessage());
+                bindingResult.reject("create.rejected", FlashMessages.text(exception));
                 return createView(model);
             }
         }
@@ -118,7 +118,7 @@ public class ShipmentController {
         try {
             shipmentService.confirmPayment(shipmentId);
         } catch (IllegalArgumentException exception) {
-            redirectAttributes.addFlashAttribute("error", exception.getMessage());
+            redirectAttributes.addFlashAttribute("error", FlashMessages.text(exception));
         }
         return "redirect:/user/shipments/" + shipmentId;
     }
@@ -128,7 +128,7 @@ public class ShipmentController {
         try {
             shipmentService.cancel(shipmentId);
         } catch (IllegalArgumentException exception) {
-            redirectAttributes.addFlashAttribute("error", exception.getMessage());
+            redirectAttributes.addFlashAttribute("error", FlashMessages.text(exception));
         }
         return "redirect:/user/shipments/" + shipmentId;
     }

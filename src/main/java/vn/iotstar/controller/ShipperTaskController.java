@@ -43,7 +43,7 @@ public class ShipperTaskController {
             action.run();
             redirectAttributes.addFlashAttribute("message", success);
         } catch (IllegalArgumentException exception) {
-            redirectAttributes.addFlashAttribute("error", exception.getMessage());
+            redirectAttributes.addFlashAttribute("error", FlashMessages.text(exception));
         }
         return "redirect:/shipper/tasks";
     }

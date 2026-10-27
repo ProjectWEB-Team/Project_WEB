@@ -45,7 +45,7 @@ public class HubOperationsController {
         try {
             hubOperationsService.receiveAtHub(command);
         } catch (IllegalArgumentException | IllegalStateException exception) {
-            redirectAttributes.addFlashAttribute("operationMessage", exception.getMessage());
+            redirectAttributes.addFlashAttribute("operationMessage", FlashMessages.text(exception));
             return "redirect:/hub/sorter";
         }
         redirectAttributes.addFlashAttribute("operationMessage", "Đã nhận hàng vào hub.");

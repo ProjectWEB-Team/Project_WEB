@@ -42,7 +42,7 @@ public class HubPickupController {
             action.run();
             redirectAttributes.addFlashAttribute("message", success);
         } catch (IllegalArgumentException exception) {
-            redirectAttributes.addFlashAttribute("error", exception.getMessage());
+            redirectAttributes.addFlashAttribute("error", FlashMessages.text(exception));
         }
         return "redirect:/hub/pickups";
     }

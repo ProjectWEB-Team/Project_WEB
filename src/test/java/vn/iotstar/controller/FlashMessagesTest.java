@@ -15,4 +15,11 @@ class FlashMessagesTest {
         assertThat(FlashMessages.of(new DataIntegrityViolationException("Violation of UNIQUE KEY constraint"))).isEqualTo(FlashMessages.GENERIC);
         assertThat(FlashMessages.of(new RuntimeException("jdbc details"))).isEqualTo(FlashMessages.GENERIC);
     }
+
+    @Test
+    void knownEnglishRulesAreShownInVietnameseAndPrefixKeepsItsDetail() {
+        assertThat(FlashMessages.of(new IllegalStateException("Vehicle is not available"))).isEqualTo("Xe không còn trống.");
+        assertThat(FlashMessages.of(new IllegalStateException("Shipper is not assigned to deliver shipment: UTX-9")))
+                .isEqualTo("Shipper không được phân công giao vận đơn: UTX-9");
+    }
 }
