@@ -10,19 +10,20 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="${pageContext.request.contextPath}/assets/css/ute-express.css" rel="stylesheet">
 </head>
-<body class="bg-ute-canvas">
+<body class="ute-auth">
 <jsp:include page="/WEB-INF/views/layout/navbar.jsp" />
-<main class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-12 col-md-8 col-lg-6">
-            <a class="d-inline-block text-ute-primary fw-bold text-decoration-none mb-4" href="${pageContext.request.contextPath}/">UTEExpress</a>
-            <section class="card border-0 shadow-sm">
+<main class="container ute-auth-main">
+    <div class="ute-auth-layout">
+        <section class="ute-auth-brand" aria-label="UTEexpress"><jsp:include page="/WEB-INF/views/layout/logo.jsp" /><p>Giao nhanh. Trọn niềm tin.</p></section>
+        <div class="ute-auth-form">
+
+            <section class="card ute-auth-card">
                 <div class="card-body p-4 p-md-5">
                     <h1 class="h3 mb-2">Tạo tài khoản</h1>
-                    <p class="text-muted mb-4">Xác thực số điện thoại để bắt đầu gửi hàng và theo dõi đơn của bạn.</p>
-                    <c:if test="${not empty otpClosedNotice}"><div class="alert alert-warning" role="status"><c:out value="${otpClosedNotice}"/></div></c:if>
+                    <p class="text-muted mb-4">${emailRegistration ? 'Xác thực email để bắt đầu gửi hàng. Số điện thoại được dùng để liên hệ và cần xác thực riêng.' : 'Xác thực số điện thoại để bắt đầu gửi hàng và theo dõi đơn của bạn.'}</p>
+                    <c:if test="${not emailRegistration and not empty otpClosedNotice}"><div class="alert alert-warning" role="status"><c:out value="${otpClosedNotice}"/></div></c:if>
                     <c:if test="${not empty error}"><div class="alert alert-danger" role="alert"><c:out value="${error}"/></div></c:if>
-                    <form:form method="post" action="${pageContext.request.contextPath}/register" modelAttribute="registerUserRequest">
+                    <form:form method="post" action="${pageContext.request.contextPath}${emailRegistration ? '/auth/email/register' : '/register'}" modelAttribute="registerUserRequest">
                         <div class="mb-3">
                             <label class="form-label" for="fullName">Họ và tên</label>
                             <form:input path="fullName" id="fullName" type="text" cssClass="form-control" cssErrorClass="form-control is-invalid" htmlEscape="true" autocomplete="name" maxlength="100" required="required"/>
@@ -51,6 +52,9 @@
                         </div>
                         <button class="btn btn-ute-accent w-100" type="submit">Đăng ký và nhận mã xác thực</button>
                     </form:form>
+                    <c:if test="${emailLoginEnabled}">
+                        <p class="text-center mt-3"><a href="${pageContext.request.contextPath}${emailRegistration ? '/register' : '/auth/email/register'}">${emailRegistration ? 'Đăng ký bằng OTP điện thoại' : 'Đăng ký bằng mã gửi qua email'}</a></p>
+                    </c:if>
                     <c:if test="${googleLoginEnabled}">
                         <p class="text-muted text-center my-3">Hoặc</p>
                         <a class="btn btn-outline-secondary w-100" href="${pageContext.request.contextPath}/oauth2/authorization/google">Tiếp tục với Google</a>
@@ -61,5 +65,4 @@
         </div>
     </div>
 </main>
-</body>
-</html>
+<jsp:include page="/WEB-INF/views/layout/footer.jsp" />

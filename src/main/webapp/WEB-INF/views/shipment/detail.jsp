@@ -92,5 +92,4 @@
     </section>
     <a class="btn btn-outline-primary mt-3" href="${pageContext.request.contextPath}/user/shipment-fees/${shipment.id}">Xem phí hoàn và phụ thu</a>
 </main>
-</body>
-</html>
+<jsp:include page="/WEB-INF/views/layout/footer.jsp" />

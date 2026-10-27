@@ -3,6 +3,8 @@
 Mô hình: trình duyệt → **Nginx (HTTPS, domain của bạn)** → **ứng dụng Spring Boot trên EC2** → **Amazon RDS for SQL Server Express**.
 Schema database do **Flyway** tự tạo/cập nhật khi ứng dụng khởi động (`src/main/resources/db/migration`), không cần chạy file SQL bằng tay.
 
+Website đang chạy: dùng [CI/CD với GitHub Actions](GITHUB_ACTIONS_CICD.md) để kiểm thử và đưa bản đã kiểm thử lên EC2. Hướng dẫn dưới đây dành cho việc dựng hạ tầng lần đầu.
+
 Thời gian làm lần đầu: khoảng 1–2 giờ. Làm đúng thứ tự từ bước 1.
 
 ---
@@ -151,6 +153,7 @@ Lần khởi động đầu, log có các dòng `Migrating schema [dbo] to versi
 ## 8. Nginx + HTTPS
 
 ```bash
+sudo install -o root -g root -m 644 deploy/nginx-auth-limits.conf /etc/nginx/conf.d/uteexpress-auth-limits.conf
 sudo nano /etc/nginx/sites-available/uteexpress     # dán deploy/nginx-uteexpress.conf, thay example.com bằng domain
 sudo ln -s /etc/nginx/sites-available/uteexpress /etc/nginx/sites-enabled/
 sudo rm -f /etc/nginx/sites-enabled/default

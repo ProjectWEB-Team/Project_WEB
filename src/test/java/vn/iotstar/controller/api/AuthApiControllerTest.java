@@ -74,7 +74,7 @@ class AuthApiControllerTest {
         User persistedUser = new User(7L, "api-user", "hash", UserRole.ROLE_USER, "ACTIVE");
         when(jwtService.extractUsername("valid-token")).thenReturn("api-user");
         when(userDetailsService.loadUserByUsername("api-user")).thenReturn(persistedUser);
-        when(jwtService.isValid("valid-token", "api-user")).thenReturn(true);
+        when(jwtService.isValid("valid-token", persistedUser)).thenReturn(true);
 
         mockMvc.perform(get("/api/security/actor").param("userId", "999")
                         .header("Authorization", "Bearer valid-token"))

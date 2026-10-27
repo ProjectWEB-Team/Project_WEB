@@ -43,5 +43,4 @@
         <c:if test="${shipments.hasNext()}"><a class="btn btn-outline-secondary btn-sm" href="?page=${shipments.number + 1}">Trang sau</a></c:if>
     </nav>
 </main>
-</body>
-</html>
+<jsp:include page="/WEB-INF/views/layout/footer.jsp" />

@@ -50,8 +50,8 @@ class SecurityConfigTest {
         User user = activeUser();
         String token = jwtService.issueToken(user);
         assertEquals("linehaul", jwtService.extractUsername(token));
-        assertTrue(jwtService.isValid(token, "linehaul"));
-        assertFalse(jwtService.isValid(token, "another-user"));
+        assertTrue(jwtService.isValid(token, user));
+        assertFalse(jwtService.isValid(token, new User(2L, "another-user", "hash", UserRole.ROLE_USER, "ACTIVE")));
     }
 
     @Test
@@ -122,6 +122,13 @@ class SecurityConfigTest {
 
     private User activeUser() {
         return new User(1L, "linehaul", "hash", UserRole.ROLE_LINEHAUL_DRIVER, "ACTIVE");
+    }
+    @Test void passwordRoleAndLockChangesRevokeExistingTokens() {
+        User user = activeUser(); String token = jwtService.issueToken(user);
+        user.changePassword("new-hash"); assertFalse(jwtService.isValid(token, user));
+        token = jwtService.issueToken(user); user.changeRole(UserRole.ROLE_USER); assertFalse(jwtService.isValid(token, user));
+        token = jwtService.issueToken(user); user.changeStatus("LOCKED"); user.changeStatus("ACTIVE");
+        assertFalse(jwtService.isValid(token, user));
     }
 
     private String signedToken(String secret, Date expiration) {

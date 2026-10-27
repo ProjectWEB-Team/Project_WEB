@@ -6,4 +6,4 @@
 <body class="bg-light">
 <jsp:include page="/WEB-INF/views/layout/navbar.jsp" />
 <main class="container py-5"><h1 class="h3">Không tìm thấy trang</h1><p>Trang bạn tìm không tồn tại hoặc đã bị di chuyển.</p>
-<a class="btn btn-primary" href="${pageContext.request.contextPath}/">Về trang chủ</a></main></body></html>
+<a class="btn btn-primary" href="${pageContext.request.contextPath}/">Về trang chủ</a></main><jsp:include page="/WEB-INF/views/layout/footer.jsp" />

@@ -11,4 +11,4 @@
 <select name="shipperId" required><c:forEach items="${shippers}" var="shipper"><option value="${shipper.userId()}"><c:out value="${shipper.fullName()}"/></option></c:forEach></select>
 <button type="submit">Phân công</button></form></c:forEach>
 <c:if test="${empty candidates}"><p>Không có kiện chờ phân công.</p></c:if>
-<a href="${pageContext.request.contextPath}/hub/return-collection">Bàn giao kiện hoàn tại hub</a></main></body></html>
+<a href="${pageContext.request.contextPath}/hub/return-collection">Bàn giao kiện hoàn tại hub</a></main><jsp:include page="/WEB-INF/views/layout/footer.jsp" />

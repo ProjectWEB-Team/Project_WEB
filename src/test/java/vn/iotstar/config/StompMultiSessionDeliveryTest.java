@@ -52,6 +52,7 @@ import static org.mockito.Mockito.*;
  */
 class StompMultiSessionDeliveryTest {
     private final SimpMessagingTemplate template = mock(SimpMessagingTemplate.class);
+    private final org.springframework.context.ApplicationEventPublisher emails = mock(org.springframework.context.ApplicationEventPublisher.class);
     private final WebSocketConfig.AuthenticatedShipmentStompInterceptor interceptor = new WebSocketConfig.AuthenticatedShipmentStompInterceptor();
 
     @BeforeEach void start() { TransactionSynchronizationManager.initSynchronization(); }
@@ -63,7 +64,7 @@ class StompMultiSessionDeliveryTest {
             new ShipmentCreatedEventResponse("UTX-1", ShipmentStatus.CREATED, "SHIPMENT_CREATED", LocalDateTime.of(2026, 10, 26, 9, 0));
 
     @Test void shipmentEventReachesOnlyTheOwnerAndOnlyAfterCommit() {
-        new StompShipmentEventPublisher(template).publishToUserAfterCommit("owner", shipmentEvent);
+        new StompShipmentEventPublisher(template, emails).publishToUserAfterCommit("owner", shipmentEvent);
         verifyNoInteractions(template);
 
         complete(TransactionSynchronization.STATUS_COMMITTED);
@@ -74,7 +75,7 @@ class StompMultiSessionDeliveryTest {
     }
 
     @Test void shipmentEventIsNeverSentOnRollback() {
-        new StompShipmentEventPublisher(template).publishToUserAfterCommit("owner", shipmentEvent);
+        new StompShipmentEventPublisher(template, emails).publishToUserAfterCommit("owner", shipmentEvent);
         TransactionSynchronizationManager.getSynchronizations().forEach(s -> s.afterCompletion(TransactionSynchronization.STATUS_ROLLED_BACK));
         verifyNoInteractions(template);
     }
@@ -97,7 +98,7 @@ class StompMultiSessionDeliveryTest {
     // --- Notifications ---
 
     @Test void twoNotificationRecipientsEachReceiveOnlyTheirOwnPayload() {
-        var publisher = new StompNotificationEventPublisher(template);
+        var publisher = new StompNotificationEventPublisher(template, emails);
         var toOwner = new NotificationEventResponse("REFUND_COMPLETED", "PAYMENT#1", "owner message");
         var toStranger = new NotificationEventResponse("WITHDRAWAL_REJECTED", "WITHDRAWAL#2", "stranger message");
         publisher.publishToUserAfterCommit("owner", toOwner);
@@ -112,7 +113,7 @@ class StompMultiSessionDeliveryTest {
     }
 
     @Test void blankNotificationRecipientIsRejectedBeforeAnySynchronization() {
-        var publisher = new StompNotificationEventPublisher(template);
+        var publisher = new StompNotificationEventPublisher(template, emails);
         assertThatThrownBy(() -> publisher.publishToUserAfterCommit(" ", new NotificationEventResponse("T", "R", "M")))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThat(TransactionSynchronizationManager.getSynchronizations()).isEmpty();

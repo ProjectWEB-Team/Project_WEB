@@ -6,4 +6,4 @@
 <body class="bg-light">
 <jsp:include page="/WEB-INF/views/layout/navbar.jsp" />
 <main class="container py-5"><h1 class="h3">Đã có lỗi xảy ra</h1><p>Hệ thống gặp sự cố. Vui lòng thử lại sau.</p>
-<a class="btn btn-primary" href="${pageContext.request.contextPath}/">Về trang chủ</a></main></body></html>
+<a class="btn btn-primary" href="${pageContext.request.contextPath}/">Về trang chủ</a></main><jsp:include page="/WEB-INF/views/layout/footer.jsp" />

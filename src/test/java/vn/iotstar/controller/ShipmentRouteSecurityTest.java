@@ -119,6 +119,7 @@ class ShipmentRouteSecurityTest {
     @Test
     void authenticatedQuoteWithCsrfUsesTheSessionPrincipalAndServerPrice() throws Exception {
         User owner = new User(7L, "shipment-owner", "test-hash", UserRole.ROLE_USER, "ACTIVE");
+        when(userDetailsService.loadUserByUsername(owner.getUsername())).thenReturn(owner);
         QuoteResponse quote = new QuoteResponse(new BigDecimal("35000"));
         when(shipmentService.quote(any())).thenAnswer(invocation -> {
             assertThat(AuthenticatedActor.requireCurrent().userId()).isEqualTo(7L);
@@ -136,6 +137,7 @@ class ShipmentRouteSecurityTest {
     @Test
     void paymentWithCsrfUsesAuthenticatedActorInsteadOfSubmittedOwner() throws Exception {
         User owner = new User(7L, "shipment-owner", "test-hash", UserRole.ROLE_USER, "ACTIVE");
+        when(userDetailsService.loadUserByUsername(owner.getUsername())).thenReturn(owner);
         doAnswer(invocation -> {
             assertThat(AuthenticatedActor.requireCurrent().userId()).isEqualTo(7L);
             return null;

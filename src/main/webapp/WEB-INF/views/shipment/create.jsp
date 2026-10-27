@@ -16,9 +16,10 @@
     <script src="${pageContext.request.contextPath}/assets/js/shipment-address.js" defer></script>
 </head>
 <body class="bg-ute-canvas">
+<c:set var="uteActiveNav" value="/user/shipments/create" scope="request" />
 <jsp:include page="/WEB-INF/views/layout/navbar.jsp" />
 <main class="container shipment-form-container py-4">
-    <a class="d-inline-block text-ute-primary fw-bold text-decoration-none mb-3" href="${pageContext.request.contextPath}/">UTEExpress</a>
+
     <h1 class="h3 mb-1">Tạo vận đơn</h1>
     <p class="text-ute-muted mb-4">Điền thông tin, xem báo giá rồi chọn cách gửi hàng. Bạn có thể quay lại để chỉnh sửa trước khi tạo đơn.</p>
     <nav id="shipment-step-navigation" aria-label="Các bước tạo vận đơn" hidden>
@@ -53,7 +54,6 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label" for="senderWardCode">Phường/xã/đặc khu người gửi</label>
-                    <input id="senderWardSearch" type="search" class="form-control mb-2" placeholder="Tìm phường/xã…" aria-label="Tìm phường/xã người gửi" aria-controls="senderWardCode" autocomplete="off">
                     <form:select id="senderWardCode" path="senderWardCode" cssClass="form-select" cssErrorClass="form-select is-invalid" required="required" autocomplete="address-level2" aria-describedby="sender-area-status">
                         <form:option value="" label="Chọn phường/xã/đặc khu"/>
                         <form:options items="${senderWards}" itemValue="code" itemLabel="name" htmlEscape="true"/>
@@ -77,7 +77,6 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label" for="receiverWardCode">Phường/xã/đặc khu người nhận</label>
-                    <input id="receiverWardSearch" type="search" class="form-control mb-2" placeholder="Tìm phường/xã…" aria-label="Tìm phường/xã người nhận" aria-controls="receiverWardCode" autocomplete="off">
                     <form:select id="receiverWardCode" path="receiverWardCode" cssClass="form-select" cssErrorClass="form-select is-invalid" required="required" autocomplete="address-level2" aria-describedby="receiver-area-status">
                         <form:option value="" label="Chọn phường/xã/đặc khu"/>
                         <form:options items="${receiverWards}" itemValue="code" itemLabel="name" htmlEscape="true"/>
@@ -149,5 +148,4 @@
         </div>
     </form:form>
 </main>
-</body>
-</html>
+<jsp:include page="/WEB-INF/views/layout/footer.jsp" />

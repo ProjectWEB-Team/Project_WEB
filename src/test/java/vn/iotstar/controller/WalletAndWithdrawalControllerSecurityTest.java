@@ -131,6 +131,7 @@ class WalletAndWithdrawalControllerSecurityTest {
      */
     private RequestPostProcessor authenticatedAs(UserRole role) {
         User principal = new User(42L, "test_" + role.name().toLowerCase(), "hash", role, "ACTIVE");
+        org.mockito.Mockito.when(userDetailsService.loadUserByUsername(principal.getUsername())).thenReturn(principal);
         Authentication authentication =
                 new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
                         principal, null, principal.getAuthorities());

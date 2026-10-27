@@ -1,5 +1,7 @@
 # Phase 02 — Cấu hình account: OTP điện thoại và Google
 
+> Cập nhật 28/10/2026: email OTP, khôi phục mật khẩu và thông báo qua SMTP đã có luồng riêng. Xem [thiết lập Google, Gmail và SMS](EMAIL_GOOGLE_SMS_SETUP.md) cho cổng local hiện tại 8081. Phần bên dưới giữ lại lịch sử Phase 02; các ghi chú Spring Mail chưa được sử dụng là trạng thái trước cập nhật này.
+
 Cập nhật trạng thái ngày **23/10/2026** theo [ADR-016](ARCHITECTURE_DECISIONS.md#adr-016--customer-phone-otp-and-google-oidc-sign-in). Database local là `ute_express`, SQL login `uteexpress_app`, cấu hình riêng trong `application-local.properties`. **Ngày 24/10: `mvn test` chạy 197 test, 0 lỗi, 9 SQL Server tests bỏ qua khi không bật biến môi trường.** Luồng account/OTP local đã qua HTTP thật; form tạo đơn đã có wizard 4 bước, báo giá gắn với session và mốc chờ bàn giao lưu trong DB. SQL tests kiểm tra linking, snapshot, rollback và cập nhật đồng thời. Bảng giá demo đã nạp (bước 9). Google/provider OTP thật, browser UAT theo vai trò và bằng chứng SQL cho first-mile/refund vẫn mở; chưa hoàn thành Phase 02.
 
 ## 1. Hai lựa chọn đăng nhập đã triển khai

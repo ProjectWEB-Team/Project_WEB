@@ -11,17 +11,21 @@ import static org.assertj.core.api.Assertions.*;
 
 class StompNotificationEventPublisherTest {
     SimpMessagingTemplate template=mock(SimpMessagingTemplate.class);
-    StompNotificationEventPublisher publisher=new StompNotificationEventPublisher(template);
+    org.springframework.context.ApplicationEventPublisher emails=mock(org.springframework.context.ApplicationEventPublisher.class);
+    StompNotificationEventPublisher publisher=new StompNotificationEventPublisher(template, emails);
     NotificationEventResponse event=new NotificationEventResponse("REFUND_COMPLETED","PAYMENT#1","Refund completed");
     @AfterEach void clear(){if(TransactionSynchronizationManager.isSynchronizationActive())TransactionSynchronizationManager.clearSynchronization();}
     @Test void targetsOwnerOnlyAfterCommit(){
         TransactionSynchronizationManager.initSynchronization();publisher.publishToUserAfterCommit("owner",event);verifyNoInteractions(template);
         TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
         verify(template).convertAndSendToUser("owner",StompNotificationEventPublisher.USER_NOTIFICATION_DESTINATION,event);verifyNoMoreInteractions(template);
+        verify(emails).publishEvent(new vn.iotstar.service.auth.AccountEmailNotification("owner",
+                "UTEExpress - Thông báo tài khoản", "Refund completed\nTham chiếu: PAYMENT#1"));
     }
     @Test void rollbackNeverSends(){
         TransactionSynchronizationManager.initSynchronization();publisher.publishToUserAfterCommit("owner",event);
         TransactionSynchronizationManager.getSynchronizations().forEach(s->s.afterCompletion(TransactionSynchronization.STATUS_ROLLED_BACK));verifyNoInteractions(template);
+        verify(emails).publishEvent(any(vn.iotstar.service.auth.AccountEmailNotification.class));
     }
     @Test void rejectsPublicationWithoutTransaction(){assertThatThrownBy(()->publisher.publishToUserAfterCommit("owner",event)).isInstanceOf(IllegalStateException.class);verifyNoInteractions(template);}
     @Test void payloadHasOnlySafeThreeFields()throws Exception{

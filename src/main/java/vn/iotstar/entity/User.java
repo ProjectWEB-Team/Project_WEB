@@ -40,6 +40,9 @@ public class User implements UserDetails {
     private LocalDateTime emailVerifiedAt;
     @Column(name = "google_subject", length = 255, columnDefinition = "NVARCHAR(255)")
     private String googleSubject;
+    @Column(name = "security_version", nullable = false)
+    private long securityVersion;
+    @Version private long version;
 
     protected User() { }
 
@@ -56,6 +59,7 @@ public class User implements UserDetails {
     public String getPhone() { return phone; }
     public String getEmail() { return email; }
     public String getGoogleSubject() { return googleSubject; }
+    public long getSecurityVersion() { return securityVersion; }
     public boolean isPhoneVerified() { return phoneVerifiedAt != null; }
     public boolean isEmailVerified() { return emailVerifiedAt != null; }
     public LocalDateTime getCreatedAt() { return createdAt; }
@@ -79,9 +83,18 @@ public class User implements UserDetails {
         phoneVerifiedAt = LocalDateTime.ofInstant(now, ZoneOffset.UTC);
         status = "ACTIVE";
     }
-    public void changePassword(String newPasswordHash) { this.passwordHash = newPasswordHash; }
-    public void changeRole(UserRole newRole) { this.role = newRole; }
-    public void changeStatus(String newStatus) { this.status = newStatus; }
+    public void verifyEmail(Instant now) {
+        if ("LOCKED".equals(status)) throw new IllegalStateException("Account is locked");
+        emailVerifiedAt = LocalDateTime.ofInstant(now, ZoneOffset.UTC);
+        status = "ACTIVE";
+    }
+    public void changePassword(String newPasswordHash) { this.passwordHash = newPasswordHash; securityVersion++; }
+    public void changeRole(UserRole newRole) {
+        if (role != newRole) { this.role = newRole; securityVersion++; }
+    }
+    public void changeStatus(String newStatus) {
+        if (!java.util.Objects.equals(status, newStatus)) { this.status = newStatus; securityVersion++; }
+    }
     public static User staff(String username, String passwordHash, String fullName, String phone, String email,
                              UserRole role, Instant now) {
         User user = registerPending(username, passwordHash, fullName, phone, email, now);

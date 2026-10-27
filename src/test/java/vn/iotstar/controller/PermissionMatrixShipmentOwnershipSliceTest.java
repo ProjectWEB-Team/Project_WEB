@@ -69,6 +69,8 @@ class PermissionMatrixShipmentOwnershipSliceTest {
 
     @BeforeEach
     void shipmentOwnedByUserOne() {
+        when(userDetailsService.loadUserByUsername(owner.getUsername())).thenReturn(owner);
+        when(userDetailsService.loadUserByUsername(stranger.getUsername())).thenReturn(stranger);
         Shipment shipment = Shipment.create("UTX-OWNED", owner, "Owner", "0900000001", "A", "R", "0900000002", "B");
         ReflectionTestUtils.setField(shipment, "id", 42L);
         ReflectionTestUtils.setField(shipment, "currentStatus", ShipmentStatus.WAITING_FOR_HANDOVER);

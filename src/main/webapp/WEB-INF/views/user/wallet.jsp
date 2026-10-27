@@ -29,7 +29,7 @@
 
     <div class="row g-4">
         <div class="col-lg-4">
-            <div class="card-ute p-4 text-white mb-4">
+            <div class="card-ute ute-wallet-balance p-4 text-white mb-4">
                 <h2 class="h6 text-uppercase small opacity-75 mb-2">Số dư khả dụng</h2>
                 <p class="display-6 fw-bold mb-1">
                     <fmt:formatNumber value="${wallet.balance}" type="currency" currencySymbol="₫"/>

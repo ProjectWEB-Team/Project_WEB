@@ -71,6 +71,7 @@ class Phase01WalkingSkeletonTest {
         when(hubRepository.findByStatusAndTypeAndProvinceAndDistrict("ACTIVE","DELIVERY_HUB","Thành phố Hồ Chí Minh",null))
                 .thenReturn(List.of(destination));
         User owner = new User(7L, "owner", "hash", UserRole.ROLE_USER, "ACTIVE");
+        when(userDetailsService.loadUserByUsername(owner.getUsername())).thenReturn(owner);
         Authentication actor = new UsernamePasswordAuthenticationToken(owner, null, owner.getAuthorities());
         PricingPolicy policy = mock(PricingPolicy.class);
         when(policy.getBasePrice()).thenReturn(new java.math.BigDecimal("20000"));

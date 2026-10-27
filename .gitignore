@@ -41,6 +41,7 @@ Thumbs.db
 *.jpg
 *.jpeg
 *.svg
+!src/main/webapp/assets/images/uteexpress-logo.svg
 *.ico
 *.pdf
 *.mp4

@@ -1,7 +1,9 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
-<html lang="vi"><head><title>Chuyến xe của tài xế</title><link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/ute-express.css"></head>
+<html lang="vi"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>Chuyến xe của tài xế</title><link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/ute-express.css"></head>
 <body>
 <jsp:include page="/WEB-INF/views/layout/navbar.jsp" /><main class="container py-4"><h1>Chuyến xe trung chuyển được giao</h1>
 <c:if test="${not empty operationMessage}"><div class="alert alert-info"><c:out value="${operationMessage}"/></div></c:if>
@@ -12,4 +14,4 @@
 <form method="post" action="${pageContext.request.contextPath}/driver/trips/start"><input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/><label>Chuyến <select name="tripId" required><option value="">Chọn chuyến</option><c:forEach items="${tripPicks}" var="p"><option value="${p[0]}"><c:out value="${p[1]}"/> → <c:out value="${p[3]}"/> (<c:out value="${p[2]}"/>)</option></c:forEach></select></label><button type="submit">Bắt đầu chuyến</button></form>
 <form method="post" action="${pageContext.request.contextPath}/driver/trips/arrive"><input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/><label>Chuyến <select name="tripId" required><option value="">Chọn chuyến</option><c:forEach items="${tripPicks}" var="p"><option value="${p[0]}"><c:out value="${p[1]}"/> → <c:out value="${p[3]}"/> (<c:out value="${p[2]}"/>)</option></c:forEach></select></label><button type="submit">Báo đã tới nơi</button></form>
 <form method="post" action="${pageContext.request.contextPath}/driver/trips/delay"><input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/><label>Chuyến <select name="tripId" required><option value="">Chọn chuyến</option><c:forEach items="${tripPicks}" var="p"><option value="${p[0]}"><c:out value="${p[1]}"/> → <c:out value="${p[3]}"/> (<c:out value="${p[2]}"/>)</option></c:forEach></select></label><label>Ghi chú trễ <textarea name="note" maxlength="500" required></textarea></label><label>Tham chiếu bằng chứng <input name="evidenceReference" maxlength="120"></label><button type="submit">Báo chuyến bị trễ</button></form>
-</main></body></html>
+</main><jsp:include page="/WEB-INF/views/layout/footer.jsp" />

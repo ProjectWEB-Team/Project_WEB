@@ -48,5 +48,4 @@
         </c:otherwise>
     </c:choose>
 </main>
-</body>
-</html>
+<jsp:include page="/WEB-INF/views/layout/footer.jsp" />

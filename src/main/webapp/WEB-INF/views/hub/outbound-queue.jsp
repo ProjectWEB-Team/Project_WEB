@@ -1,7 +1,9 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
-<html lang="vi"><head><title>Đóng bao và bàn giao</title><link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/ute-express.css"></head>
+<html lang="vi"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>Đóng bao và bàn giao</title><link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/ute-express.css"></head>
 <body>
 <jsp:include page="/WEB-INF/views/layout/navbar.jsp" /><main class="container py-4"><h1>Đóng bao, bàn giao cho tài xế</h1>
 <c:if test="${not empty operationMessage}"><div class="alert alert-info"><c:out value="${operationMessage}"/></div></c:if>
@@ -10,4 +12,4 @@
 <form method="post" action="${pageContext.request.contextPath}/hub/outbound/load"><input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/><label>ID bao <input name="containerId" type="number" required></label><label>ID đơn <input name="shipmentId" type="number" required></label><button type="submit">Cho đơn vào bao</button></form>
 <form method="post" action="${pageContext.request.contextPath}/hub/outbound/handovers"><input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/><label>Hub đích <select name="destinationHubId" required><option value="">Chọn hub</option><c:forEach items="${hubs}" var="h"><option value="${h.id}"><c:out value="${h.code}"/> – <c:out value="${h.name}"/></option></c:forEach></select></label><label>Tài xế <select name="receiverDriverId" required><option value="">Chọn tài xế</option><c:forEach items="${drivers}" var="d"><option value="${d.id}"><c:out value="${d.fullName}"/> (<c:out value="${d.phone}"/>)</option></c:forEach></select></label><label>Các ID bao <input name="containerIds" type="number" required></label><button type="submit">Tạo phiếu bàn giao</button></form>
 <form method="post" action="${pageContext.request.contextPath}/hub/outbound/handovers/correct"><input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/><label>ID phiếu bàn giao <input name="handoverId" type="number" required></label><label>Các ID bao thay thế <input name="replacementContainerIds" type="number" required></label><button type="submit">Hủy và tạo lại phiếu bàn giao</button></form>
-</main></body></html>
+</main><jsp:include page="/WEB-INF/views/layout/footer.jsp" />

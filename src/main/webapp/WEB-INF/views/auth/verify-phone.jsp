@@ -15,7 +15,7 @@
 <main class="container py-5">
     <div class="row justify-content-center">
         <div class="col-12 col-md-7 col-lg-5">
-            <a class="d-inline-block text-ute-primary fw-bold text-decoration-none mb-4" href="${pageContext.request.contextPath}/">UTEExpress</a>
+
             <section class="card border-0 shadow-sm">
                 <div class="card-body p-4 p-md-5">
                     <h1 class="h3 mb-2">Xác thực số điện thoại</h1>
@@ -40,5 +40,4 @@
         </div>
     </div>
 </main>
-</body>
-</html>
+<jsp:include page="/WEB-INF/views/layout/footer.jsp" />

@@ -108,13 +108,14 @@ class WebSocketConfigTest {
     // --- Wiring ---
 
     @Test
-    void theInterceptorIsTheOnlyClientInboundInterceptor() {
+    void accountRevocationAndDestinationScopeAreBothEnforced() {
         ChannelRegistration registration = mock(ChannelRegistration.class);
-        new WebSocketConfig().configureClientInboundChannel(registration);
+        new WebSocketConfig(mock(org.springframework.security.core.userdetails.UserDetailsService.class)).configureClientInboundChannel(registration);
         ArgumentCaptor<ChannelInterceptor[]> interceptors = ArgumentCaptor.forClass(ChannelInterceptor[].class);
         verify(registration).interceptors(interceptors.capture());
-        assertThat(interceptors.getValue()).hasSize(1);
-        assertThat(interceptors.getValue()[0]).isInstanceOf(WebSocketConfig.AuthenticatedShipmentStompInterceptor.class);
+        assertThat(interceptors.getValue()).hasSize(2);
+        assertThat(interceptors.getValue()[0]).isInstanceOf(vn.iotstar.security.WebSocketAccountGuard.class);
+        assertThat(interceptors.getValue()[1]).isInstanceOf(WebSocketConfig.AuthenticatedShipmentStompInterceptor.class);
     }
 
     @Test
@@ -123,7 +124,7 @@ class WebSocketConfigTest {
         StompWebSocketEndpointRegistration endpoint = mock(StompWebSocketEndpointRegistration.class);
         when(registry.addEndpoint(any(String[].class))).thenReturn(endpoint);
 
-        new WebSocketConfig().registerStompEndpoints(registry);
+        new WebSocketConfig(mock(org.springframework.security.core.userdetails.UserDetailsService.class)).registerStompEndpoints(registry);
 
         verify(registry).addEndpoint(WebSocketConfig.STOMP_ENDPOINT);
         verifyNoMoreInteractions(registry);
@@ -134,7 +135,7 @@ class WebSocketConfigTest {
     @Test
     void brokerUsesOnlyQueueAppAndUserPrefixes() {
         MessageBrokerRegistry registry = mock(MessageBrokerRegistry.class);
-        new WebSocketConfig().configureMessageBroker(registry);
+        new WebSocketConfig(mock(org.springframework.security.core.userdetails.UserDetailsService.class)).configureMessageBroker(registry);
         verify(registry).enableSimpleBroker("/queue");
         verify(registry).setApplicationDestinationPrefixes("/app");
         verify(registry).setUserDestinationPrefix("/user");

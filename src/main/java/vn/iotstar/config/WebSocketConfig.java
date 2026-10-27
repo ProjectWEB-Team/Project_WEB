@@ -20,6 +20,12 @@ import vn.iotstar.realtime.OperationalRealtimePublisher;
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+    private final vn.iotstar.security.WebSocketAccountGuard accountGuard;
+    public WebSocketConfig(org.springframework.security.core.userdetails.UserDetailsService users) {
+        accountGuard = new vn.iotstar.security.WebSocketAccountGuard(users);
+    }
+    @org.springframework.context.annotation.Bean
+    public vn.iotstar.security.WebSocketAccountGuard webSocketAccountGuard() { return accountGuard; }
     public static final String STOMP_ENDPOINT = "/ws";
     public static final String USER_SHIPMENT_DESTINATION = "/user" + StompShipmentEventPublisher.USER_SHIPMENT_DESTINATION;
     public static final String USER_OPERATION_DESTINATION = "/user" + OperationalRealtimePublisher.USER_OPERATION_DESTINATION;
@@ -40,7 +46,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
-        registration.interceptors(new AuthenticatedShipmentStompInterceptor());
+        registration.interceptors(accountGuard, new AuthenticatedShipmentStompInterceptor());
+    }
+    @Override public void configureClientOutboundChannel(ChannelRegistration registration) {
+        registration.interceptors(accountGuard.outbound());
     }
 
     static final class AuthenticatedShipmentStompInterceptor implements ChannelInterceptor {

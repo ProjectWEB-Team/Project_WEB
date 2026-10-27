@@ -9,13 +9,13 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="${pageContext.request.contextPath}/assets/css/ute-express.css" rel="stylesheet">
 </head>
-<body class="bg-ute-canvas">
+<body class="ute-auth">
 <jsp:include page="/WEB-INF/views/layout/navbar.jsp" />
-<main class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-12 col-md-7 col-lg-5">
-            <a class="d-inline-block text-ute-primary fw-bold text-decoration-none mb-4" href="${pageContext.request.contextPath}/">UTEExpress</a>
-            <section class="card border-0 shadow-sm">
+<main class="container ute-auth-main">
+    <div class="ute-auth-layout">
+        <section class="ute-auth-brand" aria-label="UTEexpress"><jsp:include page="/WEB-INF/views/layout/logo.jsp" /><p>Giao nhanh. Trọn niềm tin.</p></section>
+        <div class="ute-auth-form">
+            <section class="card ute-auth-card">
                 <div class="card-body p-4 p-md-5">
                     <h1 class="h3 mb-2">Đăng nhập</h1>
                     <p class="text-muted mb-4">Gửi hàng và theo dõi hành trình tại một nơi.</p>
@@ -31,7 +31,7 @@
                     </c:if>
                     <section class="ute-password-login" aria-labelledby="pw-title">
                         <h2 id="pw-title" class="h6 text-muted mb-0">Hoặc đăng nhập bằng mật khẩu</h2>
-                        <form method="post" action="${pageContext.request.contextPath}/login" class="mt-3">
+                        <form method="post" action="${pageContext.request.contextPath}/login" class="mt-3 ute-login-form">
                             <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                             <div class="mb-3"><label class="form-label" for="username">Tên đăng nhập</label><input class="form-control" id="username" name="username" type="text" autocomplete="username" required></div>
                             <div class="mb-4"><label class="form-label" for="password">Mật khẩu</label><input class="form-control" id="password" name="password" type="password" autocomplete="current-password" required></div>
@@ -45,5 +45,4 @@
         </div>
     </div>
 </main>
-</body>
-</html>
+<jsp:include page="/WEB-INF/views/layout/footer.jsp" />

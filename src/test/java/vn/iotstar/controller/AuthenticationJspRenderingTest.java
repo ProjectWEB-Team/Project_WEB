@@ -65,7 +65,7 @@ import static org.mockito.Mockito.when;
                 "server.servlet.session.cookie.name=UTEEXPRESS_SESSION",
                 "spring.mvc.view.prefix=/WEB-INF/views/", "spring.mvc.view.suffix=.jsp",
                 "uteexpress.jwt.secret=MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
-                "spring.main.banner-mode=off"
+                "spring.main.banner-mode=off", "uteexpress.mail.enabled=true"
         })
 class AuthenticationJspRenderingTest {
     private static final Instant NOW = Instant.parse("2026-10-22T08:00:00Z");
@@ -78,6 +78,7 @@ class AuthenticationJspRenderingTest {
     @MockBean private AccountSessionAuthenticator accountSessions;
     @MockBean private UserDetailsService users;
     @MockBean private JwtService jwt;
+    @MockBean private vn.iotstar.service.impl.EmailAccountService emailAccounts;
     private CookieManager cookies;
     private HttpClient browser;
 
@@ -108,6 +109,37 @@ class AuthenticationJspRenderingTest {
         csrf(html("/auth/phone-login"));
         assertThat(post("/register", Map.of()).statusCode()).isEqualTo(403);
         verifyNoInteractions(registrationService, phoneSessionService, googleAccounts);
+    }
+
+    @Test void emailFormsRenderThroughJasperAndNeverEchoSecrets() throws Exception {
+        String registration = html("/auth/email/register");
+        assertThat(registration).contains("action=\"/auth/email/register\"", "Xác thực email");
+        csrf(registration); csrf(html("/auth/email/forgot-password"));
+        UUID challenge = UUID.randomUUID();
+        when(emailAccounts.requestPasswordReset(any())).thenReturn(new vn.iotstar.service.impl.EmailAccountService.Challenge(challenge, "o***@example.test"));
+        assertThat(postWithCsrf("/auth/email/forgot-password", html("/auth/email/forgot-password"), Map.of("email", "owner@example.test")).statusCode()).isEqualTo(302);
+        String verification = html("/auth/email/verify");
+        assertThat(verification).contains("o***@example.test", "name=\"newPassword\"");
+        var rejected = postWithCsrf("/auth/email/verify", verification, Map.of("code", "987654", "newPassword", "NeverEchoPassword123!"));
+        assertThat(rejected.statusCode()).isEqualTo(200);
+        assertThat(rejected.body()).doesNotContain("987654", "NeverEchoPassword123!");
+        csrf(rejected.body());
+    }
+
+    @Test void signedInCustomerEmailSettingsRenderBothVerificationStates() throws Exception {
+        html("/login");
+        String sessionId = cookies.getCookieStore().getCookies().stream()
+                .filter(cookie -> cookie.getName().equals("UTEEXPRESS_SESSION")).findFirst().orElseThrow().getValue();
+        var user = new vn.iotstar.entity.User(7L, "owner", "hash", vn.iotstar.entity.UserRole.ROLE_USER, "ACTIVE");
+        when(users.loadUserByUsername("owner")).thenReturn(user);
+        var context = org.springframework.security.core.context.SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(user, null, user.getAuthorities()));
+        sessionTracker.sessions.get(sessionId).setAttribute("SPRING_SECURITY_CONTEXT", context);
+        when(emailAccounts.status(7L)).thenReturn(new vn.iotstar.service.impl.EmailAccountService.EmailStatus("o***@example.test", false));
+        String settings = html("/user/email");
+        assertThat(settings).contains("o***@example.test", "Gửi mã xác thực email"); csrf(settings);
+        when(emailAccounts.status(7L)).thenReturn(new vn.iotstar.service.impl.EmailAccountService.EmailStatus("o***@example.test", true));
+        assertThat(html("/user/email")).contains("Email đã xác thực").doesNotContain("Gửi mã xác thực email");
     }
 
     @Test
@@ -205,7 +237,7 @@ class AuthenticationJspRenderingTest {
     @EnableAutoConfiguration(exclude = {DataSourceAutoConfiguration.class,
             HibernateJpaAutoConfiguration.class, JpaRepositoriesAutoConfiguration.class})
     @Import({SecurityConfig.class, JwtAuthenticationFilter.class, HomeController.class,
-            RegistrationController.class, GoogleRegistrationController.class, AuthenticationViewAdvice.class})
+            RegistrationController.class, GoogleRegistrationController.class, AuthenticationViewAdvice.class, EmailAccountController.class})
     static class RenderingApplication {
         @Bean Clock clock() { return Clock.fixed(NOW, ZoneOffset.UTC); }
         @Bean SessionTracker sessionTracker() { return new SessionTracker(); }

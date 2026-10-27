@@ -66,14 +66,18 @@ public class SecurityConfig {
 
     @Bean @Order(2)
     public SecurityFilterChain webSecurityFilterChain(HttpSecurity http, AuthenticationProvider authenticationProvider,
+            UserDetailsService userDetailsService,
             ObjectProvider<ClientRegistrationRepository> clientRegistrations,
             ObjectProvider<GoogleLoginSuccessHandler> googleHandlers)
             throws Exception {
-        http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+        http.addFilterAfter(new vn.iotstar.security.AccountSessionFilter(userDetailsService),
+                        org.springframework.security.web.context.SecurityContextHolderFilter.class)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .csrf(Customizer.withDefaults())
                 .authenticationProvider(authenticationProvider)
                 .authorizeHttpRequests(auth -> auth
                         .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.INCLUDE, DispatcherType.ERROR).permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/health/ready").permitAll()
                         .requestMatchers("/", "/home", "/tracking/**", "/pricing", "/calculator/**", "/auth/**", "/login",
                                 "/register", "/oauth2/authorization/google", "/login/oauth2/code/google",
                                 "/assets/**", "/webjars/**", "/error").permitAll()

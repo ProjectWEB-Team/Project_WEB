@@ -67,6 +67,7 @@ class PermissionMatrixRouteTest {
             // Public pages and onboarding.
             new Route("GET", "/", PUBLIC),
             new Route("GET", "/home", PUBLIC),
+            new Route("GET", "/health/ready", PUBLIC),
             new Route("GET", "/login", PUBLIC),
             new Route("GET", "/register", PUBLIC),
             new Route("POST", "/register", PUBLIC),

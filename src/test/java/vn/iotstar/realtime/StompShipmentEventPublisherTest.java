@@ -23,11 +23,12 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class StompShipmentEventPublisherTest {
     @Mock private SimpMessagingTemplate messagingTemplate;
+    @Mock private org.springframework.context.ApplicationEventPublisher emails;
     private StompShipmentEventPublisher publisher;
 
     @BeforeEach
     void startTransactionSynchronization() {
-        publisher = new StompShipmentEventPublisher(messagingTemplate);
+        publisher = new StompShipmentEventPublisher(messagingTemplate, emails);
         TransactionSynchronizationManager.initSynchronization();
     }
 
@@ -53,6 +54,8 @@ class StompShipmentEventPublisherTest {
         verify(messagingTemplate).convertAndSendToUser(eq("owner"), eq(StompShipmentEventPublisher.USER_SHIPMENT_DESTINATION),
                 payloadCaptor.capture());
         assertThat(payloadCaptor.getValue()).isSameAs(event).isInstanceOf(ShipmentCreatedEventResponse.class);
+        verify(emails).publishEvent(new vn.iotstar.service.auth.AccountEmailNotification("owner",
+                "UTEExpress - Cập nhật đơn hàng", "Đơn hàng UTX-001 có cập nhật mới."));
         assertThat(ShipmentCreatedEventResponse.class.getRecordComponents())
                 .extracting(component -> component.getName())
                 .containsExactly("trackingNumber", "currentStatus", "eventType", "occurredAt");
@@ -67,5 +70,13 @@ class StompShipmentEventPublisherTest {
 
         assertThatThrownBy(() -> publisher.publishAfterCommit(actor, event)).isInstanceOf(IllegalStateException.class);
         verifyNoInteractions(messagingTemplate);
+    }
+    @Test void rollbackNeverPublishesRealtimeAndEmailIsStagedBeforeCommit() {
+        publisher.publishToUserAfterCommit("owner", new ShipmentCreatedEventResponse("UTX-001", ShipmentStatus.CREATED,
+                "SHIPMENT_CREATED", LocalDateTime.now()));
+        TransactionSynchronizationManager.getSynchronizations()
+                .forEach(sync -> sync.afterCompletion(TransactionSynchronization.STATUS_ROLLED_BACK));
+        verifyNoInteractions(messagingTemplate);
+        verify(emails).publishEvent(any(vn.iotstar.service.auth.AccountEmailNotification.class));
     }
 }

@@ -22,7 +22,7 @@
         <div class="col"><div class="card h-100"><div class="card-body"><h2 class="h6">Phiếu bàn giao đang mở</h2><p class="display-6 mb-0"><c:out value="${dashboard.activeHandoverCount}"/></p></div></div></div>
         <div class="col"><div class="card h-100"><div class="card-body"><h2 class="h6">Chuyến đang chạy</h2><p class="display-6 mb-0"><c:out value="${dashboard.activeTripCount}"/></p></div></div></div>
         <div class="col"><div class="card h-100"><div class="card-body"><h2 class="h6">Tuyến bị chặn</h2><p class="display-6 mb-0"><c:out value="${dashboard.blockedRouteCount}"/></p></div></div></div>
-        <div class="col"><div class="card h-100"><div class="card-body"><h2 class="h6">Sự cố cần xử lý</h2><p class="display-6 mb-0"><c:out value="${dashboard.actionableIncidentCount}"/></p></div></div></div>
+        <div class="col w-100"><div class="card h-100"><div class="card-body d-flex align-items-center justify-content-between gap-3"><h2 class="h6 mb-0">Sự cố cần xử lý</h2><p class="display-6 mb-0"><c:out value="${dashboard.actionableIncidentCount}"/></p></div></div></div>
     </div>
     <section class="mt-4">
         <h2 class="h5">Việc cần xử lý</h2>
@@ -35,5 +35,4 @@
         </ul>
     </section>
 </main>
-</body>
-</html>
+<jsp:include page="/WEB-INF/views/layout/footer.jsp" />

@@ -1,0 +1,146 @@
+name: CI and deploy
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: Deploy this main build to production
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Build and test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: Y
+          MSSQL_SA_PASSWORD: CiOnly-SqlServer_2026!
+          MSSQL_MEMORY_LIMIT_MB: 2048
+        ports: [1433:1433]
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'CiOnly-SqlServer_2026!' -C -Q 'SELECT 1' -b"
+          --health-interval 10s --health-timeout 5s --health-retries 30
+    env:
+      UTEEXPRESS_SQLSERVER_URL: jdbc:sqlserver://localhost:1433;databaseName=uteexpress_phase05_test_ci;encrypt=true;trustServerCertificate=true
+      UTEEXPRESS_SQLSERVER_USERNAME: sa
+      UTEEXPRESS_SQLSERVER_PASSWORD: CiOnly-SqlServer_2026!
+      UTEEXPRESS_JWT_SECRET: MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=
+      UTEEXPRESS_CI_DATABASE: 'true'
+      MAVEN_OPTS: -Xmx512m
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Check deployment scripts
+        run: |
+          shellcheck deploy/install-release.sh deploy/test-install-release.sh deploy/deploy.sh
+          bash deploy/test-install-release.sh
+      - name: Create disposable SQL Server database
+        env:
+          SQL_CONTAINER: ${{ job.services.sqlserver.id }}
+        run: |
+          docker exec "$SQL_CONTAINER" /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$UTEEXPRESS_SQLSERVER_PASSWORD" -C -b -Q 'CREATE DATABASE [uteexpress_phase05_test_ci]'
+      - name: Verify migrations from an empty database
+        run: mvn -B -ntp -Dtest=CiDatabaseMigrationTest test
+      - name: Run all tests and package the deployment artifact
+        env:
+          BUILD_COMMIT: ${{ github.sha }}
+        run: mvn -B -ntp -Dbuild.commit="$BUILD_COMMIT" verify
+      - name: Verify artifact contents and checksum
+        run: |
+          jar tf target/project-web-1.0.war > target/war-contents.txt
+          if grep -Eq '(^|/)(application-local\.properties|account-providers\.properties|\.env)$' target/war-contents.txt; then
+            echo 'Private configuration must not be included in the artifact.' >&2
+            exit 1
+          fi
+          cd target
+          sha256sum project-web-1.0.war > project-web-1.0.war.sha256
+      - name: Save test reports
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: test-reports-${{ github.run_id }}
+          path: target/surefire-reports/
+          retention-days: 14
+      - name: Save verified deployment artifact
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: uteexpress-${{ github.sha }}
+          path: |
+            target/project-web-1.0.war
+            target/project-web-1.0.war.sha256
+          if-no-files-found: error
+          retention-days: 14
+
+  deploy:
+    name: Deploy to AWS
+    needs: verify
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      vars.ENABLE_PRODUCTION_DEPLOY == 'true' &&
+      (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.deploy))
+    environment:
+      name: production
+      url: https://uteexpress.event5g.fun
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    concurrency:
+      group: production-deployment
+      cancel-in-progress: false
+    steps:
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: uteexpress-${{ github.sha }}
+          path: artifact
+      - name: Install the verified artifact
+        env:
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+          DEPLOY_PORT: ${{ vars.DEPLOY_PORT || '22' }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          BUILD_COMMIT: ${{ github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9.-]+$ && "$DEPLOY_USER" =~ ^[a-zA-Z0-9_-]+$ && "$DEPLOY_PORT" =~ ^[0-9]+$ ]]
+          [[ -n "$DEPLOY_SSH_KEY" && -n "$DEPLOY_KNOWN_HOSTS" ]]
+          install -d -m 700 "$HOME/.ssh"
+          trap 'rm -f "$HOME/.ssh/deploy_key"' EXIT
+          printf '%s\n' "$DEPLOY_SSH_KEY" > "$HOME/.ssh/deploy_key"
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/deploy_key" "$HOME/.ssh/known_hosts"
+          ssh_options=(-i "$HOME/.ssh/deploy_key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15)
+          (cd artifact && sha256sum --check project-web-1.0.war.sha256)
+          checksum=$(sha256sum artifact/project-web-1.0.war | cut -d ' ' -f 1)
+          [[ "$BUILD_COMMIT" =~ ^[a-f0-9]{40}$ && "$checksum" =~ ^[a-f0-9]{64}$ ]]
+          ssh "${ssh_options[@]}" -p "$DEPLOY_PORT" "$DEPLOY_USER@$DEPLOY_HOST" "mkdir -p /var/lib/uteexpress-deploy/incoming/$BUILD_COMMIT"
+          scp "${ssh_options[@]}" -P "$DEPLOY_PORT" artifact/project-web-1.0.war "$DEPLOY_USER@$DEPLOY_HOST:/var/lib/uteexpress-deploy/incoming/$BUILD_COMMIT/app.war"
+          ssh "${ssh_options[@]}" -p "$DEPLOY_PORT" "$DEPLOY_USER@$DEPLOY_HOST" "sudo -n /usr/local/sbin/uteexpress-install-release $BUILD_COMMIT $checksum"
+      - name: Check the public HTTPS deployment
+        env:
+          BUILD_COMMIT: ${{ github.sha }}
+        run: |
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 --retry-all-errors --max-time 15 \
+            https://uteexpress.event5g.fun/health/ready > health.json
+          jq -e --arg commit "$BUILD_COMMIT" '.status == "UP" and .commit == $commit' health.json

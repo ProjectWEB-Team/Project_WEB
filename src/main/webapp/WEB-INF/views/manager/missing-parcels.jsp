@@ -22,4 +22,4 @@
 <button type="submit">Ghi nhận kết quả điều tra</button>
 </form></c:if></c:if>
 <a href="${pageContext.request.contextPath}/manager/operations">Quay lại bảng điều hành</a>
-</main></body></html>
+</main><jsp:include page="/WEB-INF/views/layout/footer.jsp" />

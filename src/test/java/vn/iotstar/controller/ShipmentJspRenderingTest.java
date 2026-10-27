@@ -93,7 +93,12 @@ class ShipmentJspRenderingTest {
                 .doesNotContain("id=\"shipment-create-button\"", "name=\"quoteReference\"");
         assertThat(form).contains("id=\"senderProvinceCode\"", "id=\"senderWardCode\"", "id=\"receiverProvinceCode\"", "id=\"receiverWardCode\"",
                 "value=\"79\"", "value=\"01\"", "/assets/js/shipment-address.js")
-                .doesNotContain("name=\"fromRegion\"", "name=\"toRegion\"", "name=\"receiverDistrict\"");
+                .doesNotContain("name=\"fromRegion\"", "name=\"toRegion\"", "name=\"receiverDistrict\"",
+                        "senderWardSearch", "receiverWardSearch");
+        assertThat(form).contains("id=\"ute-contact\"", "mailto:khangfithcmute@gmail.com", "tel:+84911195500",
+                "24162091@student.hcmute.edu.vn", "24162144@student.hcmute.edu.vn");
+        assertThat(form).contains("class=\"nav-link active\" href=\"/user/shipments/create\" aria-current=\"page\"")
+                .doesNotContain("class=\"nav-link active\" href=\"/user/shipments\"");
         hiddenValue(form, "_csrf");
         Files.writeString(Path.of("target/shipment-wizard-empty.html"), form);
         verifyNoInteractions(shipments);
@@ -125,6 +130,8 @@ class ShipmentJspRenderingTest {
                 "2 Receiver Street &amp; Annex")
                 .doesNotContain("Owner <b>example</b>");
         assertThat(quote.body()).contains("35.000đ");
+        assertThat(quote.body()).contains("class=\"nav-link active\" href=\"/user/shipments/create\" aria-current=\"page\"")
+                .doesNotContain("class=\"nav-link active\" href=\"/user/shipments\"");
         assertThat(quote.body()).containsPattern("<option[^>]*value=\"79\"[^>]*selected=\"selected\"")
                 .containsPattern("<option[^>]*value=\"26740\"[^>]*selected=\"selected\"");
         fields.put("quoteReference", hiddenValue(quote.body(), "quoteReference"));
@@ -180,6 +187,8 @@ class ShipmentJspRenderingTest {
 
         String detail = html("/user/shipments/42");
         assertThat(detail).contains("UTX-FIXTURE", expectedInstruction);
+        assertThat(detail).contains("class=\"nav-link active\" href=\"/user/shipments\" aria-current=\"page\"")
+                .doesNotContain("class=\"nav-link active\" href=\"/user/shipments/create\"");
         if (status == ShipmentStatus.WAITING_FOR_PAYMENT) {
             assertThat(detail).contains("action=\"/user/shipments/42/confirm-payment\"");
             hiddenValue(detail, "_csrf");
