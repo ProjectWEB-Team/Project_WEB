@@ -10,6 +10,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -22,6 +23,7 @@ public class Payment implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
+    @Version @Column(nullable = false) private Long version;
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "shipment_id", nullable = false) private Shipment shipment;
     @Column(name = "payer_type", nullable = false, length = 50, columnDefinition = "NVARCHAR(50)") private String payerType;

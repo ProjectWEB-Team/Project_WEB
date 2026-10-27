@@ -88,7 +88,8 @@ class ShipmentSqlServerIntegrationTest {
     void applyCurrentForwardMigrations() throws Exception {
         SqlServerMigrationSupport.apply(dataSource,
                 "db/migration/V2__phase_01_shipment_events_event_type.sql",
-                "db/migration/V6__phase_03_hub_routing_schema.sql", "db/migration/V14__phase_05_intake_service_code.sql");
+                "db/migration/V6__phase_03_hub_routing_schema.sql", "db/migration/V14__phase_05_intake_service_code.sql",
+                "db/migration/V19__optimistic_locking_money_records.sql");
     }
 
     @AfterEach

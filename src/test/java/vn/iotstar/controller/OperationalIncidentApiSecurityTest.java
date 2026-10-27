@@ -22,6 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class OperationalIncidentApiSecurityTest {
     @Autowired private MockMvc mockMvc;
     @MockBean private LinehaulTripService linehaulTripService;
+    @MockBean private vn.iotstar.repository.LinehaulOperationsRepository linehaulOperationsRepository;
     @MockBean private JwtService jwtService;
     @MockBean private UserDetailsService userDetailsService;
     @Test void missingBearerTokenIsRejected() throws Exception {
