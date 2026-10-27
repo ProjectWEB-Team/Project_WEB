@@ -19,10 +19,26 @@ import java.util.List;
 @Service
 @Transactional(readOnly = true)
 public class AdminNetworkService {
+    // JavaBean getters: the configured Jasper/EL 5 runtime does not read record accessors.
     public record HubRow(String code, String name, Integer level, String type, String region, String province,
-                         String parentCode, String status) { }
+                         String parentCode, String status) {
+        public String getCode() { return code; }
+        public String getName() { return name; }
+        public Integer getLevel() { return level; }
+        public String getType() { return type; }
+        public String getRegion() { return region; }
+        public String getProvince() { return province; }
+        public String getParentCode() { return parentCode; }
+        public String getStatus() { return status; }
+    }
     public record RouteRow(String currentHub, String destinationRegion, String destinationProvince, String nextHub,
-                           String status) { }
+                           String status) {
+        public String getCurrentHub() { return currentHub; }
+        public String getDestinationRegion() { return destinationRegion; }
+        public String getDestinationProvince() { return destinationProvince; }
+        public String getNextHub() { return nextHub; }
+        public String getStatus() { return status; }
+    }
 
     private final HubRepository hubs;
     private final HubRoutingRuleRepository rules;
