@@ -39,6 +39,8 @@ class LinehaulTripRouteSecurityTest {
                 .andExpect(status().isUnauthorized());
     }
     @Test @WithMockUser(roles = "LINEHAUL_DRIVER") void acceptsExplicitVehicleWithCsrf() throws Exception {
+        org.mockito.Mockito.when(linehaulTripService.acceptHandover(30L, 50L))
+                .thenReturn(new vn.iotstar.dto.driver.TripActionResponse(7L, "PENDING", false));
         mockMvc.perform(post("/driver/handovers/accept").with(csrf()).param("handoverId", "30").param("vehicleId", "50"))
                 .andExpect(redirectedUrl("/driver"));
         verify(linehaulTripService).acceptHandover(30L, 50L);

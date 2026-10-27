@@ -34,8 +34,8 @@ public class DriverOperationsController {
 
     @PostMapping("/driver/handovers/accept")
     public String accept(@RequestParam Long handoverId, @RequestParam Long vehicleId, RedirectAttributes redirect) {
-        linehaulTripService.acceptHandover(handoverId, vehicleId);
-        redirect.addFlashAttribute("operationMessage", "Đã nhận bàn giao để chạy chuyến.");
+        var trip = linehaulTripService.acceptHandover(handoverId, vehicleId);
+        redirect.addFlashAttribute("operationMessage", "Đã nhận bàn giao, ID chuyến: " + trip.tripId() + ". Dùng ID này để bắt đầu và báo tới nơi.");
         return "redirect:/driver";
     }
 

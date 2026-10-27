@@ -36,7 +36,7 @@ public class OutboundOperationsController {
     @PostMapping("/containers")
     public String createContainer(@Valid @ModelAttribute CreateContainerCommand command, BindingResult errors, RedirectAttributes redirect) {
         if (errors.hasErrors()) return invalid(redirect);
-        containerHandoverService.createContainer(command); redirect.addFlashAttribute("operationMessage", "Đã tạo bao."); return "redirect:/hub/outbound";
+        Long id = containerHandoverService.createContainer(command); redirect.addFlashAttribute("operationMessage", "Đã tạo bao, ID bao: " + id + "."); return "redirect:/hub/outbound";
     }
     @PostMapping("/load")
     public String load(@Valid @ModelAttribute LoadContainerCommand command, BindingResult errors, RedirectAttributes redirect) {
@@ -46,13 +46,13 @@ public class OutboundOperationsController {
     @PostMapping("/handovers")
     public String createHandover(@Valid @ModelAttribute CreateHandoverCommand command, BindingResult errors, RedirectAttributes redirect) {
         if (errors.hasErrors()) return invalid(redirect);
-        containerHandoverService.createHandover(command); redirect.addFlashAttribute("operationMessage", "Đã tạo phiếu bàn giao cho tài xế được giao."); return "redirect:/hub/outbound";
+        Long id = containerHandoverService.createHandover(command); redirect.addFlashAttribute("operationMessage", "Đã tạo phiếu bàn giao cho tài xế, ID phiếu: " + id + ". Báo ID này cho tài xế."); return "redirect:/hub/outbound";
     }
     @PostMapping("/handovers/correct")
     public String correct(@Valid @ModelAttribute CorrectHandoverCommand command, BindingResult errors, RedirectAttributes redirect) {
         if (errors.hasErrors()) return invalid(redirect);
-        containerHandoverService.correctByCancellationAndRecreation(command);
-        redirect.addFlashAttribute("operationMessage", "Đã tạo phiếu bàn giao thay thế.");
+        Long id = containerHandoverService.correctByCancellationAndRecreation(command);
+        redirect.addFlashAttribute("operationMessage", "Đã tạo phiếu bàn giao thay thế, ID phiếu: " + id + ".");
         return "redirect:/hub/outbound";
     }
     private String invalid(RedirectAttributes redirect) { redirect.addFlashAttribute("operationMessage", "Nhập đúng các ID nghiệp vụ."); return "redirect:/hub/outbound"; }

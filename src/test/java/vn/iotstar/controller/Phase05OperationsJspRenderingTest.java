@@ -99,6 +99,7 @@ class Phase05OperationsJspRenderingTest {
     @Test void driverVehicleSelectionAndTripFormsSurviveRealJasper() throws Exception {
         login("LINEHAUL_DRIVER");
         when(trips.availableVehicles()).thenReturn(List.of(new VehicleOptionResponse(13L, "51A-12345", "TRUCK")));
+        when(trips.acceptHandover(11L, 13L)).thenReturn(new vn.iotstar.dto.driver.TripActionResponse(9L, "PENDING", false));
         String form = html("/driver");
         assertThat(form).contains("value=\"13\"", "51A-12345", "name=\"vehicleId\"", "/driver/trips/arrive", "/driver/handovers/scan");
         assertThat(post("/driver/handovers/accept", form, Map.of("handoverId", "11", "vehicleId", "13"))
