@@ -83,6 +83,7 @@ class PermissionMatrixRouteTest {
             new Route("POST", "/auth/google/complete", PUBLIC),
             new Route("GET", "/tracking", PUBLIC),
             new Route("GET", "/pricing", PUBLIC),
+            new Route("GET", "/calculator", PUBLIC),
             // Every authenticated role; the service layer decides ownership (ADR-015).
             new Route("GET", "/user/shipments", ALL),
             new Route("GET", "/user/shipments/create", ALL),

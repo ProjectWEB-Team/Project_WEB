@@ -15,6 +15,11 @@ public class PublicPricingController {
 
     public PublicPricingController(PublicPricingService pricing) { this.pricing = pricing; }
 
+    @GetMapping("/calculator")
+    public String calculatorRedirect() {
+        return "redirect:/pricing";
+    }
+
     @GetMapping("/pricing")
     public String prices(@RequestParam(required = false) String serviceCode, @RequestParam(required = false) String fromRegion,
                          @RequestParam(required = false) String toRegion, @RequestParam(required = false) Integer weightGrams,
