@@ -22,6 +22,7 @@
         <p class="mb-1">Trạng thái: <span class="badge text-bg-primary"><c:out value="${shipment.currentStatus}"/></span></p>
         <p class="mb-1">Cước phí: <strong><fmt:formatNumber value="${shipment.shippingFee}" pattern="#,##0" var="shippingFormatted"/>${fn:replace(shippingFormatted, ',', '.')}đ</strong> (<c:out value="${shipment.paymentStatus}"/>)</p>
         <p class="text-ute-muted mb-0">Tạo lúc: <c:out value="${shipment.createdAt}"/></p>
+        <c:if test="${not empty shipment.estimatedDelivery}"><p class="mb-0">Dự kiến giao trước: <strong><c:out value="${shipment.estimatedDelivery}"/></strong></p></c:if>
         <c:if test="${shipment.currentStatus == 'CANCELLED'}">
             <c:forEach items="${shipment.events}" var="event">
                 <c:if test="${event.eventType == 'SHIPMENT_CANCELLED'}">

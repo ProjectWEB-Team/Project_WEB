@@ -36,8 +36,10 @@ import vn.iotstar.service.auth.VietnamPhoneNormalizer;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Clock;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.EnumSet;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -168,7 +170,17 @@ public class ShipmentServiceImpl implements ShipmentService {
                 shipment.getSenderName(), shipment.getSenderPhone(), shipment.getSenderAddress(), shipment.getReceiverName(),
                 shipment.getReceiverPhone(), shipment.getReceiverAddress(), shipment.getCreatedAt(), events,
                 shipment.getShippingFee(), shipment.getPaymentStatus(), method, shipment.getPickupMethod(),
-                shipment.getFeePayer(), shipment.getWaitingForHandoverAt());
+                shipment.getFeePayer(), shipment.getWaitingForHandoverAt(), estimatedDelivery(shipment));
+    }
+
+    /** Same region 2 days, different region 4 days from creation (upper end of the 1-2 / 3-4 day promise). */
+    private LocalDate estimatedDelivery(Shipment shipment) {
+        ShipmentStatus status = shipment.getCurrentStatus();
+        if (status == ShipmentStatus.DELIVERED || status == ShipmentStatus.CANCELLED || status == ShipmentStatus.RETURNED_TO_SENDER
+                || shipment.getOriginHubId() == null || shipment.getDestinationRegion() == null) return null;
+        boolean sameRegion = hubRepository.findById(shipment.getOriginHubId())
+                .map(hub -> shipment.getDestinationRegion().equals(hub.getRegion())).orElse(false);
+        return shipment.getCreatedAt().toLocalDate().plusDays(sameRegion ? 2 : 4);
     }
 
     @Override

@@ -3,6 +3,7 @@ package vn.iotstar.dto.shipment;
 import vn.iotstar.entity.ShipmentStatus;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -12,7 +13,15 @@ public record ShipmentDetailResponse(Long id, String trackingNumber, ShipmentSta
                                      String receiverName, String receiverPhone, String receiverAddress,
                                      LocalDateTime createdAt, List<ShipmentEventResponse> events,
                                      BigDecimal shippingFee, String paymentStatus, String paymentMethod,
-                                     String pickupMethod, String feePayer, LocalDateTime waitingForHandoverAt) {
+                                     String pickupMethod, String feePayer, LocalDateTime waitingForHandoverAt,
+                                     LocalDate estimatedDelivery) {
+    public ShipmentDetailResponse(Long id, String trackingNumber, ShipmentStatus currentStatus, String senderName, String senderPhone,
+                                  String senderAddress, String receiverName, String receiverPhone, String receiverAddress,
+                                  LocalDateTime createdAt, List<ShipmentEventResponse> events, BigDecimal shippingFee, String paymentStatus,
+                                  String paymentMethod, String pickupMethod, String feePayer, LocalDateTime waitingForHandoverAt) {
+        this(id, trackingNumber, currentStatus, senderName, senderPhone, senderAddress, receiverName, receiverPhone, receiverAddress,
+                createdAt, events, shippingFee, paymentStatus, paymentMethod, pickupMethod, feePayer, waitingForHandoverAt, null);
+    }
     public Long getId() { return id; }
     public String getTrackingNumber() { return trackingNumber; }
     public ShipmentStatus getCurrentStatus() { return currentStatus; }
@@ -30,4 +39,5 @@ public record ShipmentDetailResponse(Long id, String trackingNumber, ShipmentSta
     public String getPickupMethod() { return pickupMethod; }
     public String getFeePayer() { return feePayer; }
     public LocalDateTime getWaitingForHandoverAt() { return waitingForHandoverAt; }
+    public LocalDate getEstimatedDelivery() { return estimatedDelivery; }
 }
