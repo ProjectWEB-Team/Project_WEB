@@ -17,7 +17,7 @@
 | STT | Họ và tên | Mã số sinh viên | Vai trò | Nhiệm vụ đảm nhiệm chính | Tỷ lệ hoàn thành |
 | :---: | :--- | :---: | :--- | :--- | :---: |
 | 1 | **Ngô Bá Vạn** | 24162144 | Nhóm trưởng | Thống nhất quy trình vận hành; khởi tạo khung kiến trúc nền tảng; phát triển phân hệ bưu cục và trung chuyển liên tỉnh; phụ trách tích hợp chéo hệ thống; điều phối tiến độ, rà soát chức năng và tổng hợp báo cáo. | 100% |
-| 2 | **Hoàng Phúc Khang** | 24162056 | Thành viên | Thống nhất quy trình vận hành; phát triển phân hệ tiếp nhận và tạo đơn hàng; thiết kế giao diện Figma (UI/UX), hạ tầng máy chủ, CI/CD, dịch vụ gửi email OTP và triển khai hệ thống. | 100% |
+| 2 | **Hoàng Phúc Khang** | 24162056 | Thành viên | Thống nhất quy trình vận hành; phát triển phân hệ tiếp nhận và tạo đơn hàng; thiết kế giao diện Figma (UI/UX), hạ tầng máy chủ, CI/CD, dịch vụ gửi email OTP và triển khai hệ thống; biên soạn nội dung báo cáo | 100% |
 | 3 | **Huỳnh Tấn Anh Phát** | 24162091 | Thành viên | Thiết kế sơ đồ quan hệ thực thể (ERD) và cơ sở dữ liệu; phát triển phân hệ giao hàng chặng cuối và tài chính; thực hiện kiểm thử thực tế; biên soạn báo cáo và thiết kế slide thuyết trình. | 100% |
 
 ---
@@ -28,19 +28,19 @@
 * **Kiến trúc và nền tảng:** Khởi tạo dự án Spring Boot 3, cấu hình bảo mật Spring Security 6, thiết lập cơ chế kiểm soát phiên đăng nhập và chuẩn hóa mô hình phân tầng Controller - Service - Repository.
 * **Phân hệ bưu cục và trung chuyển:** Xây dựng thuật toán định tuyến trạm tự động, quy trình phân loại bưu gửi trên băng chuyền, đóng bao hàng container, niêm phong chì và điều phối các chuyến xe tải liên tỉnh.
 * **Tích hợp hệ thống và quản trị:** Phụ trách tích hợp chéo các luồng dữ liệu, xử lý ngoại lệ liên trạm và xây dựng bảng điều hành tác nghiệp bưu cục cho vai trò quản lý.
-* **Quản lý và kiểm duyệt:** Cùng nhóm phân tích nghiệp vụ, điều phối tiến độ chung, tham gia viết, rà soát mã nguồn và kiểm duyệt kỹ thuật báo cáo cuối kỳ.
+* **Quản lý và kiểm duyệt:** Cùng nhóm phân tích nghiệp vụ, điều phối tiến độ chung, tham gia biên soạn, rà soát và kiểm duyệt nội dung báo cáo.
 
 #### Hoàng Phúc Khang (Thành viên - MSSV: 24162056)
 * **Quy trình và phân hệ tiếp nhận:** Cùng nhóm trưởng thống nhất quy trình vận hành; phát triển chức năng quản lý tài khoản, danh bạ sổ địa chỉ, tính cước vận chuyển tự động và luồng tạo đơn lấy hàng tận nơi hoặc gửi tại quầy.
 * **Thiết kế giao diện UI/UX (Frontend):** Khảo sát hành trình người dùng và thiết kế nguyên mẫu giao diện trên Figma cho 7 vai trò trong hệ thống; phối hợp hiện thực hóa giao diện bằng JSP/JSTL và Bootstrap 5.3.
 * **Hạ tầng đám mây và dịch vụ mạng:** Thiết lập quy trình tự động hóa CI/CD qua GitHub Actions, vận hành máy chủ AWS EC2 với Nginx reverse proxy, chứng chỉ SSL, cấu hình cơ sở dữ liệu Amazon RDS for SQL Server, tích hợp Gmail SMTP gửi mã OTP qua Outbox Worker và WebSocket STOMP.
-* **Kiểm thử và tài liệu hạ tầng:** Tham gia viết bài kiểm thử đơn vị, kiểm thử tích hợp và biên soạn nội dung kỹ thuật hạ tầng, triển khai trong báo cáo.
+* **Kiểm thử và tài liệu hạ tầng:** Tham gia viết bài kiểm thử đơn vị, kiểm thử tích hợp và biên soạn nội dung báo cáo.
 
 #### Huỳnh Tấn Anh Phát (Thành viên - MSSV: 24162091)
 * **Thiết kế cơ sở dữ liệu:** Khảo sát yêu cầu lưu trữ thông tin, thiết kế sơ đồ quan hệ thực thể (ERD) và xây dựng cấu trúc 25 bảng cơ sở dữ liệu ban đầu đạt chuẩn dạng chuẩn 3 (3NF) kèm các ràng buộc toàn vẹn dữ liệu.
 * **Phân hệ giao hàng và tài chính:** Phát triển tác nghiệp phát hàng của shipper, xử lý giao thành công, ghi nhận giao thất bại, kích hoạt chuyển hoàn, quản lý tiền thu hộ COD và đối soát dòng tiền.
 * **Ví điện tử và thanh toán:** Xây dựng tính năng ví điện tử khách hàng, lưu vết lịch sử biến động số dư tiền COD và quy trình gửi, phê duyệt yêu cầu rút tiền về tài khoản ngân hàng.
-* **Kiểm thử thực tế và tài liệu báo cáo:** Thực hiện kiểm thử chấp nhận người dùng (UAT) trên môi trường máy thật cho đầy đủ 7 vai trò; đảm nhiệm vai trò biên soạn chính báo cáo và thiết kế slide thuyết trình.
+* **Kiểm thử thực tế và tài liệu báo cáo:** Thực hiện kiểm thử chấp nhận người dùng (UAT) cho đầy đủ 7 vai trò; biên soạn nội dung báo cáo và thiết kế slide thuyết trình.
 
 ---
 
