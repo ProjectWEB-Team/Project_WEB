@@ -6,11 +6,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Đăng nhập | UTEExpress</title>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="${pageContext.request.contextPath}/assets/css/ute-express.css" rel="stylesheet">
+    <link href="${pageContext.request.contextPath}/assets/css/ute-modern.css" rel="stylesheet">
 </head>
 <body class="ute-auth">
-<jsp:include page="/WEB-INF/views/layout/navbar.jsp" />
 <main class="container ute-auth-main">
     <div class="ute-auth-layout">
         <section class="ute-auth-brand" aria-label="UTEexpress"><jsp:include page="/WEB-INF/views/layout/logo.jsp" /><p>Giao nhanh. Trọn niềm tin.</p></section>
@@ -30,14 +31,14 @@
                         <a class="btn btn-outline-secondary w-100 mb-3" href="${pageContext.request.contextPath}/oauth2/authorization/google">Đăng nhập bằng Google</a>
                     </c:if>
                     <section class="ute-password-login" aria-labelledby="pw-title">
-                        <h2 id="pw-title" class="h6 text-muted mb-0">Hoặc đăng nhập bằng mật khẩu</h2>
+                        <h2 id="pw-title" class="ute-divider">Hoặc đăng nhập bằng mật khẩu</h2>
                         <form method="post" action="${pageContext.request.contextPath}/login" class="mt-3 ute-login-form">
                             <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
-                            <div class="mb-3"><label class="form-label" for="username">Tên đăng nhập</label><input class="form-control" id="username" name="username" type="text" autocomplete="username" required></div>
-                            <div class="mb-4"><label class="form-label" for="password">Mật khẩu</label><input class="form-control" id="password" name="password" type="password" autocomplete="current-password" required></div>
+                            <div class="mb-3"><label class="form-label" for="username">Tên đăng nhập</label><input class="form-control" id="username" name="username" type="text" autocomplete="username" placeholder="Nhập tên đăng nhập" required></div>
+                            <div class="mb-2"><label class="form-label" for="password">Mật khẩu</label><input class="form-control" id="password" name="password" type="password" autocomplete="current-password" placeholder="Nhập mật khẩu" required></div>
+                            <p class="small text-end mb-3"><a class="fw-medium" href="${pageContext.request.contextPath}/auth/forgot-password">Quên mật khẩu?</a></p>
                             <button class="btn btn-primary w-100" type="submit">Đăng nhập</button>
                         </form>
-                        <p class="small mt-2 mb-0"><a href="${pageContext.request.contextPath}/auth/forgot-password">Quên mật khẩu?</a></p>
                     </section>
                     <p class="text-center small mb-0 mt-4">Chưa có tài khoản? <a href="${pageContext.request.contextPath}/register">Đăng ký</a></p>
                 </div>
@@ -45,4 +46,5 @@
         </div>
     </div>
 </main>
-<jsp:include page="/WEB-INF/views/layout/footer.jsp" />
+</body>
+</html>

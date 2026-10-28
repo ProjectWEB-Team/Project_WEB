@@ -96,6 +96,16 @@ public class EmailAccountController {
         populate(session, model);
         return "auth/verify-email";
     }
+    @PostMapping(value = "/auth/email/check-code", produces = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public java.util.Map<String, Object> checkCode(@RequestParam(defaultValue = "") String code, HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        UUID id = challengeId(session);
+        if (id == null) return java.util.Map.of("valid", false, "message", "Phiên xác thực đã hết hạn. Vui lòng thử lại từ đầu.");
+        String purpose = (String) session.getAttribute(PURPOSE);
+        boolean valid = accounts.check(id, code.trim(), purpose, actorId(request, purpose));
+        return java.util.Map.of("valid", valid, "message", valid ? "Mã hợp lệ." : "Mã không chính xác hoặc đã hết hạn.");
+    }
     @PostMapping("/auth/email/verify")
     public String verify(@RequestParam(defaultValue = "") String code, @RequestParam(defaultValue = "") String newPassword,
                          HttpServletRequest request, Model model) {

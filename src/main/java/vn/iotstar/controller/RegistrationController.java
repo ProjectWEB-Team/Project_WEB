@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import vn.iotstar.dto.auth.PhoneLoginRequest;
 import vn.iotstar.dto.auth.RegisterUserRequest;
@@ -161,6 +162,21 @@ public class RegistrationController {
         }
         model.addAttribute("maskedPhone", session.getAttribute(CHALLENGE_PHONE));
         return "auth/reset-password";
+    }
+
+    @PostMapping(value = "/auth/check-reset-otp", produces = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public java.util.Map<String, Object> checkResetOtp(@RequestParam(defaultValue = "") String code, HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        UUID challengeId = resetChallengeId(session);
+        if (challengeId == null) {
+            return java.util.Map.of("valid", false, "message", "Phiên xác thực đã hết hạn. Vui lòng thử lại từ đầu.");
+        }
+        boolean valid = registrationService.checkResetOtp(challengeId, code.trim());
+        if (valid) {
+            return java.util.Map.of("valid", true, "message", "Mã OTP hợp lệ.");
+        }
+        return java.util.Map.of("valid", false, "message", "Mã OTP không chính xác hoặc đã hết hạn.");
     }
 
     @PostMapping("/auth/reset-password")

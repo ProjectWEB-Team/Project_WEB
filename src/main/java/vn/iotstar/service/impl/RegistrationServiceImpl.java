@@ -96,6 +96,18 @@ public class RegistrationServiceImpl implements RegistrationService {
     @Override public RegistrationChallengeResponse requestPasswordReset(PhoneLoginRequest request) {
         return requestPhoneChallenge(request, "PASSWORD_RESET");
     }
+    @Override public boolean checkResetOtp(UUID challengeId, String code) {
+        if (challengeId == null || code == null || !code.matches("[0-9]{6}")) return false;
+        PhoneOtpChallenge challenge = challenges.findById(challengeId).orElse(null);
+        Instant now = clock.instant();
+        if (challenge == null || !challenge.usable("PASSWORD_RESET", now, policy.getMaxAttempts())) return false;
+        if (!encoder.matches(code, challenge.getCodeHash())) {
+            challenge.reject();
+            challenges.saveAndFlush(challenge);
+            return false;
+        }
+        return true;
+    }
     @Override public boolean resetPassword(VerifyPhoneOtpRequest request, String newPassword) {
         if (newPassword == null || newPassword.length() < 8 || newPassword.getBytes(StandardCharsets.UTF_8).length > 72) return false;
         return verifyBound(request, "PASSWORD_RESET").map(user -> { user.changePassword(encoder.encode(newPassword)); return true; })

@@ -1,6 +1,6 @@
 # Google, Gmail SMTP và OTP điện thoại
 
-Thiết lập local hiện tại: `http://127.0.0.1:8081`. Google và SMTP là hai cấu hình độc lập. Google dùng OAuth Client ID/Client secret; SMTP dùng địa chỉ Gmail và App Password. Không gửi các khóa này vào chat hoặc commit lên Git.
+Thiết lập local hiện tại: `http://localhost:8080` (file chạy sẵn: `.local/run-google-mail.ps1`). Google và SMTP là hai cấu hình độc lập. Google dùng OAuth Client ID/Client secret; SMTP dùng địa chỉ Gmail và App Password. Không gửi các khóa này vào chat hoặc commit lên Git.
 
 ## 1. Điền thông tin riêng trên máy
 
@@ -20,8 +20,8 @@ File `.properties` đọc ký tự `\` như dấu escape. Nếu secret có dấu
 1. Mở [Google Cloud Console](https://console.cloud.google.com/), tạo hoặc chọn project.
 2. Trong Google Auth Platform, khai báo Branding/Audience và tài khoản thử nghiệm nếu ứng dụng ở chế độ Testing.
 3. Tạo client loại **Web application** và thêm chính xác các Authorized redirect URIs sẽ dùng:
-   - `http://127.0.0.1:8081/login/oauth2/code/google`
-   - `http://localhost:8081/login/oauth2/code/google`
+   - `http://localhost:8080/login/oauth2/code/google`
+   - `http://127.0.0.1:8080/login/oauth2/code/google`
    - `https://uteexpress.event5g.fun/login/oauth2/code/google`
 4. Điền Client ID/Client secret vào file riêng ở mục 1. Khi đưa lên server, thêm callback HTTPS theo đúng tên miền; không dùng callback localhost cho server.
 
@@ -79,6 +79,8 @@ Kiểm tra thực tế sau khi có credentials:
 4. Tạo/cập nhật đơn trên tài khoản có email đã xác thực, kiểm tra thư nhận và thư rác.
 
 ## 5. Chọn dịch vụ OTP điện thoại ở Việt Nam
+
+**Đã bổ sung adapter SpeedSMS cho Verify/Notify.** Xem [hướng dẫn cấu hình và kiểm tra SMS](SPEEDSMS_SETUP.md). Token điền riêng trong `.local/sms-provider.properties` hoặc `/etc/uteexpress.env`; bật profile `sms` và bỏ `otp-local`. Chưa gửi SMS thật cho tới khi bạn cấu hình và thử trên số của mình.
 
 SMTP không gửi SMS. Chỉ bật gửi điện thoại thật sau khi chọn nhà cung cấp, được cấp khóa và hoàn tất kết nối API.
 

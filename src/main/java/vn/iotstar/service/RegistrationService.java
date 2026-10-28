@@ -12,5 +12,6 @@ public interface RegistrationService {
     Optional<Long> verifyLogin(VerifyPhoneOtpRequest request);
     /** Same anti-enumeration contract as requestLogin: unknown phones get a decoy challenge. */
     RegistrationChallengeResponse requestPasswordReset(PhoneLoginRequest request);
+    boolean checkResetOtp(UUID challengeId, String code);
     boolean resetPassword(VerifyPhoneOtpRequest request, String newPassword);
 }
