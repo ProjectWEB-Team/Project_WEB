@@ -1,0 +1,81 @@
+# Phase 06 — Service matrix: ownership, finance, last-mile (HARD-01, plan 06-02)
+
+Source branch: `feature/phase-06-hardening`. Pattern verified, not replaced (D-02): `AuthenticatedActor.requireCurrent()` + service checks (ADR-015), `FinanceAccess` (manager subtree / admin all-hub), `LastMileAccess` (active shipper/hub profile, physical location).
+
+Short names: **POS** = `PermissionMatrixOwnershipServiceTest`, **PFS** = `PermissionMatrixFinanceScopeServiceTest`, **SLICE** = `PermissionMatrixShipmentOwnershipSliceTest` (filter chain + controller + real `ShipmentServiceImpl`).
+
+Dimensions: R = role, H = hub scope, P = position, A = task assignment, L = shipment location/custody, O = resource ownership.
+
+| Service.method | Dimensions enforced | Denial type | Positive evidence | Negative evidence | Status |
+|---|---|---|---|---|---|
+| ShipmentServiceImpl.quote | none (authenticated; pure pricing) | — | ShipmentServiceImplTest#quotesBasePlusExtraWeightStepsInsuranceAndCodFee | n/a: no protected data; see F-06-O-03 | EXISTING |
+| ShipmentServiceImpl.create | O (sender = actor) | — | ShipmentServiceImplTest | sender id is server-derived; role not checked, see F-06-O-03 | EXISTING |
+| ShipmentServiceImpl.getDetail | O | ShipmentAccessDeniedException → 403 | SLICE#ownerReadsTheDetail | SLICE#strangerCannotReadTheDetail, ShipmentServiceImplTest#nonOwnerIsDeniedAtServiceBoundaryBeforeEventsAreRead | NEW |
+| ShipmentServiceImpl.confirmPayment | O | ShipmentAccessDeniedException → 403 | ShipmentServiceImplTest#senderOnlinePaymentWaitsForPaymentThenDemoConfirmIsIdempotent | SLICE#strangerCannotConfirmPayment, ShipmentServiceImplTest#nonOwnerCannotConfirmPayment | NEW |
+| ShipmentServiceImpl.cancel | O, state | ShipmentAccessDeniedException → 403 | SLICE#ownerCanCancel | SLICE#strangerCannotCancel, ShipmentServiceImplTest#senderCannotCancelAfterPickupOrSomeoneElsesShipment | NEW |
+| ShipmentServiceImpl.listMine | O (query by actor id) | — (scoped query) | SLICE#listQueriesOnlyTheCallersOwnShipments | SLICE#listQueriesOnlyTheCallersOwnShipments (never queries another id) | NEW |
+| TrackingServiceImpl.track | public whitelist projection | — | TrackingServiceImplTest | n/a: public by design (PUBLIC_LABELS only) | EXISTING |
+| TrackingServiceImpl.incoming | O (receiver = actor) | — (scoped query) | POS#incomingListQueriesOnlyTheCallersOwnReceipts | POS#incomingListQueriesOnlyTheCallersOwnReceipts | NEW |
+| TrackingServiceImpl.incomingDetail | O (receiver) | ShipmentAccessDeniedException | TrackingServiceImplTest | TrackingServiceImplTest#otherUsersCannotReadOrUnlockSomeoneElsesIncomingShipment | EXISTING |
+| TrackingServiceImpl.unlock | O (receiver) | ShipmentAccessDeniedException | TrackingServiceImplTest | TrackingServiceImplTest#otherUsersCannotReadOrUnlockSomeoneElsesIncomingShipment | EXISTING |
+| ShipmentFeeService.view | R (USER), O | AccessDeniedException | ShipmentFeeServiceTest | ShipmentFeeServiceTest#anotherUserCannotSettleOrReadSurcharge | EXISTING |
+| ShipmentFeeService.paySurcharge | R, O, state | AccessDeniedException | ShipmentFeeServiceTest | ShipmentFeeServiceTest#anotherUserCannotSettleOrReadSurcharge | EXISTING |
+| ShipmentFeeService.payReturn (E_WALLET/VNPAY) | R (USER), O | AccessDeniedException | LastMileReturnServiceImplTest | ShipmentFeeServiceTest#anotherUserCannotSettleOrReadSurcharge (same requireOwner) | EXISTING |
+| ShipmentFeeService.payReturn (CASH, hub) | R, P (INBOUND/GENERAL_STAFF), H (origin), L | AccessDeniedException | POS#cashReturnFeeByInboundStaffAtTheOriginIsRecorded | POS#cashReturnFeeAtAnotherHubIsDeniedWithoutAnyPayment, LastMileReturnServiceImplTest#senderCannotClaimCashOrReleaseOwnParcel | NEW |
+| ShipmentFeeService.payReturn (CASH, shipper) | R, H, A (IN_PROGRESS RETURN_DELIVERY), L | AccessDeniedException | LastMileReturnServiceImplTest#returnDeliveryNeedsScanAndFeesBeforeConfirmation | POS#cashReturnFeeByAShipperWithoutAnInProgressReturnTaskIsDenied | NEW |
+| ShipmentFeeService.requireReturnSettled / returnOutstanding / forwardOutstanding | internal helpers (callers authorize first) | — | LastMileReturnServiceImplTest | n/a: no controller reaches them directly | EXISTING |
+| WithdrawalServiceImpl.requestWithdrawal | O (actor id only) | — | WithdrawalServiceImplTest#requestLocksWalletBalance | POS#withdrawalRequestLocksOnlyTheCallersWallet | NEW |
+| WithdrawalServiceImpl.requestWithdrawal (idempotency key) | O (key scoped by actor id); blank key → server UUID on branch `fix/withdrawal-blank-key` | IllegalStateException on a conflicting reused key | WithdrawalServiceImplTest#requestIsIdempotent; `fix/withdrawal-blank-key`: WithdrawalServiceImplTest#blankKeyGetsDistinctServerKey | WithdrawalServiceImplTest#requestWithConflictingKeyIsRejected | EXISTING |
+| WithdrawalServiceImpl.approveWithdrawal | R (ADMIN) | AccessDeniedException | WithdrawalServiceImplTest | WithdrawalServiceImplTest#onlyAdminCanApprove | EXISTING |
+| WithdrawalServiceImpl.rejectWithdrawal | R (ADMIN) | AccessDeniedException | POS#adminCanRejectAPendingWithdrawal | POS#managerCannotRejectAWithdrawalAndNothingIsReleased | NEW |
+| WithdrawalServiceImpl.getUserWithdrawals | O or ADMIN | AccessDeniedException | WithdrawalServiceImplTest | WithdrawalServiceImplTest#userCannotReadOtherUsersOrPendingAdminQueue | EXISTING |
+| WithdrawalServiceImpl.getPendingWithdrawals | R (ADMIN) | AccessDeniedException | WithdrawalServiceImplTest | WithdrawalServiceImplTest#userCannotReadOtherUsersOrPendingAdminQueue | EXISTING |
+| WithdrawalServiceImpl.getPendingWithdrawalSummaries | R (ADMIN, via getPendingWithdrawals) | AccessDeniedException | WithdrawalServiceImplTest | POS#managerCannotReadTheAdministratorWithdrawalQueue | NEW |
+| WalletLedgerServiceImpl.getWalletResponse | O or ADMIN | AccessDeniedException | PermissionMatrixOwnershipServiceTest#walletReadsAreForTheOwnerOrAnAdministrator | PermissionMatrixOwnershipServiceTest#walletReadsAreForTheOwnerOrAnAdministrator | NEW |
+| WalletLedgerServiceImpl.getTransactions | O or ADMIN | AccessDeniedException | PermissionMatrixOwnershipServiceTest#walletReadsAreForTheOwnerOrAnAdministrator | PermissionMatrixOwnershipServiceTest#walletReadsAreForTheOwnerOrAnAdministrator | NEW |
+| WalletLedgerServiceImpl.getOrCreateWallet / record* / credit* / recordFeeDebit | internal ledger seam, no controller caller; reference uniqueness | IllegalStateException on duplicate | Phase04WalletSqlServerIntegrationTest, RefundProducerConsumerTest | n/a: authorization belongs to the calling service (WithdrawalServiceImpl, ShipmentFeeService, ShipmentFinanceServiceImpl) | EXISTING |
+| FinanceReconciliationServiceImpl.reconcile | R, H (shipper hub in subtree) | AccessDeniedException | FinanceReconciliationServiceImplTest#matchedCodRequiresSeparatePayoutAndReplayProvesLedger | FinanceReconciliationServiceImplTest#userCannotEnterFinanceServices | EXISTING |
+| FinanceReconciliationServiceImpl.payoutReadyCod | R, H | AccessDeniedException | FinanceReconciliationServiceImplTest | FinanceReconciliationServiceImplTest#managerScopeAppliesBeforeListDetailAndReplay | EXISTING |
+| FinanceReconciliationServiceImpl.getReconciliationsByShipper | R, H | AccessDeniedException | PFS#administratorReadsAnyShipperHistoryAndReadyPayouts | PFS#managerOutsideTheShipperSubtreeCannotReadHistoryOrReadyPayouts | NEW |
+| FinanceReconciliationServiceImpl.getReconciliationItems | R, H | AccessDeniedException | FinanceReconciliationServiceImplTest | FinanceReconciliationServiceImplTest#managerScopeAppliesBeforeListDetailAndReplay | EXISTING |
+| FinanceReconciliationServiceImpl.getReadyPayouts | R, H | AccessDeniedException | PFS#administratorReadsAnyShipperHistoryAndReadyPayouts | PFS#managerOutsideTheShipperSubtreeCannotReadHistoryOrReadyPayouts, PFS#managerWithoutAnActiveProfileAndOperationalRolesAreDenied | NEW |
+| FinanceReconciliationServiceImpl.getShiftExpectedItems (both overloads) | R, H | AccessDeniedException | FinanceReconciliationServiceImplTest#expectedItemsExcludeAlreadyReconciledAndNoncashSources | FinanceReconciliationServiceImplTest#managerScopeAppliesBeforeListDetailAndReplay | EXISTING |
+| ShipmentFinanceServiceImpl.refundShipmentPayment | R, H (origin hub) | AccessDeniedException | ShipmentFinanceServiceImplTest | ShipmentFinanceServiceImplTest#roleAndUnassignedManagerAreDeniedEvenOnReplay | EXISTING |
+| ShipmentFinanceServiceImpl.settlePendingRefund | system path (scheduler, no actor) | — | ShipmentFinanceServiceImplTest | n/a: only `RefundSettlementScheduler` calls it, see F-06-O-05 | EXISTING |
+| ShipmentFinanceServiceImpl.compensateLostShipment | R, H (incident hub) | AccessDeniedException | ShipmentFinanceServiceImplTest | PFS#managerOutsideTheIncidentHubCannotCompensateALoss | NEW |
+| ShipmentFinanceServiceImpl.listPendingRefundCandidates | R, H (filtered) | AccessDeniedException | PFS#administratorListsFinanceCandidates | PFS#operationalRolesCannotListOrPriceFinanceCandidates | NEW |
+| ShipmentFinanceServiceImpl.listConfirmedLossCandidates | R, H (filtered) | AccessDeniedException | PFS#administratorListsFinanceCandidates | PFS#operationalRolesCannotListOrPriceFinanceCandidates | NEW |
+| ShipmentFinanceServiceImpl.calculateLostCompensation | R, H | AccessDeniedException | ShipmentFinanceServiceImplTest | PFS#operationalRolesCannotListOrPriceFinanceCandidates | NEW |
+| LastMileDeliveryServiceImpl.scanForDelivery | R, A, H, L | AccessDeniedException | LastMileDeliveryServiceImplTest | LastMileDeliveryServiceImplTest#nonShipperRoleIsDenied, #scanDeliveryWrongHubFails | EXISTING |
+| LastMileDeliveryServiceImpl.recordCollection | R, A (IN_PROGRESS), H, L (custody) | AccessDeniedException | LastMileCollectionValidationTest | PFS#anUnassignedShipperAtTheSameHubCannotActOnSomeoneElsesDelivery | NEW |
+| LastMileDeliveryServiceImpl.confirmDelivery | R, A, H, L | AccessDeniedException | LastMileDeliveryServiceImplTest | PFS#anUnassignedShipperAtTheSameHubCannotActOnSomeoneElsesDelivery | NEW |
+| LastMileDeliveryServiceImpl.recordFailure | R, A, H, L | AccessDeniedException | LastMileReturnServiceImplTest | PFS#anUnassignedShipperAtTheSameHubCannotActOnSomeoneElsesDelivery | NEW |
+| LastMileDeliveryServiceImpl.processReturnHandover | R, P, H (origin), L | AccessDeniedException | LastMileReturnServiceImplTest#hubReleaseRequiresRecordedFeesAndVerifiedIdentity | LastMileReturnServiceImplTest#senderCannotClaimCashOrReleaseOwnParcel, #unknownHandoverAndNullOriginDenied | EXISTING |
+| LastMileDeliveryServiceImpl.scanReturnDelivery | R, A (RETURN_DELIVERY), H, L | AccessDeniedException | PFS#anUnassignedShipperCannotScanOrConfirmAReturnDelivery (assigned shipper path) | PFS#anUnassignedShipperCannotScanOrConfirmAReturnDelivery | NEW |
+| LastMileDeliveryServiceImpl.confirmReturnDelivery | R, A, H, L | AccessDeniedException | LastMileReturnServiceImplTest#returnDeliveryNeedsScanAndFeesBeforeConfirmation | PFS#anUnassignedShipperCannotScanOrConfirmAReturnDelivery | NEW |
+| LastMileDeliveryServiceImpl.receiveFailedDelivery | R, P (INBOUND/GENERAL_STAFF), H (destination), L | AccessDeniedException | LastMileReturnServiceImplTest | LastMileReturnServiceImplTest#retryRequiresRealInboundReceiptBeforeNewAssignment | EXISTING |
+| LastMileDeliveryServiceImpl.getAssignedDeliveryTasks | R, A (actor's tasks), H | AccessDeniedException | PFS#theAssignedShipperReadsTheirDeliveryTask | PFS#nonShipperRolesCannotReadShipperTaskLists | NEW |
+| LastMileDeliveryServiceImpl.getDeliveryTask | R, A, H | AccessDeniedException | PFS#theAssignedShipperReadsTheirDeliveryTask | PFS#anUnassignedShipperAtTheSameHubCannotActOnSomeoneElsesDelivery, PFS#nonShipperRolesCannotReadShipperTaskLists | NEW |
+| LastMileDeliveryServiceImpl.getAssignedReturnTasks | R, A, H | AccessDeniedException | LastMileReturnServiceImplTest | PFS#nonShipperRolesCannotReadShipperTaskLists | NEW |
+
+## Hypotheses (planning time)
+
+- **(a) Unguarded wallet reads**: confirmed as a defense-in-depth gap. The only callers are `WalletController.java:36-37`, which pass `AuthenticatedActor.requireCurrent().userId()`; no request-controlled id reaches them → F-06-O-02 (MEDIUM).
+- **(b) Spring `AccessDeniedException` → HTTP 500**: confirmed by a throwaway probe (not committed). `GET /user/shipment-fees/42` with `ShipmentFeeService.view` throwing `AccessDeniedException("Sender ownership required")` returned **500, view `error/500`**. `WebExceptionHandler` maps only `ShipmentAccessDeniedException` and `HubOperationAccessDeniedException` to 403, and its `@ExceptionHandler(Exception.class)` catches the plain Spring exception before Spring Security's `ExceptionTranslationFilter`. Affected controllers (no local handler, no catch): `ShipmentFeeController`, `LastMileAssignmentController`, `ReturnDisposalController`, and the paths through `LastMileAccess`/`FinanceAccess`-backed services without a catch. `FinanceReconciliationController` has its own 403 handler; `WalletController`, `AdminWithdrawalController` and `LastMileDeliveryController` catch and flash. Still denied, no data exposure → F-06-O-01 (MEDIUM).
+- **(c) `ShipmentServiceImpl.create` has no role check**: confirmed → F-06-O-03 (LOW).
+- **(d) Flash messages echo `getMessage()`**: confirmed → F-06-O-04 (LOW).
+
+## Findings
+
+| ID | Severity | Surface | Description | Disposition | Evidence |
+|---|---|---|---|---|---|
+| F-06-O-01 | MEDIUM | `WebExceptionHandler` | A plain Spring `AccessDeniedException` thrown by a service renders `error/500` with HTTP 500 instead of 403 on controllers without a local handler. The action is still denied and nothing is exposed. One-line fix: add an `@ExceptionHandler(AccessDeniedException.class)` returning 403 `error/403` (outside this plan's file scope). | FIXED (`0b9b1f9`: WebExceptionHandler maps AccessDeniedException to 403; ExceptionHandlingTest#plainServiceDenialUsesSafeForbiddenView) | probe above; `WebExceptionHandler.unexpected` |
+| F-06-O-02 | MEDIUM | `WalletLedgerServiceImpl.getWalletResponse`, `getTransactions` | No caller-identity check inside the service; safe today because the only caller passes the actor id. | FIXED (`0b9b1f9`: owner-or-admin check; PermissionMatrixOwnershipServiceTest#walletReadsAreForTheOwnerOrAnAdministrator) | `WalletController.java:36-37` |
+| F-06-O-03 | LOW | `ShipmentServiceImpl.create` | Any authenticated role (staff, admin) can create a shipment as sender, but `ShipmentFeeService.requireOwner` then demands `ROLE_USER`, so such a sender cannot pay its own surcharge or return fee online. Policy question for the owner. | RECORDED | `ShipmentServiceImpl.createShipment`, `ShipmentFeeService.requireOwner` |
+| F-06-O-04 | LOW | Flash messages | `WalletController`, `AdminWithdrawalController`, `LastMileDeliveryController` and `ShipmentController` flash `exception.getMessage()`; database constraint text can reach the user (seen with the blank withdrawal key, fixed separately on `fix/withdrawal-blank-key`). | RECORDED | catch blocks in those controllers |
+| F-06-O-05 | LOW | `ShipmentFinanceServiceImpl.settlePendingRefund` | Public service method without an actor check; only the scheduler calls it, and it re-validates the persisted obligation. | RECORDED | `RefundSettlementScheduler.java:21` |
+| F-06-O-06 | LOW | `ShipmentServiceImpl.getDetail` | Unknown id → 404, someone else's id → 403, so shipment ids can be probed for existence (no content exposed). | RECORDED | `ShipmentServiceImpl.getDetail` |
+| F-06-O-08 | MEDIUM | `WithdrawalServiceImpl.requestWithdrawal` | A blank idempotency key was stored as "" (or NULL); `UQ_withdrawal_requests_user_key (user_id, request_key)` then rejected the user's second withdrawal with raw SQL text. Functional defect, no data exposure. | FIXED on `origin/fix/withdrawal-blank-key` (`7ede357`, not yet merged to main; not part of `feature/phase-06-hardening`) | `fix/withdrawal-blank-key`: WithdrawalServiceImplTest#blankKeyGetsDistinctServerKey |
+| F-06-O-07 | LOW | `LastMileDeliveryServiceImpl.getDeliveryTask` | Returns the shipper's most recent DELIVERY assignment for the parcel even when completed (own historical data only). | RECORDED | `getDeliveryTask` stream filter |
+
+No CRITICAL or HIGH ownership or finance-scope finding was found; no production file was changed by this plan.

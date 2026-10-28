@@ -2,7 +2,7 @@
 node_modules/
 .agents/
 .gsd/
-.planning/
+# .planning/ (tracked on branch bao_cao)
 .local/
 .local-backups/
 
