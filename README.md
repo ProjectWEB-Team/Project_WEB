@@ -1,7 +1,7 @@
 # UTEExpress - Hệ thống quản lý vận hành logistics và chuyển phát nhanh
 
 > **Đồ án môn học:** Lập trình Web  
-> **Trường:** Đại học Sư phạm Kỹ thuật Thành phố Hồ Chí Minh (HCMUTE)  
+> **Trường:** Đại học Công Nghệ Kỹ thuật Thành phố Hồ Chí Minh (HCMUTE)  
 > **Khoa:** Công nghệ Thông tin  
 > **Giảng viên hướng dẫn:** ThS. Nguyễn Hữu Trung  
 > **Đề tài:** Đề tài 9 - Xây dựng website quản lý chuỗi giao nhận Logistics UTEExpress  
