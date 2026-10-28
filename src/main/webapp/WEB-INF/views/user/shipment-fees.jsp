@@ -14,59 +14,72 @@
 </head>
 <body class="bg-ute-canvas">
 <jsp:include page="/WEB-INF/views/layout/navbar.jsp" />
-<main class="container shipment-form-container py-4">
-    <nav class="d-flex flex-wrap gap-2 mb-4" aria-label="Điều hướng vận đơn">
-        <a class="btn btn-outline-secondary" href="${pageContext.request.contextPath}/user/shipments/${fees.shipmentId()}">← Quay lại chi tiết vận đơn</a>
-        <a class="btn btn-outline-secondary" href="${pageContext.request.contextPath}/user/shipments">Đơn đã gửi</a>
-    </nav>
-    <header class="mb-4">
-        <p class="text-ute-primary fw-bold mb-1">UTEExpress</p>
-        <h1 class="h3">Phí hoàn và phụ thu</h1>
-        <p class="text-ute-muted mb-0">Vận đơn <strong class="font-monospace"><c:out value="${fees.trackingNumber()}"/></strong></p>
-    </header>
-    <p class="text-ute-muted">Trang này hiển thị các khoản phát sinh khi hoàn hàng hoặc cân lại kiện hàng. Cước vận chuyển ban đầu và trạng thái thanh toán nằm ở trang chi tiết vận đơn.</p>
+<main class="ute-app flex-grow-1">
+  <div class="ute-wrap">
+    <div class="ute-detail-bar">
+        <div class="d-flex gap-2">
+            <a class="btn ute-btn-ghost" href="${pageContext.request.contextPath}/user/shipments/${fees.shipmentId()}">&larr; Quay lại chi tiết vận đơn</a>
+            <a class="btn ute-btn-ghost" href="${pageContext.request.contextPath}/user/shipments">Danh sách đơn đã gửi</a>
+        </div>
+    </div>
+    <div class="ute-app-head">
+        <div>
+            <h1>Phí hoàn hàng và Phụ thu cân nặng (Vận đơn <c:out value="${fees.trackingNumber()}"/>)</h1>
+            <p>Hiển thị các khoản phí phát sinh khi kiện hàng bị hoàn trả về gốc hoặc chênh lệch khối lượng khi cân đo thực tế tại bưu cục.</p>
+        </div>
+    </div>
     <c:set var="totalDue" value="${fees.forwardDue() + fees.returnDue() + fees.surchargeDue()}"/>
-    <section class="card-ute p-4 mb-4" aria-labelledby="fee-breakdown-title">
-        <h2 id="fee-breakdown-title" class="h5 text-ute-primary mb-3">Các khoản còn phải trả</h2>
-        <dl class="row mb-0">
-            <dt class="col-sm-8 fw-normal mb-2">Cước chiều đi còn thiếu khi hoàn hàng</dt>
-            <dd class="col-sm-4 text-sm-end"><fmt:formatNumber value="${fees.forwardDue()}" pattern="#,##0" var="forwardFormatted"/>${fn:replace(forwardFormatted, ',', '.')}đ</dd>
-            <dt class="col-sm-8 fw-normal mb-2">Phí hoàn hàng</dt>
-            <dd class="col-sm-4 text-sm-end"><fmt:formatNumber value="${fees.returnDue()}" pattern="#,##0" var="returnFormatted"/>${fn:replace(returnFormatted, ',', '.')}đ</dd>
-            <dt class="col-sm-8 fw-normal mb-2">Phụ thu cân nặng</dt>
-            <dd class="col-sm-4 text-sm-end"><fmt:formatNumber value="${fees.surchargeDue()}" pattern="#,##0" var="surchargeFormatted"/>${fn:replace(surchargeFormatted, ',', '.')}đ</dd>
-            <dt class="col-sm-8 border-top pt-3">Tổng cần thanh toán tại đây</dt>
-            <dd id="shipment-fees-total" class="col-sm-4 text-sm-end border-top pt-3 fw-bold text-ute-primary"><fmt:formatNumber value="${totalDue}" pattern="#,##0" var="totalFormatted"/>${fn:replace(totalFormatted, ',', '.')}đ</dd>
-        </dl>
-    </section>
+    <fmt:formatNumber value="${fees.forwardDue()}" pattern="#,##0" var="forwardFormatted"/>
+    <fmt:formatNumber value="${fees.returnDue()}" pattern="#,##0" var="returnFormatted"/>
+    <fmt:formatNumber value="${fees.surchargeDue()}" pattern="#,##0" var="surchargeFormatted"/>
+    <fmt:formatNumber value="${totalDue}" pattern="#,##0" var="totalFormatted"/>
     <c:choose>
         <c:when test="${totalDue == 0}">
-            <div id="shipment-fees-empty" class="alert alert-info" role="status">Hiện không có phí hoàn hoặc phụ thu cần thanh toán. Bạn có thể quay lại chi tiết để xem trạng thái đơn và cước vận chuyển ban đầu.</div>
+            <div id="shipment-fees-empty" class="ute-fee-alert" role="status">Hiện không có phí hoàn hoặc phụ thu cần thanh toán. Bạn có thể quay lại chi tiết để xem trạng thái đơn.</div>
         </c:when>
         <c:otherwise>
-            <c:forEach items="${['RETURN','WEIGHT_SURCHARGE']}" var="kind">
-                <c:if test="${kind == 'RETURN' ? fees.forwardDue() + fees.returnDue() > 0 : fees.surchargeDue() > 0}">
-                    <section class="card-ute p-4 mb-3" aria-labelledby="payment-title-${kind}">
-                        <h2 id="payment-title-${kind}" class="h5">${kind == 'RETURN' ? 'Thanh toán các khoản hoàn hàng' : 'Thanh toán phụ thu cân nặng'}</h2>
-                        <p class="text-ute-muted">Chọn phương thức thanh toán cho khoản này.</p>
-                        <form method="post" action="${pageContext.request.contextPath}/user/shipment-fees/${fees.shipmentId()}/wallet" class="mb-3">
-                            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
-                            <input type="hidden" name="obligation" value="${kind}">
-                            <button type="submit" class="btn btn-ute-primary">Thanh toán bằng ví</button>
-                        </form>
-                        <form method="post" action="${pageContext.request.contextPath}/user/shipment-fees/${fees.shipmentId()}/demo-vnpay" class="border-top pt-3">
-                            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
-                            <input type="hidden" name="obligation" value="${kind}">
-                            <div class="form-check mb-3">
-                                <input id="confirm-demo-${kind}" class="form-check-input" type="checkbox" name="confirmDemo" value="true" required>
-                                <label class="form-check-label" for="confirm-demo-${kind}">Tôi xác nhận thanh toán VNPay mô phỏng, không phát sinh giao dịch ngân hàng thật.</label>
-                            </div>
-                            <button type="submit" class="btn btn-outline-primary">Thanh toán VNPay demo</button>
-                        </form>
-                    </section>
-                </c:if>
-            </c:forEach>
+            <div class="ute-fee-alert" role="status">Còn khoản chưa thanh toán: tổng <strong>${fn:replace(totalFormatted, ',', '.')} đ</strong>.</div>
         </c:otherwise>
     </c:choose>
+    <section class="ute-app-card" aria-labelledby="fee-breakdown-title">
+        <div class="ute-app-card-head"><h2 id="fee-breakdown-title">Bảng bóc tách các khoản phí phát sinh cần thanh toán &mdash; Vận đơn <c:out value="${fees.trackingNumber()}"/></h2></div>
+        <div class="ute-fee-tiles">
+            <div class="ute-fee-tile"><small>Cước chiều đi còn thiếu</small><strong>${fn:replace(forwardFormatted, ',', '.')} đ</strong><span>Cước chiều đi chưa thanh toán khi hoàn hàng</span></div>
+            <div class="ute-fee-tile"><small>Phí chuyển hoàn về gốc</small><strong>${fn:replace(returnFormatted, ',', '.')} đ</strong><span>Phí hoàn hàng về người gửi</span></div>
+            <div class="ute-fee-tile"><small>Phụ thu vượt cân tại hub</small><strong>${fn:replace(surchargeFormatted, ',', '.')} đ</strong><span>Chênh lệch khối lượng cân thực tế</span></div>
+            <div class="ute-fee-tile is-total"><small>Tổng cần thanh toán</small><strong id="shipment-fees-total">${fn:replace(totalFormatted, ',', '.')} đ</strong><span>Thanh toán để mở khóa nhận lại hàng hoàn</span></div>
+        </div>
+    </section>
+    <c:if test="${totalDue != 0}">
+    <div class="ute-fee-pay">
+        <c:forEach items="${['RETURN','WEIGHT_SURCHARGE']}" var="kind">
+            <c:if test="${kind == 'RETURN' ? fees.forwardDue() + fees.returnDue() > 0 : fees.surchargeDue() > 0}">
+                <section class="ute-app-card" aria-labelledby="payment-title-${kind}">
+                    <div class="ute-app-card-head">
+                        <h2 id="payment-title-${kind}">${kind == 'RETURN' ? 'Thanh toán các khoản hoàn hàng' : 'Thanh toán phụ thu cân nặng'}</h2>
+                        <p>Chọn phương thức thanh toán cho khoản này.</p>
+                    </div>
+                    <div class="ute-fee-buttons">
+                        <form method="post" action="${pageContext.request.contextPath}/user/shipment-fees/${fees.shipmentId()}/wallet">
+                            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                            <input type="hidden" name="obligation" value="${kind}">
+                            <button type="submit" class="btn btn-ute-primary w-100">Thanh toán bằng Ví</button>
+                        </form>
+                        <form method="post" action="${pageContext.request.contextPath}/user/shipment-fees/${fees.shipmentId()}/demo-vnpay">
+                            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                            <input type="hidden" name="obligation" value="${kind}">
+                            <button type="submit" class="btn ute-btn-warm-outline w-100">Thanh toán qua VNPAY</button>
+                            <div class="form-check mt-2">
+                                <input id="confirm-demo-${kind}" class="form-check-input" type="checkbox" name="confirmDemo" value="true" required>
+                                <label class="form-check-label small" for="confirm-demo-${kind}">Tôi xác nhận thanh toán VNPay mô phỏng, không phát sinh giao dịch ngân hàng thật.</label>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+            </c:if>
+        </c:forEach>
+    </div>
+    </c:if>
+  </div>
 </main>
 <jsp:include page="/WEB-INF/views/layout/footer.jsp" />

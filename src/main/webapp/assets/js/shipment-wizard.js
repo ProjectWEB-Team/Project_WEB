@@ -32,7 +32,7 @@
             values: `${money(fieldValue('declaredValue'))} / ${money(fieldValue('codAmount'))}`,
             payment: `${selectedLabel('feePayer')} · ${selectedLabel('paymentMethod')}`,
             pickup: selectedLabel('pickupMethod'),
-            fee: hasQuote ? quote.querySelector('strong').textContent : 'Cần báo giá lại'
+            fee: hasQuote ? (quote.querySelector('.ute-quote-total-val')?.textContent || quote.querySelector('strong')?.textContent || '') : 'Cần báo giá lại'
         };
         summary.querySelectorAll('[data-summary]').forEach((item) => {
             item.textContent = values[item.dataset.summary];
@@ -45,15 +45,17 @@
         stepButtons.forEach((button, position) => {
             if (position === index) button.setAttribute('aria-current', 'step');
             else button.removeAttribute('aria-current');
+            button.classList.toggle('is-done', position < index);
             button.disabled = position === 3 && !hasQuote;
         });
         previous.hidden = index === 0;
         next.hidden = index === 3;
         next.disabled = index === 2 && !hasQuote;
-        next.textContent = index === 2 ? 'Tiếp tục xác nhận' : 'Tiếp tục';
+        next.textContent = index === 2 ? 'Tiếp tục xác nhận →' : index === 0 ? 'Tiếp tục' : `Tiếp tục sang Bước ${index + 2} →`;
+        previous.textContent = `← Quay lại Bước ${index}`;
         quoteButton.disabled = index !== 2 || submitting;
         if (createButton) createButton.disabled = index !== 3 || !hasQuote || submitting;
-        document.getElementById('shipment-step-status').textContent = `Bước ${index + 1} / ${steps.length}`;
+        document.getElementById('shipment-step-status').textContent = `Bước ${index + 1} / ${steps.length}${index ? ' · ' + ['', 'Kiện hàng & Dịch vụ', 'Cước phí & Thanh toán', 'Cách gửi & Xác nhận'][index] : ''}`;
         if (index === 3) updateSummary();
         if (focus) steps[index].querySelector('h2').focus();
     }

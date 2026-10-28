@@ -1,6 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <%@ taglib prefix="u" tagdir="/WEB-INF/tags" %>
 <!DOCTYPE html>
 <html lang="vi">
@@ -13,34 +14,47 @@
 </head>
 <body class="bg-ute-canvas">
 <jsp:include page="/WEB-INF/views/layout/navbar.jsp" />
-<main class="container py-4" style="max-width: 960px">
-    <c:if test="${not empty message}"><div class="alert alert-success" role="status"><c:out value="${message}"/></div></c:if>
-    <c:if test="${not empty error}"><div class="alert alert-danger" role="alert"><c:out value="${error}"/></div></c:if>
-    <h1 class="h3 mb-3">Đơn đang đến</h1>
-    <p class="text-ute-muted">Thông tin được che. Mở từng đơn và nhập đủ mã vận đơn để xem chi tiết.</p>
-    <section class="card-ute p-0">
+<main class="ute-app flex-grow-1">
+  <div class="ute-wrap">
+    <c:if test="${not empty message}"><div class="alert alert-success mb-0" role="status"><c:out value="${message}"/></div></c:if>
+    <c:if test="${not empty error}"><div class="alert alert-danger mb-0" role="alert"><c:out value="${error}"/></div></c:if>
+    <div class="ute-app-head">
+        <div>
+            <h1>Đơn hàng đang giao đến bạn</h1>
+            <p>Để bảo vệ quyền riêng tư, thông tin mã vận đơn và người gửi được che một phần. Nhập đúng mã vận đơn để mở khóa địa chỉ và số tiền cần thanh toán.</p>
+        </div>
+    </div>
+    <section class="ute-app-card">
+        <div class="ute-app-card-head">
+            <h2>Danh sách đơn đang đến số điện thoại của bạn (${shipments.totalElements} đơn)</h2>
+            <p>Thông tin người gửi được che một phần. Chọn một đơn để mở chi tiết và nhập mã vận đơn nhằm mở khóa.</p>
+        </div>
         <c:choose>
-            <c:when test="${shipments.totalElements == 0}"><p class="p-4 mb-0 text-ute-muted">Chưa có đơn nào gửi đến bạn.</p></c:when>
+            <c:when test="${shipments.totalElements == 0}"><p class="mb-0 text-ute-muted">Chưa có đơn nào gửi đến bạn.</p></c:when>
             <c:otherwise>
-                <table class="table mb-0 align-middle">
-                    <thead><tr><th>Mã vận đơn</th><th>Người gửi</th><th>Trạng thái</th><th>Tạo lúc</th></tr></thead>
+                <div class="table-responsive">
+                <table class="table ute-list-table align-middle">
+                    <thead><tr><th>Mã vận đơn (đã che)</th><th>Người gửi (đã che)</th><th>Trạng thái hiện tại</th><th>Tạo lúc</th><th>Thao tác</th></tr></thead>
                     <tbody>
                     <c:forEach items="${shipments.content}" var="s">
                         <tr>
-                            <td><a class="font-monospace" href="${pageContext.request.contextPath}/user/incoming/${s.id}"><c:out value="${s.maskedTrackingNumber}"/></a></td>
+                            <td><a class="ute-code" href="${pageContext.request.contextPath}/user/incoming/${s.id}"><c:out value="${s.maskedTrackingNumber}"/></a></td>
                             <td><c:out value="${s.maskedSenderName}"/></td>
                             <td><u:statusbadge status="${s.currentStatus}"/></td>
-                            <td class="small text-ute-muted"><c:out value="${s.createdAt}"/></td>
+                            <td><c:set var="at" value="${s.createdAt}"/>${fn:substring(at, 8, 10)}/${fn:substring(at, 5, 7)}/${fn:substring(at, 0, 4)} ${fn:substring(at, 11, 16)}</td>
+                            <td><a class="btn ute-btn-view" href="${pageContext.request.contextPath}/user/incoming/${s.id}">Mở chi tiết</a></td>
                         </tr>
                     </c:forEach>
                     </tbody>
                 </table>
+                </div>
             </c:otherwise>
         </c:choose>
+        <nav class="d-flex justify-content-between" aria-label="Phân trang">
+            <c:if test="${shipments.hasPrevious()}"><a class="btn btn-outline-secondary btn-sm" href="?page=${shipments.number - 1}">Trang trước</a></c:if>
+            <c:if test="${shipments.hasNext()}"><a class="btn btn-outline-secondary btn-sm" href="?page=${shipments.number + 1}">Trang sau</a></c:if>
+        </nav>
     </section>
-    <nav class="d-flex justify-content-between mt-3" aria-label="Phân trang">
-        <c:if test="${shipments.hasPrevious()}"><a class="btn btn-outline-secondary btn-sm" href="?page=${shipments.number - 1}">Trang trước</a></c:if>
-        <c:if test="${shipments.hasNext()}"><a class="btn btn-outline-secondary btn-sm" href="?page=${shipments.number + 1}">Trang sau</a></c:if>
-    </nav>
+  </div>
 </main>
 <jsp:include page="/WEB-INF/views/layout/footer.jsp" />

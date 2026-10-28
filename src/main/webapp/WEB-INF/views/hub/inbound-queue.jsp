@@ -17,7 +17,7 @@
     </c:forEach></tbody></table>
   </c:otherwise>
 </c:choose>
-<form method="post" action="${pageContext.request.contextPath}/hub/inbound/receive">
+<form class="ute-operation-form" method="post" action="${pageContext.request.contextPath}/hub/inbound/receive">
   <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
   <label>Bàn giao <select name="handoverId" required><option value="">Chọn phiếu</option><c:forEach items="${handoverPicks}" var="p"><option value="${p[0]}">#<c:out value="${p[0]}"/> từ <c:out value="${p[1]}"/></option></c:forEach></select></label>
   <label>Bao hàng <select name="containerId" required><option value="">Chọn bao</option><c:forEach items="${containerPicks}" var="p"><option value="${p[1]}">Phiếu #<c:out value="${p[0]}"/> – bao <c:out value="${p[2]}"/></option></c:forEach></select></label>
@@ -25,21 +25,23 @@
   <button type="submit">Ghi nhận đã nhận hàng</button>
 </form>
 <h2>Mở bao xong và đối chiếu danh sách</h2>
-<form method="post" action="${pageContext.request.contextPath}/hub/inbound/reconcile">
+<form class="ute-operation-form ute-operation-form-bulk" method="post" action="${pageContext.request.contextPath}/hub/inbound/reconcile">
   <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
+  <div class="ute-form-field-stack">
   <label>Bàn giao <select name="handoverId" required><option value="">Chọn phiếu</option><c:forEach items="${handoverPicks}" var="p"><option value="${p[0]}">#<c:out value="${p[0]}"/> từ <c:out value="${p[1]}"/></option></c:forEach></select></label>
   <label>Bao hàng <select name="containerId" required><option value="">Chọn bao</option><c:forEach items="${containerPicks}" var="p"><option value="${p[1]}">Phiếu #<c:out value="${p[0]}"/> – bao <c:out value="${p[2]}"/></option></c:forEach></select></label>
-  <label>Các đơn đã nhận (giữ Ctrl để chọn nhiều) <select name="receivedShipmentIds" multiple size="6" required><c:forEach items="${shipmentPicks}" var="p"><option value="${p[1]}">Bao #<c:out value="${p[0]}"/> – <c:out value="${p[2]}"/></option></c:forEach></select></label>
-  <button type="submit">Ghi nhận kiện đã nhận và kiện thiếu</button>
+  </div>
+  <label class="ute-form-wide">Các đơn đã nhận (giữ Ctrl để chọn nhiều) <select name="receivedShipmentIds" multiple size="6" required><c:forEach items="${shipmentPicks}" var="p"><option value="${p[1]}">Bao #<c:out value="${p[0]}"/> – <c:out value="${p[2]}"/></option></c:forEach></select></label>
+  <div class="ute-form-actions"><button type="submit">Ghi nhận kiện đã nhận và kiện thiếu</button></div>
 </form>
-<form method="post" action="${pageContext.request.contextPath}/hub/inbound/reconcile-empty">
+<form class="ute-operation-form" method="post" action="${pageContext.request.contextPath}/hub/inbound/reconcile-empty">
   <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
   <label>Bàn giao <select name="handoverId" required><option value="">Chọn phiếu</option><c:forEach items="${handoverPicks}" var="p"><option value="${p[0]}">#<c:out value="${p[0]}"/> từ <c:out value="${p[1]}"/></option></c:forEach></select></label>
   <label>Bao hàng <select name="containerId" required><option value="">Chọn bao</option><c:forEach items="${containerPicks}" var="p"><option value="${p[1]}">Phiếu #<c:out value="${p[0]}"/> – bao <c:out value="${p[2]}"/></option></c:forEach></select></label>
-  <label><input type="checkbox" name="confirmAllMissing" value="true" required /> Không nhận được kiện nào trong danh sách</label>
+  <label class="ute-form-wide"><input type="checkbox" name="confirmAllMissing" value="true" required /> Không nhận được kiện nào trong danh sách</label>
   <button type="submit">Báo thiếu toàn bộ</button>
 </form>
-<h2>Nhận lại kiện giao thất bại từ shipper</h2><form method="post" action="${pageContext.request.contextPath}/hub/delivery-returns/receive">
+<h2>Nhận lại kiện giao thất bại từ shipper</h2><form class="ute-operation-form" method="post" action="${pageContext.request.contextPath}/hub/delivery-returns/receive">
 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"><label>Mã ID vận đơn<input name="shipmentId" type="number" required></label>
 <label>Quét mã vận đơn<input name="trackingNumber" required></label><button>Xác nhận nhận kiện vật lý</button></form>
 </main><jsp:include page="/WEB-INF/views/layout/footer.jsp" />

@@ -45,7 +45,7 @@
                                 <th>Chủ tài khoản</th>
                                 <th class="text-end">Số tiền</th>
                                 <th>Thời điểm</th>
-                                <th class="text-center">Thao tác</th>
+                                <th>Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
