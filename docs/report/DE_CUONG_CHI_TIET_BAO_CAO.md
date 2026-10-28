@@ -1,7 +1,7 @@
 # ĐỀ CƯƠNG CHI TIẾT BÁO CÁO ĐỒ ÁN MÔN HỌC
 ## Đề tài: Xây dựng hệ thống quản lý chuỗi giao nhận Logistics UTEExpress
-**Trường:** Đại học Sư phạm Kỹ thuật Thành phố Hồ Chí Minh (HCMUTE)  
-**Khoa:** Công nghệ Thông tin  
+**Trường:** Đại học Công Nghệ Kỹ Thuật Thành phố Hồ Chí Minh (HCMUTE)  
+**Khoa:** Công Nghệ Thông tin  
 **Giảng viên hướng dẫn:** ThS. Nguyễn Hữu Trung  
 **Nhóm sinh viên thực hiện:**
 1. Ngô Bá Vạn (Nhóm trưởng) - MSSV: 24162144
@@ -20,94 +20,110 @@
 
 ---
 
-### CHƯƠNG 1: TỔNG QUAN ĐỀ TÀI VÀ BÀI TOÁN NGHIỆP VỤ
-* **1.1. Đặt vấn đề và tính cấp thiết của đề tài:**
-  * Sự bùng nổ của thương mại điện tử và nhu cầu quản lý chuỗi cung ứng giao nhận bưu chính đa trạm tại Việt Nam.
-  * Các thách thức thực tế: kiểm soát hàng hóa qua nhiều trạm trung chuyển, hạn chế thất lạc, quản lý dòng tiền thu hộ COD và bảo mật thông tin bưu gửi.
-* **1.2. Mục tiêu và phạm vi đề tài:**
-  * Mục tiêu: Xây dựng hệ thống quản lý logistics thuần vận chuyển hoàn chỉnh, vận hành xuyên suốt vòng đời kiện hàng.
-  * Phạm vi: Áp dụng mô hình Hub đa cấp (Bưu cục phát/nhận cấp 1, Hub vùng cấp 2, Trung tâm khai thác SOC cấp 3).
-* **1.3. Khảo sát quy trình nghiệp vụ chuỗi giao nhận UTEExpress:**
-  * Quy trình tạo đơn và tiếp nhận bưu gửi (Khách gửi tại quầy hoặc Bưu tá lấy tận nơi).
-  * Quy trình quét mã phân loại trên băng chuyền, đóng bao hàng container và niêm phong chì bảo mật.
-  * Quy trình điều phối chuyến xe tải trung chuyển đường dài (Linehaul trips).
-  * Quy trình giao hàng chặng cuối của bưu tá (Last-mile delivery), xử lý giao thành công, giao thất bại và chuyển hoàn.
-  * Quy trình tài chính: thu hộ COD, đối soát tiền mặt tại bưu cục và quản lý ví điện tử khách hàng.
-* **1.4. Phân công nhiệm vụ và tỷ lệ hoàn thành của các thành viên trong nhóm:**
-  * Trình bày bảng phân công nhiệm vụ và tỷ lệ hoàn thành 100% của 3 thành viên theo đúng tài liệu dự án.
+### CHƯƠNG 1: TỔNG QUAN ĐỀ TÀI
+* **1.1. Giới thiệu đề tài:** Giới thiệu bài toán chuỗi giao nhận bưu chính đa trạm UTEExpress.
+* **1.2. Lý do chọn đề tài:** Bối cảnh thương mại điện tử tại Việt Nam và yêu cầu kiểm soát dòng hàng hóa, công nợ COD liên tỉnh.
+* **1.3. Mục tiêu của đề tài:** Xây dựng hệ thống logistics thuần vận chuyển, quản lý xuyên suốt vòng đời bưu gửi.
+* **1.4. Phạm vi và đối tượng áp dụng:** Mạng lưới bưu cục đa cấp (Bưu cục phát/nhận cấp 1, Hub vùng cấp 2, Trung tâm khai thác SOC cấp 3).
+* **1.5. Phân công nhiệm vụ các thành viên:** Bảng phân công nhiệm vụ và tỷ lệ hoàn thành 100% của 3 thành viên.
 
 ---
 
-### CHƯƠNG 2: PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG
-* **2.1. Phân tích yêu cầu chức năng theo 6 vai trò chuẩn (Canonical Roles):**
-  * Khách hàng (`ROLE_USER`): Quản lý sổ địa chỉ, tính cước tự động, tạo đơn, tra cứu vận đơn, ví điện tử và rút tiền COD.
-  * Nhân viên giao nhận (`ROLE_SHIPPER`): Tiếp nhận đơn lấy/phát, cập nhật trạng thái giao hàng, thu tiền COD.
-  * Nhân viên bưu cục (`ROLE_HUB_STAFF`): Tiếp nhận hàng tại quầy và quét mã phân loại trên băng chuyền.
-  * Tài xế trung chuyển (`ROLE_LINEHAUL_DRIVER`): Tiếp nhận chuyến xe tải và bàn giao bao hàng liên tỉnh.
-  * Quản lý bưu cục (`ROLE_MANAGER`): Giám sát bảng điều hành tác nghiệp, phân tuyến bưu tá, xử lý hàng ngoại lệ và duyệt đối soát.
-  * Quản trị viên hệ thống (`ROLE_ADMIN`): Cấu hình danh mục trạm, định tuyến và bảng giá cước dịch vụ.
-* **2.2. Sơ đồ Use Case tổng quát và các Use Case phân hệ.**
-* **2.3. Sơ đồ tuần tự (Sequence Diagram) và sơ đồ hoạt động (Activity Diagram) các luồng chính:**
-  * Luồng tạo đơn và tính cước vận chuyển.
-  * Luồng phân loại, đóng bao và xuất bến trung chuyển.
-  * Luồng giao hàng chặng cuối, thu tiền COD và đối soát tài chính.
-* **2.4. Thiết kế cơ sở dữ liệu quan hệ (ERD):**
-  * Sơ đồ quan hệ thực thể (ERD) đạt chuẩn dạng chuẩn 3 (3NF).
-  * Từ điển dữ liệu 25 bảng chính và các bảng mở rộng (users, hubs, shipments, containers, linehaul_trips, delivery_tasks, wallets...).
-* **2.5. Thiết kế giao diện UI/UX trên Figma:**
-  * Nghiên cứu trải nghiệm người dùng theo từng vai trò tác nghiệp.
-  * Bộ nhận diện thương hiệu HCMUTE Logistics: Deep Cobalt Blue (`#0F3D78`) và Safety Orange (`#F26522`), chuẩn độ tương phản cao WCAG AA/AAA.
+### CHƯƠNG 2: CƠ SỞ LÝ THUYẾT
+* **2.1. Nền tảng Spring Framework và Spring Boot:**
+  * 2.1.1. Tổng quan Spring Boot 3.3.4 và môi trường Java 21 LTS
+  * 2.1.2. Cơ chế Dependency Injection (DI) và Inversion of Control (IoC)
+  * 2.1.3. Mô hình MVC trong Spring (Model, View, Controller và lớp DTO)
+* **2.2. Cơ chế bảo mật và phân quyền với Spring Security 6:**
+  * 2.2.1. Kiểm soát truy cập dựa trên vai trò (RBAC) kết hợp phạm vi bưu cục (Data Scoping)
+  * 2.2.2. Đăng nhập biểu mẫu và tích hợp Google OAuth2 / OpenID Connect
+* **2.3. Tầng dữ liệu và quản trị migration:**
+  * 2.3.1. Spring Data JPA và Hibernate ORM
+  * 2.3.2. Hệ quản trị cơ sở dữ liệu Microsoft SQL Server 2019+
+  * 2.3.3. Tự động hóa quản lý lược đồ dữ liệu với Flyway Migration
+* **2.4. Công nghệ trình diễn giao diện và truyền thông:**
+  * 2.4.1. JSP / JSTL 3.0 (Jakarta EE) kết hợp Bootstrap 5.3 và Bootstrap Icons
+  * 2.4.2. Thiết kế nguyên mẫu giao diện UI/UX trên Figma
+  * 2.4.3. Giao tiếp dữ liệu thời gian thực với WebSocket STOMP
+  * 2.4.4. Dịch vụ thư điện tử Gmail SMTP
+* **2.5. Hạ tầng điện toán đám mây và DevOps:**
+  * 2.5.1. Máy chủ đám mây AWS EC2 và cơ sở dữ liệu Amazon RDS
+  * 2.5.2. Máy chủ web Nginx làm reverse proxy và chứng chỉ bảo mật SSL
+  * 2.5.3. Tự động hóa kiểm thử và triển khai qua GitHub Actions (CI/CD)
 
 ---
 
-### CHƯƠNG 3: KIẾN TRÚC KỸ THUẬT VÀ GIẢI PHÁP CÔNG NGHỆ
-* **3.1. Mô hình kiến trúc ba tầng (Three-Tier Architecture):**
-  * Presentation Layer: Spring MVC kết hợp JSP/JSTL 3.0 (Jakarta EE), Bootstrap 5.3 và Bootstrap Icons.
-  * Business Logic Layer: Spring Boot 3.3.4 trên nền Java 21 LTS, cấu trúc phân tách rõ giữa Controller, DTO, Service Interface, Service Implementation và Repository.
-  * Data Access Layer: Spring Data JPA, Hibernate ORM và hệ quản trị Microsoft SQL Server 2019+.
-* **3.2. Cơ chế phân quyền và bảo mật nâng cao:**
-  * Spring Security 6 với cơ chế RBAC kết hợp Data Scoping (phạm vi bưu cục và chức vụ nhân sự).
-  * Đăng nhập biểu mẫu truyền thống, xác thực OTP và tích hợp đăng nhập Google OAuth2 / OpenID Connect.
-* **3.3. Các giải pháp kỹ thuật nâng cao:**
-  * **Transaction Outbox Pattern:** Tách rời tiến trình gửi email OTP và thông báo đơn hàng qua Gmail SMTP (cổng 587 STARTTLS) bằng Scheduled Worker chạy ngầm, bảo đảm không gián đoạn giao dịch dữ liệu.
-  * **Cơ chế Idempotency Key:** Khóa chống trùng lặp yêu cầu cho các thao tác quét mã vạch và giao dịch tiền tệ tốc độ cao.
-  * **Thuật toán định tuyến trạm tự động:** Định tuyến bưu gửi tối ưu qua mạng lưới trạm Hub và SOC.
-  * **Cập nhật thời gian thực:** Tích hợp WebSocket STOMP thông báo biến động đơn hàng tức thì.
-* **3.4. Quản lý phiên bản cơ sở dữ liệu tự động với Flyway:**
-  * Quản trị lịch sử schema đồng bộ từ `V1__baseline.sql` đến `V22__notification_email_outbox.sql`.
+### CHƯƠNG 3: PHÂN TÍCH VÀ ĐẶC TẢ YÊU CẦU HỆ THỐNG
+* **3.1. Phân tích tác nhân và 6 vai trò chuẩn trong hệ thống:**
+  * Khách hàng (`ROLE_USER`), Bưu tá giao nhận (`ROLE_SHIPPER`), Nhân viên bưu cục (`ROLE_HUB_STAFF`), Tài xế trung chuyển (`ROLE_LINEHAUL_DRIVER`), Quản lý bưu cục (`ROLE_MANAGER`), Quản trị viên (`ROLE_ADMIN`).
+* **3.2. Đặc tả yêu cầu chức năng theo từng phân hệ:**
+  * 3.2.1. Phân hệ tiếp nhận và tạo đơn (Intake)
+  * 3.2.2. Phân hệ tác nghiệp bưu cục và phân loại hàng (Hub Operations)
+  * 3.2.3. Phân hệ trung chuyển xe tải liên tỉnh (Linehaul)
+  * 3.2.4. Phân hệ giao hàng chặng cuối và tài chính COD (Last-mile và Finance)
+  * 3.2.5. Phân hệ giám sát, điều hành và quản trị hệ thống
+* **3.3. Đặc tả yêu cầu phi chức năng:**
+  * An toàn bảo mật thông tin bưu gửi, tính toàn vẹn tài chính ví điện tử, hiệu năng xử lý quét mã vạch tốc độ cao và chuẩn hiển thị công thái học kho bãi (WCAG).
+* **3.4. Mô hình hóa chức năng bằng lược đồ Use Case:**
+  * 3.4.1. Lược đồ Use Case tổng quát
+  * 3.4.2. Lược đồ Use Case chi tiết các phân hệ
+* **3.5. Mô hình hóa quy trình nghiệp vụ:**
+  * 3.5.1. Máy trạng thái bưu gửi (Shipment State Machine với 13 trạng thái chuẩn)
+  * 3.5.2. Sơ đồ hoạt động (Activity Diagram) các luồng tác nghiệp chính
 
 ---
 
-### CHƯƠNG 4: HIỆN THỰC HÓA VÀ KẾT QUẢ KIỂM THỬ
-* **4.1. Hiện thực hóa các phân hệ chức năng (kèm hình ảnh minh họa giao diện và mã nguồn tiêu biểu):**
-  * Phân hệ Khách hàng (Đăng ký, xác thực OTP, tạo đơn, tra cứu vận đơn, ví điện tử).
-  * Phân hệ Bưu cục và Phân loại (Quét mã phân loại, đóng bao container, niêm phong chì).
-  * Phân hệ Trung chuyển liên tỉnh (Điều phối xe tải, bàn giao hàng hóa giữa các trạm).
-  * Phân hệ Bưu tá và Tài chính (Tác nghiệp giao hàng, thu COD, biên bản đối soát tiền mặt).
-  * Phân hệ Quản lý và Quản trị (Bảng điều hành tác nghiệp bưu cục, cấu hình bảng giá và mạng lưới trạm).
-* **4.2. Chiến lược và kết quả kiểm thử tự động:**
-  * Bộ kiểm thử tự động hơn 2.000 ca kiểm thử (Unit Test, Security Permission Matrix, Realtime STOMP).
-  * Kiểm thử tích hợp truy vấn trực tiếp trên cơ sở dữ liệu Microsoft SQL Server thật đạt tỷ lệ thành công 100%.
-* **4.3. Kiểm thử chấp nhận người dùng thực tế (Manual UAT):**
-  * Kịch bản kiểm thử thủ công trên máy thật theo 7 vai trò người dùng.
-  * Dữ liệu mẫu kiểm thử và tài khoản demo nghiệm thu (`Demo@12345`).
+### CHƯƠNG 4: THIẾT KẾ HỆ THỐNG
+* **4.1. Thiết kế kiến trúc tổng thể:**
+  * 4.1.1. Kiến trúc phân tầng Controller - Service - Repository
+  * 4.1.2. Mẫu kiến trúc Transaction Outbox Pattern gửi email OTP chạy ngầm
+  * 4.1.3. Cơ chế khóa chống trùng lặp yêu cầu (Idempotency Key)
+  * 4.1.4. Thuật toán định tuyến bưu cục tự động
+* **4.2. Thiết kế cơ sở dữ liệu quan hệ (ERD):**
+  * 4.2.1. Sơ đồ quan hệ thực thể (ERD) chuẩn hóa dạng chuẩn 3 (3NF)
+  * 4.2.2. Bốn phân hệ dữ liệu: Cốt lõi, Đơn hàng và Bảng giá, Vận hành trung chuyển, Giao hàng và Tài chính
+* **4.3. Từ điển dữ liệu và mô tả các bảng:**
+  * Đặc tả chi tiết các trường, kiểu dữ liệu, khóa chính, khóa ngoại của 25 bảng nghiệp vụ chính.
+* **4.4. Thiết kế các ràng buộc toàn vẹn và giao dịch an toàn:**
+  * Ràng buộc trạng thái đơn hàng, bất biến tài chính ví điện tử, xử lý đồng thời và kiểm soát xung đột dữ liệu (Optimistic Locking).
+* **4.5. Thiết kế giao diện nguyên mẫu UI/UX trên Figma:**
+  * Bộ nhận diện thương hiệu HCMUTE Logistics: Deep Cobalt Blue (`#0F3D78`) và Safety Orange (`#F26522`).
 
 ---
 
-### CHƯƠNG 5: TRIỂN KHAI HỆ THỐNG VÀ ĐÁNH GIÁ TỔNG KẾT
-* **5.1. Triển khai hạ tầng đám mây:**
-  * Thuê và cấu hình máy chủ AWS EC2 (Ubuntu Server 24.04 LTS) và Amazon RDS for SQL Server Express.
-  * Cấu hình máy chủ web Nginx làm reverse proxy và cài đặt chứng chỉ bảo mật SSL Let's Encrypt / Certbot.
-  * Vận hành hệ thống thực tế trên tên miền: `https://uteexpress.event5g.fun`.
-* **5.2. Tự động hóa quy trình CI/CD qua GitHub Actions:**
-  * Pipeline `.github/workflows/ci-cd.yml` tự động chạy kiểm thử trên runner container SQL Server, đóng gói WAR và triển khai an toàn qua SSH.
-* **5.3. Đánh giá ưu điểm và hạn chế của hệ thống:**
-  * Ưu điểm: Kiến trúc chuẩn mực, hiệu năng cao, độ tin cậy dữ liệu lớn, giao diện tối ưu cho tác nghiệp kho bãi.
-  * Hạn chế: Chưa tích hợp bản đồ số theo dõi GPS xe tải thời gian thực, chưa tích hợp cổng thanh toán trực tuyến bên thứ ba (VNPay/Momo thật).
-* **5.4. Hướng phát triển trong tương lai.**
-* **5.5. Kết luận.**
+### CHƯƠNG 5: XÂY DỰNG, TRIỂN KHAI VÀ ĐÁNH GIÁ HỆ THỐNG
+* **5.1. Xây dựng các phân hệ chức năng và giao diện người dùng:**
+  * 5.1.1. Phân hệ Khách hàng (Tạo đơn, tính cước tự động, theo dõi hành trình bảo mật bằng mã PIN, ví điện tử)
+  * 5.1.2. Phân hệ Bưu cục (Quét mã phân loại trên băng chuyền, gom bao container, niêm phong chì)
+  * 5.1.3. Phân hệ Trung chuyển liên tỉnh (Điều phối chuyến xe tải, bốc dỡ và biên bản bàn giao)
+  * 5.1.4. Phân hệ Giao nhận bưu tá (Tuyến phát hàng di động, thu tiền COD, ghi nhận giao thất bại, chuyển hoàn)
+  * 5.1.5. Phân hệ Quản lý và Quản trị (Bảng điều hành bưu cục trực quan, đối soát dòng tiền, cấu hình mạng lưới)
+* **5.2. Xây dựng các dịch vụ tích hợp nâng cao:**
+  * 5.2.1. Đăng ký, xác thực Email OTP qua Gmail SMTP Outbox Worker và đăng nhập Google OAuth2
+  * 5.2.2. Thông báo trạng thái thời gian thực qua WebSocket STOMP
+* **5.3. Triển khai hệ thống thực tế trên nền tảng đám mây AWS:**
+  * 5.3.1. Mô hình vận hành trên AWS EC2 kết hợp Amazon RDS for SQL Server
+  * 5.3.2. Cấu hình máy chủ web Nginx làm reverse proxy và bảo mật HTTPS / SSL Certbot
+  * 5.3.3. Vận hành tên miền chính thức: `https://uteexpress.event5g.fun`
+  * 5.3.4. Vận hành quy trình tự động hóa CI/CD với GitHub Actions
+* **5.4. Đánh giá chất lượng hệ thống qua kiểm thử:**
+  * 5.4.1. Chiến lược và kết quả kiểm thử tự động (Unit Test, Security Matrix, kiểm thử tích hợp trên SQL Server thật - 2.047 ca kiểm thử pass 100%)
+  * 5.4.2. Kiểm thử chấp nhận người dùng thực tế (Manual UAT Acceptance Test theo 7 vai trò)
 
 ---
 
-* **TÀI LIỆU THAM KHẢO**
-* **PHỤ LỤC**
+### CHƯƠNG 6: TỔNG KẾT VÀ HƯỚNG PHÁT TRIỂN
+*(Chương này không chia thành các mục con vụn vặt, được trình bày liền mạch thành các đoạn văn văn xuôi tổng kết toàn diện đề tài)*
+* Đoạn văn đánh giá tổng quan kết quả đạt được so với mục tiêu và phạm vi đặt ra ban đầu.
+* Đoạn văn phân tích, đúc kết các ưu điểm nổi bật của hệ thống và thẳng thắn chỉ ra các mặt còn hạn chế trong quá trình thực hiện.
+* Đoạn văn định hướng nghiên cứu và mở rộng hệ thống trong tương lai (tích hợp định vị GPS xe tải theo thời gian thực, mở rộng tích hợp cổng thanh toán trực tuyến bên thứ ba).
+* Đoạn văn kết luận toàn văn đồ án và lời cảm ơn kết thúc.
+
+---
+
+### PHỤ LỤC
+* **Phụ lục A:** Hướng dẫn cài đặt và cấu hình chạy cục bộ.
+* **Phụ lục B:** Danh sách tài khoản thử nghiệm hệ thống (Mật khẩu `Demo@12345`).
+* **Phụ lục C:** Cấu trúc tổ chức mã nguồn dự án.
+
+### TÀI LIỆU THAM KHẢO
