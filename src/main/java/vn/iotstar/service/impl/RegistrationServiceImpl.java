@@ -47,16 +47,20 @@ public class RegistrationServiceImpl implements RegistrationService {
             throw RegistrationException.weakPassword();
         User pending = users.findByPhoneForUpdate(phone).orElse(null);
         if (pending != null) {
-            // Losing a browser session must not strand an unfinished registration.
-            // Resume only the same credentials; never overwrite the stored identity.
-            if (pending.getRole() != UserRole.ROLE_USER || !"INACTIVE".equals(pending.getStatus())
-                    || pending.getGoogleSubject() != null || pending.isPhoneVerified()
-                    || !pending.getUsername().equals(username) || !pending.getEmail().equals(email)
-                    || !encoder.matches(password, pending.getPassword())) throw RegistrationException.phoneTaken();
-            PhoneOtpChallenge existing = challenges.findByUserIdForUpdate(pending.getId()).orElseThrow(this::invalidRegistration);
-            if (!"REGISTRATION".equals(existing.getPurpose()) || existing.getConsumedAt() != null) throw invalidRegistration();
-            return issue(existing, "REGISTRATION");
+            // Only a sign-up that never finished can be touched; a real account keeps its phone.
+            if (!pending.isUnfinishedRegistration()) throw RegistrationException.phoneTaken();
+            // Same details again (lost session): resume it, which keeps the resend limits.
+            if (pending.getUsername().equals(username) && pending.getEmail().equals(email)
+                    && encoder.matches(password, pending.getPassword())) {
+                PhoneOtpChallenge existing = challenges.findByUserIdForUpdate(pending.getId()).orElseThrow(this::invalidRegistration);
+                if (!"REGISTRATION".equals(existing.getPurpose()) || existing.getConsumedAt() != null) throw invalidRegistration();
+                return issue(existing, "REGISTRATION");
+            }
+            discard(pending);
         }
+        // Anything left half-done with this email or username must not block a new attempt either.
+        users.findByEmail(email).filter(User::isUnfinishedRegistration).ifPresent(this::discard);
+        users.findByUsername(username).filter(User::isUnfinishedRegistration).ifPresent(this::discard);
         if (users.existsByPhone(phone)) throw RegistrationException.phoneTaken();
         if (users.existsByEmail(email)) throw RegistrationException.emailTaken();
         if (users.existsByUsername(username)) throw RegistrationException.usernameTaken();
@@ -160,6 +164,12 @@ public class RegistrationServiceImpl implements RegistrationService {
     private String required(String text, int max) {
         if (text == null || text.isBlank() || text.strip().length() > max) throw invalidRegistration();
         return text.strip();
+    }
+    private void discard(User unfinished) {
+        users.deletePhoneChallengesOf(unfinished.getId());
+        users.deleteEmailChallengesOf(unfinished.getId());
+        users.delete(unfinished);
+        users.flush();
     }
     private RegistrationException invalidRegistration() {
         return new RegistrationException("Không thể đăng ký với thông tin này. Vui lòng kiểm tra lại.");

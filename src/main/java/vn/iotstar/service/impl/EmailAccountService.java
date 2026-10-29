@@ -53,14 +53,18 @@ public class EmailAccountService {
         String phone = VietnamPhoneNormalizer.normalize(request.getPhone());
         User user = users.findByEmailForUpdate(email).orElse(null);
         if (user != null) {
-            if (!customer(user) || !"INACTIVE".equals(user.getStatus()) || user.getGoogleSubject() != null
-                    || user.isEmailVerified() || user.isPhoneVerified() || !user.getPhone().equals(phone)
-                    || !user.getUsername().equals(request.getUsername())
-                    || !encoder.matches(request.getPassword(), user.getPassword())) throw RegistrationException.emailTaken();
-            EmailOtpChallenge pending = challenges.findByUserIdForUpdate(user.getId()).orElseThrow(this::invalid);
-            if (!"REGISTRATION".equals(pending.getPurpose()) || pending.getConsumedAt() != null) throw invalid();
-            return issue(user, "REGISTRATION", pending);
+            // Only a sign-up that never finished can be touched; a real account keeps its email.
+            if (!user.isUnfinishedRegistration()) throw RegistrationException.emailTaken();
+            if (java.util.Objects.equals(user.getPhone(), phone) && user.getUsername().equals(request.getUsername())
+                    && encoder.matches(request.getPassword(), user.getPassword())) {
+                EmailOtpChallenge pending = challenges.findByUserIdForUpdate(user.getId()).orElseThrow(this::invalid);
+                if (!"REGISTRATION".equals(pending.getPurpose()) || pending.getConsumedAt() != null) throw invalid();
+                return issue(user, "REGISTRATION", pending);
+            }
+            discard(user);
         }
+        users.findByPhone(phone).filter(User::isUnfinishedRegistration).ifPresent(this::discard);
+        users.findByUsername(request.getUsername()).filter(User::isUnfinishedRegistration).ifPresent(this::discard);
         if (users.existsByPhone(phone)) throw RegistrationException.phoneTaken();
         if (users.existsByUsername(request.getUsername())) throw RegistrationException.usernameTaken();
         user = users.saveAndFlush(User.registerPending(request.getUsername(), encoder.encode(request.getPassword()),
@@ -147,6 +151,12 @@ public class EmailAccountService {
         return new Challenge(challenge.getId(), mask(challenge.getEmail()));
     }
     private boolean customer(User user) { return user != null && user.getRole() == UserRole.ROLE_USER && user.isAccountNonLocked(); }
+    private void discard(User unfinished) {
+        users.deletePhoneChallengesOf(unfinished.getId());
+        users.deleteEmailChallengesOf(unfinished.getId());
+        users.delete(unfinished);
+        users.flush();
+    }
     private boolean validPassword(String value) {
         return value != null && value.length() >= 8 && value.getBytes(StandardCharsets.UTF_8).length <= 72;
     }

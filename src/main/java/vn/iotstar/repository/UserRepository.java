@@ -10,6 +10,12 @@ import org.springframework.data.repository.query.Param;
 
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsername(String username);
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("delete from PhoneOtpChallenge c where c.user.id = :id")
+    void deletePhoneChallengesOf(@Param("id") Long id);
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("delete from EmailOtpChallenge c where c.user.id = :id")
+    void deleteEmailChallengesOf(@Param("id") Long id);
     Optional<User> findByPhone(String phone);
     Optional<User> findByEmail(String email);
     Optional<User> findByGoogleSubject(String googleSubject);

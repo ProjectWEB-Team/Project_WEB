@@ -97,16 +97,24 @@ class RegistrationServiceImplTest {
         assertThat(c.getSendCount()).isEqualTo(1);
         verifyNoInteractions(delivery);
     }
-    @Test void differentPasswordCannotResumeOrChangePendingAccount() {
+    @Test void differentDetailsReplaceAnUnfinishedSignUpInsteadOfBlockingIt() {
         PhoneOtpChallenge c = registrationChallenge();
         when(users.findByPhoneForUpdate("+84901234567")).thenReturn(Optional.of(c.getUser()));
-        RegisterUserRequest r = request(); r.setEmail("a@example.com"); r.setPassword("DifferentPassword!");
-        assertThatThrownBy(() -> serviceAt(now.plusSeconds(60)).register(r)).isInstanceOf(RegistrationException.class);
-        verifyNoInteractions(challenges, delivery);
+        when(users.saveAndFlush(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(challenges.saveAndFlush(any(PhoneOtpChallenge.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        RegisterUserRequest r = request(); r.setPassword("DifferentPassword!");
+
+        serviceAt(now.plusSeconds(60)).register(r);
+
+        verify(users).deletePhoneChallengesOf(c.getUser().getId());
+        verify(users).delete(c.getUser());
+        verify(delivery).send(any(), eq("+84901234567"), anyString(), any());
     }
-    @Test void differentContactCannotResumePendingAccount() {
-        when(users.findByPhoneForUpdate("+84901234567")).thenReturn(Optional.of(registrationChallenge().getUser()));
+    @Test void aRealAccountKeepsItsPhoneAndIsNeverDeletedBySomeoneElsesSignUp() {
+        User real = registrationChallenge().getUser(); real.verifyPhone(now);
+        when(users.findByPhoneForUpdate("+84901234567")).thenReturn(Optional.of(real));
         assertThatThrownBy(() -> serviceAt(now.plusSeconds(60)).register(request())).isInstanceOf(RegistrationException.class);
+        verify(users, never()).delete(any());
         verifyNoInteractions(challenges, delivery);
     }
     @Test void correctOtpActivatesAndVerifiesOnlyPhone() {

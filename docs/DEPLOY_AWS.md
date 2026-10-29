@@ -187,7 +187,7 @@ Profile `demo` nạp 38 hub mô phỏng, tài khoản `demo_*` cho mọi vai tr�
 
    Trong `/etc/nginx/sites-available/uteexpress`, bỏ dấu `#` ở hai dòng `auth_basic` trong khối `server` (đã có sẵn trong file mẫu), rồi `sudo nginx -t && sudo systemctl reload nginx`. Không commit file `.htpasswd`. WebSocket `/ws` vẫn hoạt động: trình duyệt tự gửi lại thông tin basic auth và cookie đăng nhập cho cùng domain.
 
-OTP: profile `otp-local` ghi mã vào file trên server (`/opt/uteexpress/.local/otp-inbox`), chỉ người SSH vào máy đọc được. Chỉ thêm (`prod,demo,otp-local`) nếu cần thử đăng ký; bình thường dùng tài khoản demo.
+OTP: profile `otp-local` ghi mã vào file trên server (`/opt/uteexpress/.local/otp-sms`), chỉ người SSH vào máy đọc được. Chỉ thêm (`prod,demo,otp-local`) nếu cần thử đăng ký; bình thường dùng tài khoản demo.
 
 ## 9. Cập nhật phiên bản mới
 
