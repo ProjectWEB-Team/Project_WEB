@@ -12,6 +12,7 @@
     <link href="${pageContext.request.contextPath}/assets/css/ute-modern.css" rel="stylesheet">
 </head>
 <body class="ute-auth">
+<a class="ute-auth-home" href="${pageContext.request.contextPath}/"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/></svg>Trang chủ</a>
 <main class="container ute-auth-main">
     <div class="ute-auth-layout">
         <section class="ute-auth-brand" aria-label="UTEexpress"><jsp:include page="/WEB-INF/views/layout/logo.jsp" /><p>Giao nhanh. Trọn niềm tin.</p></section>

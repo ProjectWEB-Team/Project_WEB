@@ -1198,3 +1198,22 @@ main .ute-operation-form { margin-bottom: 18px; }
 /* Buttons inside tables never squeeze their label into a column of letters */
 .table .btn, .ute-list-table .btn { white-space: nowrap; flex-shrink: 0; }
 .ute-user-avatar-img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex: none; display: block; }
+
+/* ---------- Back to home (auth pages) and the floating contact button ---------- */
+.ute-auth-home { position: fixed; top: 16px; left: 16px; z-index: 1040; display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px 8px 12px; min-height: 40px; border-radius: 999px; background: var(--surface); color: var(--ink); border: 1px solid var(--line); font-size: .9rem; font-weight: 600; text-decoration: none; }
+.ute-auth-home:hover { background: var(--tint); color: var(--ink); }
+.ute-fab { position: fixed; right: 20px; bottom: 20px; z-index: 1040; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
+.ute-fab-toggle { width: 56px; height: 56px; border-radius: 50%; border: 0; background: var(--ink); color: #fff; font-size: 1.5rem; display: grid; place-items: center; cursor: pointer; box-shadow: 0 6px 18px rgba(18, 35, 63, .28); transition: background-color .15s, transform .15s; }
+.ute-fab-toggle:hover { background: #2A3F5F; }
+.ute-fab.is-open .ute-fab-toggle { background: var(--accent); color: var(--ink); }
+.ute-fab-toggle .ute-fab-close, .ute-fab.is-open .ute-fab-toggle .ute-fab-open { display: none; }
+.ute-fab.is-open .ute-fab-toggle .ute-fab-close { display: block; }
+.ute-fab-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; align-items: flex-end; visibility: hidden; opacity: 0; transform: translateY(8px); transition: opacity .15s, transform .15s, visibility .15s; }
+.ute-fab.is-open .ute-fab-list { visibility: visible; opacity: 1; transform: none; }
+.ute-fab-item { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); }
+.ute-fab-label { background: var(--ink); color: #fff; border-radius: 999px; padding: 4px 12px; font-size: .85rem; font-weight: 600; opacity: 0; transform: translateX(6px); transition: opacity .15s, transform .15s; pointer-events: none; }
+.ute-fab-item:hover .ute-fab-label, .ute-fab-item:focus-visible .ute-fab-label { opacity: 1; transform: none; }
+.ute-fab-icon { width: 48px; height: 48px; border-radius: 50%; background: var(--surface); border: 1px solid var(--line); display: grid; place-items: center; font-size: 1.6rem; box-shadow: 0 4px 12px rgba(18, 35, 63, .18); transition: transform .15s; }
+.ute-fab-item:hover .ute-fab-icon, .ute-fab-item:focus-visible .ute-fab-icon { transform: scale(1.08); }
+@media (prefers-reduced-motion: reduce) { .ute-fab-list, .ute-fab-icon, .ute-fab-toggle { transition: none; } }
+@media (max-width: 575.98px) { .ute-fab { right: 14px; bottom: 14px; } .ute-auth-home { top: 10px; left: 10px; } }
