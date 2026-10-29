@@ -35,7 +35,8 @@
 
                     <form:form id="verifyOtpForm" method="post" action="${pageContext.request.contextPath}/auth/verify-phone" modelAttribute="otpForm">
                         <input type="hidden" id="fullOtpCode" name="code" value="">
-                        
+                        <form:errors path="code" cssClass="alert alert-danger" htmlEscape="true"/>
+
                         <div class="ute-otp-inputs" role="group" aria-label="Nhập 6 chữ số mã OTP">
                             <input type="text" class="ute-otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code" autofocus>
                             <input type="text" class="ute-otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]">

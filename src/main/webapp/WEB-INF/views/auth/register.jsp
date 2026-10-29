@@ -21,10 +21,10 @@
             <section class="card ute-auth-card ute-auth-card-sm">
                 <div class="card-body p-4 p-md-5">
                     <h1 class="h3 mb-2">Tạo tài khoản</h1>
-                    <p class="text-muted mb-4">Điền thông tin của bạn, sau đó chọn cách nhận mã xác thực.</p>
+                    <p class="text-muted mb-4">${emailRegistration ? 'Xác thực email để bắt đầu gửi hàng. ' : ''}Điền thông tin của bạn, sau đó chọn cách nhận mã xác thực.</p>
                     <c:if test="${not empty otpClosedNotice}"><div class="alert alert-warning" role="status"><c:out value="${otpClosedNotice}"/></div></c:if>
                     <c:if test="${not empty error}"><div class="alert alert-danger" role="alert"><c:out value="${error}"/></div></c:if>
-                    <form:form method="post" id="registerForm" action="${pageContext.request.contextPath}/register" modelAttribute="registerUserRequest">
+                    <form:form method="post" id="registerForm" action="${pageContext.request.contextPath}${emailRegistration ? '/auth/email/register' : '/register'}" modelAttribute="registerUserRequest">
                         <div class="mb-3">
                             <label class="form-label" for="fullName">Họ và tên</label>
                             <form:input path="fullName" id="fullName" placeholder="Nhập họ và tên đầy đủ" type="text" cssClass="form-control" cssErrorClass="form-control is-invalid" htmlEscape="true" autocomplete="name" maxlength="100" required="required"/>

@@ -12,7 +12,7 @@
             </a>
             <div class="ute-footer-compact-contacts">
                 <span class="ute-footer-compact-phone"><span class="ute-contact-badge-circle" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M6.62 10.79a15.053 15.053 0 006.59 6.59l2.2-2.2a1 1 0 011.02-.24c1.12.37 2.33.57 3.57.57a1 1 0 011 1V20a1 1 0 01-1 1A17 17 0 013 4a1 1 0 011-1h3.5a1 1 0 011 1c0 1.25.2 2.45.57 3.57a1 1 0 01-.25 1.02l-2.2 2.2z"/></svg></span>Hotline: <a href="tel:+84911195500">0911 195 500</a></span>
-                <span>Email: khangfithcmute@gmail.com &nbsp;·&nbsp; 24162091@student.hcmute.edu.vn &nbsp;·&nbsp; 24162144@student.hcmute.edu.vn</span>
+                <span>Email: <a href="mailto:khangfithcmute@gmail.com">khangfithcmute@gmail.com</a> &nbsp;·&nbsp; <a href="mailto:24162091@student.hcmute.edu.vn">24162091@student.hcmute.edu.vn</a> &nbsp;·&nbsp; <a href="mailto:24162144@student.hcmute.edu.vn">24162144@student.hcmute.edu.vn</a></span>
             </div>
             <p class="ute-footer-compact-legal">&copy; 2026 UTEExpress &middot; Trường Đại học Công nghệ Kỹ thuật TP. Hồ Chí Minh.</p>
         </div>

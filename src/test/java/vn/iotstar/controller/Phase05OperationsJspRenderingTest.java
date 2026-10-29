@@ -104,6 +104,7 @@ class Phase05OperationsJspRenderingTest {
         login("LINEHAUL_DRIVER");
         when(trips.availableVehicles()).thenReturn(List.of(new VehicleOptionResponse(13L, "51A-12345", "TRUCK")));
         when(trips.acceptHandover(11L, 13L)).thenReturn(new vn.iotstar.dto.driver.TripActionResponse(9L, "PENDING", false));
+        when(linehaulOps.driverTripPicks(any())).thenReturn(List.<Object[]>of(new Object[]{9L, "TX-9", "IN_TRANSIT", "Hub B"}));
         String form = html("/driver");
         assertThat(form).contains("value=\"13\"", "51A-12345", "name=\"vehicleId\"", "/driver/trips/arrive", "/driver/handovers/scan");
         assertThat(post("/driver/handovers/accept", form, Map.of("handoverId", "11", "vehicleId", "13"))
@@ -154,7 +155,7 @@ class Phase05OperationsJspRenderingTest {
         login("USER");
         when(fees.view(42L)).thenReturn(new vn.iotstar.dto.returnflow.ShipmentFeeResponse(42L,"UTX-42",money("30000"),money("25000"),money("5000")));
         String form=html("/user/shipment-fees/42");
-        assertThat(form).contains("UTX-42","25.000đ","60.000đ","/assets/css/ute-express.css", "href=\"/user/shipments/42\"",
+        assertThat(form).contains("UTX-42","25.000 đ","60.000 đ","/assets/css/ute-express.css", "href=\"/user/shipments/42\"",
                 "value=\"RETURN\"","value=\"WEIGHT_SURCHARGE\"","name=\"confirmDemo\"");
         assertThat(post("/user/shipment-fees/42/demo-vnpay",form,Map.of("obligation","RETURN","confirmDemo","true")).statusCode()).isEqualTo(302);
         verify(fees).payReturn(42L,"VNPAY",true);
@@ -165,7 +166,7 @@ class Phase05OperationsJspRenderingTest {
     @Test void noAdditionalFeesExplainsZeroAndLinksBackWithoutPaymentForms() throws Exception {
         login("USER");
         when(fees.view(42L)).thenReturn(new vn.iotstar.dto.returnflow.ShipmentFeeResponse(42L,"UTX-42",money("0"),money("0"),money("0")));
-        assertThat(html("/user/shipment-fees/42")).contains("id=\"shipment-fees-empty\"", "href=\"/user/shipments/42\"", "0đ")
+        assertThat(html("/user/shipment-fees/42")).contains("id=\"shipment-fees-empty\"", "href=\"/user/shipments/42\"", "0 đ")
                 .doesNotContain("name=\"obligation\"", "name=\"confirmDemo\"");
     }
 

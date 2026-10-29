@@ -168,7 +168,7 @@ class AuthenticationJspRenderingTest {
                 .hasValue("/auth/verify-phone");
 
         String verification = html("/auth/verify-phone");
-        assertThat(verification).contains("+84******567", "Xác thực và đăng nhập");
+        assertThat(verification).contains("+84******567", "Xác nhận và đăng nhập");
         HttpResponse<String> rejected = postWithCsrf("/auth/verify-phone", verification,
                 Map.of("code", "secret-not-six-digits"));
         assertThat(rejected.statusCode()).isEqualTo(200);
