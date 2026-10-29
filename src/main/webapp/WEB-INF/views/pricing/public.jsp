@@ -9,7 +9,7 @@
         <div class="ute-wrap">
             <p class="ute-hero-tag"><span aria-hidden="true"></span>UTE<b>Express</b></p>
             <h1>Bảng giá cước</h1>
-            <p class="ute-lead">Cước tính theo dịch vụ, tuyến (miền gửi đến miền nhận) và khối lượng. Giá dưới đây là giá đang áp dụng. Giá chính thức hiện khi bạn tạo đơn.</p>
+            <p class="ute-lead">Cước theo dịch vụ, tuyến và khối lượng. Giá chính thức hiện khi tạo đơn.</p>
         </div>
     </div>
 
@@ -43,7 +43,7 @@
             <label>Tiền thu hộ COD (đ)
                 <input type="number" name="codAmount" min="0" inputmode="numeric" placeholder="Nếu có" value="<c:out value='${param.codAmount}'/>"></label>
             <div class="ute-estimate-action">
-                <p>Cước tham khảo tự động theo biểu phí niêm yết. Cước chính thức được khóa khi xác nhận tạo vận đơn.</p>
+                <p>Cước tham khảo theo biểu phí niêm yết.</p>
                 <button type="submit" class="btn btn-ute-accent">Ước tính cước</button>
             </div>
         </form>
@@ -54,7 +54,7 @@
                     <c:when test="${not empty estimate}">
                         <p class="ute-estimate-label">Cước ước tính</p>
                         <p class="ute-estimate-fee"><fmt:formatNumber value="${estimate}" pattern="#,##0" var="feeText"/>${fn:replace(feeText, ',', '.')} đ</p>
-                        <p class="text-muted mb-0">Đây là ước tính theo bảng giá đang áp dụng. Giá chính thức hiện khi bạn tạo đơn.</p>
+                        <p class="text-muted mb-0">Ước tính theo bảng giá hiện hành.</p>
                     </c:when>
                     <c:otherwise><p>Chưa có bảng giá cho dịch vụ và tuyến này.</p></c:otherwise>
                 </c:choose>
@@ -64,7 +64,7 @@
 
     <section class="ute-price-tables" aria-labelledby="table-title">
         <h2 id="table-title">Bảng giá đang áp dụng</h2>
-        <p class="ute-estimate-sub">Giá hiển thị khi tạo đơn là giá chính thức. Bảng dưới để tham khảo trước.</p>
+        <p class="ute-estimate-sub">Giá chính thức hiện khi tạo đơn.</p>
         <c:choose>
             <c:when test="${empty policies}"><p class="text-muted">Chưa có bảng giá nào đang áp dụng.</p></c:when>
             <c:otherwise>
@@ -93,7 +93,7 @@
             </c:otherwise>
         </c:choose>
         <div class="ute-price-note">
-            <div><b>Lưu ý</b><p>Cước tính theo khối lượng thực tế, làm tròn đến đồng. Có thể có phụ phí khi bưu cục đo lại kiện hàng. Bảng giá có thể thay đổi, giá chính thức là giá hiển thị khi bạn xác nhận tạo đơn.</p></div>
+            <div><b>Lưu ý</b><p>Cước theo khối lượng thực tế. Có thể có phụ phí nếu bưu cục đo lại. Giá chính thức là giá khi tạo đơn.</p></div>
             <a class="btn btn-ute-accent" href="${pageContext.request.contextPath}/user/shipments/create">Tạo đơn gửi hàng</a>
         </div>
     </section>

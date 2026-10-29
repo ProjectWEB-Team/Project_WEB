@@ -66,7 +66,7 @@
                                 <i class="bi bi-check-circle-fill text-success fs-5"></i>
                                 <span>Số điện thoại <c:out value="${maskedPhone}"/> đã được xác thực OTP thành công.</span>
                             </div>
-                            <p class="text-muted">Vui lòng thiết lập mật khẩu mới có độ bảo mật cao cho tài khoản của bạn.</p>
+                            <p class="text-muted">Đặt mật khẩu mới.</p>
 
                             <div class="mb-3">
                                 <label class="form-label" for="newPassword">Mật khẩu mới</label>

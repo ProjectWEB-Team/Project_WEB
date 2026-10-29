@@ -38,11 +38,11 @@
                             <c:when test="${fn:contains(event.description, 'PAYMENT_TIMEOUT')}">Đơn đã tự hủy vì quá hạn thanh toán trực tuyến.</c:when>
                             <c:when test="${fn:contains(event.description, 'PICKUP_SERVICE_FAILURE')}">Đơn đã bị hủy do lỗi dịch vụ lấy hàng của UTEExpress.</c:when>
                             <c:when test="${fn:contains(event.description, 'PICKUP_TIMEOUT')}">Đơn đã tự hủy vì shipper không lấy được hàng trong thời hạn.</c:when>
-                            <c:when test="${fn:contains(event.description, 'DROPOFF_TIMEOUT')}">Đơn đã tự hủy vì kiện hàng chưa được mang tới bưu cục trong thời hạn.</c:when>
+                            <c:when test="${fn:contains(event.description, 'DROPOFF_TIMEOUT')}">Đơn tự hủy vì chưa được mang tới bưu cục đúng hạn.</c:when>
                             <c:when test="${fn:contains(event.description, 'SENDER_REQUEST')}">Bạn đã hủy đơn này.</c:when>
                             <c:otherwise>Đơn hàng đã bị hủy.</c:otherwise>
                         </c:choose>
-                        Nếu cước đã được thanh toán trước, tiền sẽ được hoàn vào ví của bạn.
+                        Cước đã thanh toán sẽ được hoàn vào ví.
                     </div>
                 </c:if>
             </c:forEach>
@@ -52,7 +52,7 @@
             <h2>Bước tiếp theo</h2>
         <c:choose>
             <c:when test="${shipment.currentStatus == 'WAITING_FOR_PAYMENT'}">
-                <p>Thanh toán cước trực tuyến để đơn chuyển sang chờ bàn giao. Đơn chưa thanh toán sẽ tự hủy khi quá hạn thanh toán.</p>
+                <p>Thanh toán cước để đơn chuyển sang chờ bàn giao. Quá hạn đơn sẽ tự hủy.</p>
                 <c:if test="${vnpayEnabled}">
                     <form method="post" action="${pageContext.request.contextPath}/user/shipments/${shipment.id}/vnpay" class="mb-2">
                         <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
@@ -73,7 +73,7 @@
                     <p class="mb-0 text-ute-muted">
                         <c:choose>
                             <c:when test="${shipment.feePayer == 'RECEIVER'}">Cước phí sẽ được thu từ người nhận khi giao hàng.</c:when>
-                            <c:otherwise>Cước phí tiền mặt sẽ được thu khi bàn giao kiện hàng, không thu lúc tạo đơn.</c:otherwise>
+                            <c:otherwise>Cước tiền mặt thu khi bàn giao kiện hàng.</c:otherwise>
                         </c:choose>
                     </p>
                 </c:if>
@@ -95,7 +95,7 @@
     <section class="ute-app-card">
         <div class="ute-app-card-head">
             <h2>Lịch sử sự kiện vận đơn (${shipment.events.size()} sự kiện)</h2>
-            <p>Mọi thay đổi trạng thái thanh toán, phân công lấy hàng và bàn giao qua các bưu cục đều được ghi nhận chính xác.</p>
+            <p>Mọi thay đổi thanh toán, lấy hàng và bàn giao đều được ghi lại.</p>
         </div>
         <div class="table-responsive">
         <table class="table ute-list-table align-middle">

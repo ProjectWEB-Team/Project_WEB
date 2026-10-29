@@ -23,7 +23,7 @@
                         <input type="hidden" id="fullOtpCode" name="code" value="">
                         <div id="step-otp-section">
                             <h1 class="h3 mb-2">${emailPasswordReset ? 'Xác minh mã OTP' : 'Nhập mã xác thực'}</h1>
-                            <p class="text-muted">Nếu yêu cầu hợp lệ, mã gồm 6 chữ số đã được gửi tới <strong><c:out value="${maskedEmail}"/></strong>. Kiểm tra cả thư rác và không chia sẻ mã.</p>
+                            <p class="text-muted">Mã 6 chữ số đã gửi tới <strong><c:out value="${maskedEmail}"/></strong>. Kiểm tra cả thư rác.</p>
                             <c:if test="${not empty error}"><div class="alert alert-danger" role="alert"><c:out value="${error}"/></div></c:if>
                             <c:if test="${not empty notice}"><div class="alert alert-info" role="status"><c:out value="${notice}"/></div></c:if>
                             <div id="otpErrorAlert" class="alert alert-danger" role="alert" hidden></div>

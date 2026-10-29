@@ -1194,3 +1194,7 @@ main .ute-operation-form { margin-bottom: 18px; }
   .pf-row { grid-template-columns: 1fr auto; padding: .9rem 1.25rem; }
   .pf-label { grid-column: 1 / -1; margin-bottom: -.5rem; }
 }
+
+/* Buttons inside tables never squeeze their label into a column of letters */
+.table .btn, .ute-list-table .btn { white-space: nowrap; flex-shrink: 0; }
+.ute-user-avatar-img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex: none; display: block; }

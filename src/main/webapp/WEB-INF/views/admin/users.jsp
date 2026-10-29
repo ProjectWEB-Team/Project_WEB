@@ -13,14 +13,14 @@
 <c:set target="${roleNames}" property="ROLE_ADMIN" value="Quản trị hệ thống"/>
 <main class="ute-staff flex-grow-1">
     <h1>Quản lý người dùng và nhân viên</h1>
-    <p class="ute-staff-sub">Tạo tài khoản và phân quyền nhân viên. Hệ thống sinh mật khẩu tạm và chỉ hiện một lần.</p>
+    <p class="ute-staff-sub">Tạo tài khoản và phân quyền nhân viên.</p>
 
     <c:if test="${not empty successMessage}"><div class="alert alert-success" role="status"><c:out value="${successMessage}"/></div></c:if>
     <c:if test="${not empty errorMessage}"><div class="alert alert-danger" role="alert"><c:out value="${errorMessage}"/></div></c:if>
 
     <section class="card-ute p-4 mb-4">
         <h2 class="ute-staff-h3">Tạo tài khoản nhân viên</h2>
-        <p class="ute-staff-note mb-3">Shipper, nhân viên hub, tài xế và quản lý cần chọn bưu cục và vị trí.</p>
+        <p class="ute-staff-note mb-3">Nhân viên cần bưu cục và vị trí.</p>
         <form method="post" action="${pageContext.request.contextPath}/admin/users" class="row g-2 ute-user-create">
             <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
             <div class="col-md-2"><label class="form-label" for="username">Tên đăng nhập</label><input class="form-control" id="username" name="username" required maxlength="50" placeholder="VD: nv_buucuc_dn01"></div>
@@ -55,8 +55,8 @@
                         <td><c:choose><c:when test="${u.status == 'ACTIVE'}"><span class="ute-status-toggle"><span class="on" style="display:inline">&#10003; Hoạt động</span></span></c:when><c:otherwise><span class="ute-status-toggle"><span class="off"><c:out value="${u.status == 'LOCKED' ? 'Đã khóa' : u.status}"/></span></span></c:otherwise></c:choose></td>
                         <td><c:out value="${workplaces[u.id]}" default="–"/></td>
                         <td>
-                            <div class="d-flex align-items-center gap-2 flex-nowrap">
-                                <form method="post" action="${pageContext.request.contextPath}/admin/users/${u.id}/assign" class="d-flex align-items-center gap-2 m-0">
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <form method="post" action="${pageContext.request.contextPath}/admin/users/${u.id}/assign" class="d-flex align-items-center gap-2 flex-wrap m-0">
                                     <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                                     <select class="form-select form-select-sm" style="min-width: 140px;" name="role" aria-label="Vai trò">
                                         <c:forEach items="${roles}" var="r"><option value="${r}" ${r == u.role ? 'selected' : ''}>${empty roleNames[fn:trim(r)] ? r : roleNames[fn:trim(r)]}</option></c:forEach>

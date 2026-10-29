@@ -14,9 +14,9 @@
         <p><c:out value="${maskedEmail}"/></p>
         <c:if test="${not empty error}"><div class="alert alert-danger" role="alert"><c:out value="${error}"/></div></c:if>
         <c:choose>
-            <c:when test="${emailVerified}"><p class="alert alert-success" role="status">Email đã xác thực. Bạn có thể nhận thông báo và khôi phục mật khẩu qua email.</p></c:when>
+            <c:when test="${emailVerified}"><p class="alert alert-success" role="status">Email đã xác thực.</p></c:when>
             <c:otherwise>
-                <p class="text-muted">Xác thực email để nhận thông báo đơn hàng và khôi phục mật khẩu khi cần.</p>
+                <p class="text-muted">Xác thực email để nhận thông báo và khôi phục mật khẩu.</p>
                 <form method="post" action="${pageContext.request.contextPath}/user/email">
                     <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                     <button class="btn btn-ute-accent w-100" type="submit">Gửi mã xác thực email</button>

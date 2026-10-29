@@ -74,17 +74,17 @@ public class ManagerOperationsRepository {
             case "ROUTE" -> {
                 select = "select e.id, e.shipment.id, e.hub.id from RoutingExceptionRecord e where e.hub.id in :hubIds "
                         + "and e.exceptionType = 'ROUTE_LOOKUP_BLOCKED' and e.status = 'OPEN'";
-                summary = "Static route requires correction";
+                summary = "Tuyến cần chỉnh lại";
             }
             case "MISSING" -> {
                 select = "select e.id, e.shipmentId, e.hubId from Incident e where e.hubId in :hubIds "
                         + "and e.type = 'MISSING_PARCEL' and e.status in ('OPEN', 'INVESTIGATING')";
-                summary = "Missing parcel requires investigation";
+                summary = "Hàng thất lạc cần điều tra";
             }
             case "HANDOVER" -> {
                 select = "select e.id, null, e.fromHub.id from Handover e where (e.fromHub.id in :hubIds or e.toHub.id in :hubIds) "
                         + "and e.status in ('PENDING_ACCEPTANCE', 'ACCEPTED', 'IN_TRANSIT')";
-                summary = "Handover requires acceptance or receipt";
+                summary = "Bàn giao chờ nhận";
             }
             default -> throw new IllegalArgumentException("Unknown operational work item");
         }
