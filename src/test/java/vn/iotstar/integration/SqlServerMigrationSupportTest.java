@@ -29,7 +29,7 @@ class SqlServerMigrationSupportTest {
     }
     @Test void orderedManifestResolvesEveryResourceWithoutDemoSeed() throws Exception {
         var scripts = SqlServerMigrationSupport.phase05Manifest();
-        assertThat(scripts).hasSize(22).doesNotHaveDuplicates();
+        assertThat(scripts).hasSize(21).doesNotHaveDuplicates();
         assertThat(scripts.indexOf("db/migration/V15__phase_05_route_key_alignment.sql"))
                 .isGreaterThan(scripts.indexOf("db/migration/V11__phase_04_return_schema.sql"))
                 .isLessThan(scripts.indexOf("db/migration/V16__phase_05_custody_alignment.sql"));

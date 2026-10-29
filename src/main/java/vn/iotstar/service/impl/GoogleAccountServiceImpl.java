@@ -3,6 +3,7 @@ package vn.iotstar.service.impl;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import vn.iotstar.dto.auth.GoogleRegistrationRequest;
 import vn.iotstar.entity.User;
 import vn.iotstar.entity.UserRole;
 import vn.iotstar.exception.GoogleAccountException;
@@ -10,6 +11,7 @@ import vn.iotstar.exception.RegistrationException;
 import vn.iotstar.repository.UserRepository;
 import vn.iotstar.security.VerifiedGoogleIdentity;
 import vn.iotstar.service.GoogleAccountService;
+import vn.iotstar.service.auth.VietnamPhoneNormalizer;
 
 import java.time.Clock;
 import java.util.Locale;
@@ -43,18 +45,29 @@ public class GoogleAccountServiceImpl implements GoogleAccountService {
 
     @Override
     @Transactional
-    public User register(VerifiedGoogleIdentity identity) {
+    public User register(VerifiedGoogleIdentity identity, GoogleRegistrationRequest request) {
         validateIdentity(identity);
+        if (request == null || request.getFullName() == null || request.getFullName().isBlank()
+                || request.getFullName().trim().length() > 100) {
+            throw new GoogleAccountException();
+        }
+        String phone;
+        try {
+            phone = VietnamPhoneNormalizer.normalize(request.getPhone());
+        } catch (RegistrationException exception) {
+            throw new GoogleAccountException();
+        }
         String email = identity.email().trim().toLowerCase(Locale.ROOT);
-        // A matching email is not permission to take over or merge an existing account.
-        if (users.findByGoogleSubject(identity.subject()).isPresent()) throw new GoogleAccountException();
-        if (users.existsByEmail(email)) throw RegistrationException.emailTaken();
-        String name = identity.fullName() == null || identity.fullName().isBlank() ? email : identity.fullName().trim();
+        // A matching contact is not permission to take over or merge an existing account.
+        if (users.findByGoogleSubject(identity.subject()).isPresent()
+                || users.existsByEmail(email) || users.existsByPhone(phone)) {
+            throw new GoogleAccountException();
+        }
         String username = "g_" + UUID.randomUUID().toString().replace("-", "");
         String unknownPassword = UUID.randomUUID().toString() + UUID.randomUUID();
-        // The phone is linked later from the profile page, never at sign-in.
-        return users.saveAndFlush(User.googleAccount(username, passwordEncoder.encode(unknownPassword),
-                name.substring(0, Math.min(name.length(), 100)), null, email, identity.subject(), clock.instant()));
+        User user = User.googleAccount(username, passwordEncoder.encode(unknownPassword),
+                request.getFullName().trim(), phone, email, identity.subject(), clock.instant());
+        return users.saveAndFlush(user);
     }
 
     private void validateIdentity(VerifiedGoogleIdentity identity) {

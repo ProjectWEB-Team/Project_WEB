@@ -23,7 +23,7 @@
                     <h1 class="h3 mb-2">Đăng nhập</h1>
                     <p class="text-muted mb-4">Gửi hàng và theo dõi hành trình tại một nơi.</p>
                     <c:if test="${not empty param.error}"><div class="alert alert-danger" role="alert">Tên đăng nhập hoặc mật khẩu không đúng.</div></c:if>
-                    <c:if test="${not empty param.googleError}"><div class="alert alert-danger" role="alert">${param.googleError == 'email' ? 'Email Google này đã có tài khoản đăng ký bằng cách khác. Hãy đăng nhập bằng tên đăng nhập hoặc số điện thoại đã dùng.' : 'Không thể đăng nhập bằng Google. Vui lòng thử lại hoặc chọn cách đăng nhập khác.'}</div></c:if>
+                    <c:if test="${not empty param.googleError}"><div class="alert alert-danger" role="alert">Không thể đăng nhập bằng Google. Vui lòng thử lại hoặc chọn cách đăng nhập khác.</div></c:if>
                     <c:if test="${not empty param.phoneError}"><div class="alert alert-danger" role="alert">Không thể đăng nhập bằng điện thoại. Vui lòng thử lại hoặc chọn cách đăng nhập khác.</div></c:if>
                     <c:if test="${not empty param.logout}"><div class="alert alert-success" role="status">Bạn đã đăng xuất.</div></c:if>
                     <c:if test="${not empty param.reset}"><div class="alert alert-success" role="status">Đã đặt lại mật khẩu. Hãy đăng nhập bằng mật khẩu mới.</div></c:if>

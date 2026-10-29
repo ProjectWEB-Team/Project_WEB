@@ -40,11 +40,9 @@ public class RegistrationServiceImpl implements RegistrationService {
         String email = required(request.getEmail(), 100).toLowerCase(Locale.ROOT);
         String phone = VietnamPhoneNormalizer.normalize(request.getPhone());
         String password = request.getPassword();
-        if (!username.matches("[A-Za-z0-9_.-]{3,50}"))
-            throw new RegistrationException("Tên đăng nhập gồm 3–50 chữ cái, chữ số hoặc dấu _ . -.", "username");
-        if (!email.matches("[^\\s@]+@[^\\s@]+\\.[^\\s@]+")) throw new RegistrationException("Email không hợp lệ.", "email");
-        if (password == null || password.length() < 8 || password.getBytes(StandardCharsets.UTF_8).length > 72)
-            throw RegistrationException.weakPassword();
+        if (!username.matches("[A-Za-z0-9_.-]{3,50}") || !email.matches("[^\\s@]+@[^\\s@]+\\.[^\\s@]+")
+                || password == null || password.length() < 8 || password.getBytes(StandardCharsets.UTF_8).length > 72)
+            throw invalidRegistration();
         User pending = users.findByPhoneForUpdate(phone).orElse(null);
         if (pending != null) {
             // Losing a browser session must not strand an unfinished registration.
@@ -52,14 +50,12 @@ public class RegistrationServiceImpl implements RegistrationService {
             if (pending.getRole() != UserRole.ROLE_USER || !"INACTIVE".equals(pending.getStatus())
                     || pending.getGoogleSubject() != null || pending.isPhoneVerified()
                     || !pending.getUsername().equals(username) || !pending.getEmail().equals(email)
-                    || !encoder.matches(password, pending.getPassword())) throw RegistrationException.phoneTaken();
+                    || !encoder.matches(password, pending.getPassword())) throw invalidRegistration();
             PhoneOtpChallenge existing = challenges.findByUserIdForUpdate(pending.getId()).orElseThrow(this::invalidRegistration);
             if (!"REGISTRATION".equals(existing.getPurpose()) || existing.getConsumedAt() != null) throw invalidRegistration();
             return issue(existing, "REGISTRATION");
         }
-        if (users.existsByPhone(phone)) throw RegistrationException.phoneTaken();
-        if (users.existsByEmail(email)) throw RegistrationException.emailTaken();
-        if (users.existsByUsername(username)) throw RegistrationException.usernameTaken();
+        if (users.existsByUsername(username) || users.existsByPhone(phone) || users.existsByEmail(email)) throw alreadyUsed();
         User user = users.saveAndFlush(User.registerPending(username, encoder.encode(password), name, phone, email, clock.instant()));
         String code = newCode();
         PhoneOtpChallenge challenge = PhoneOtpChallenge.create(user, "REGISTRATION", encoder.encode(code), clock.instant(), policy);
@@ -122,6 +118,7 @@ public class RegistrationServiceImpl implements RegistrationService {
         User user = users.findByPhoneForUpdate(phone).filter(User::isEnabled)
                 .filter(User::isAccountNonLocked).filter(User::isPhoneVerified).orElse(null);
         // Phone OTP is a customer capability; internal roles keep their provisioned login path.
+        // A Google account's unverified contact phone must never become a public login identifier.
         if (user == null || user.getRole() != UserRole.ROLE_USER) {
             return new RegistrationChallengeResponse(UUID.randomUUID(), clock.instant().plus(policy.getLifetime()),
                     "*******" + phone.substring(phone.length() - 3));
@@ -160,6 +157,9 @@ public class RegistrationServiceImpl implements RegistrationService {
     private String required(String text, int max) {
         if (text == null || text.isBlank() || text.strip().length() > max) throw invalidRegistration();
         return text.strip();
+    }
+    private RegistrationException alreadyUsed() {
+        return new RegistrationException("Số điện thoại, email hoặc tên đăng nhập đã được sử dụng. Nếu bạn đã có tài khoản, hãy đăng nhập.");
     }
     private RegistrationException invalidRegistration() {
         return new RegistrationException("Không thể đăng ký với thông tin này. Vui lòng kiểm tra lại.");

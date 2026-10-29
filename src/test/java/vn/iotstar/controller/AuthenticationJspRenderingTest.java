@@ -178,6 +178,25 @@ class AuthenticationJspRenderingTest {
         verifyNoInteractions(phoneSessionService);
     }
 
+    @Test
+    void googleCompletionJspEscapesTrustedIdentityAndRendersCsrfWithoutExternalGoogle() throws Exception {
+        html("/login");
+        String sessionId = cookies.getCookieStore().getCookies().stream()
+                .filter(cookie -> cookie.getName().equals("UTEEXPRESS_SESSION"))
+                .findFirst().orElseThrow().getValue();
+        HttpSession session = sessionTracker.sessions.get(sessionId);
+        assertThat(session).isNotNull();
+        session.setAttribute(VerifiedGoogleIdentity.SESSION_ATTRIBUTE,
+                new VerifiedGoogleIdentity("test-subject", "owner@example.test",
+                        "Owner <script>alert(1)</script>", NOW));
+
+        String completion = html("/auth/google/complete");
+        assertThat(completion).contains("owner@example.test", "Owner &lt;script&gt;alert(1)&lt;/script&gt;")
+                .doesNotContain("<script>alert(1)</script>");
+        csrf(completion);
+        verifyNoInteractions(googleAccounts, accountSessions);
+    }
+
     private String html(String path) throws Exception {
         HttpResponse<String> response = browser.send(HttpRequest.newBuilder(uri(path))
                 .timeout(Duration.ofSeconds(30)).GET().build(), HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
@@ -218,7 +237,7 @@ class AuthenticationJspRenderingTest {
     @EnableAutoConfiguration(exclude = {DataSourceAutoConfiguration.class,
             HibernateJpaAutoConfiguration.class, JpaRepositoriesAutoConfiguration.class})
     @Import({SecurityConfig.class, JwtAuthenticationFilter.class, HomeController.class,
-            RegistrationController.class, AuthenticationViewAdvice.class, EmailAccountController.class})
+            RegistrationController.class, GoogleRegistrationController.class, AuthenticationViewAdvice.class, EmailAccountController.class})
     static class RenderingApplication {
         @Bean Clock clock() { return Clock.fixed(NOW, ZoneOffset.UTC); }
         @Bean SessionTracker sessionTracker() { return new SessionTracker(); }
