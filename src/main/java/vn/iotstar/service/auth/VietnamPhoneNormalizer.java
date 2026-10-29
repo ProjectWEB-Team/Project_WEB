@@ -13,6 +13,6 @@ public final class VietnamPhoneNormalizer {
         return "+84" + value.substring(1);
     }
     private static RegistrationException invalid() {
-        return new RegistrationException("Số điện thoại di động Việt Nam chưa hợp lệ.");
+        return new RegistrationException("Số điện thoại di động Việt Nam chưa hợp lệ.", "phone");
     }
 }

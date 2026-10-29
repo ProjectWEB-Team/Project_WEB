@@ -14,7 +14,13 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import vn.iotstar.entity.User;
 import vn.iotstar.exception.RegistrationException;
 import vn.iotstar.security.AuthenticatedActor;
+import vn.iotstar.service.AvatarService;
+import vn.iotstar.service.StepUpService;
 import vn.iotstar.service.UserProfileService;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+import java.util.Map;
 
 import java.util.UUID;
 
@@ -26,10 +32,15 @@ public class UserProfileController {
     static final String EMAIL_CHALLENGE_ID = "profileEmailChallengeId";
     static final String EMAIL_TARGET = "profileEmailTarget";
 
+    private static final String STEP_UP_REQUIRED = "Cần xác minh danh tính trước khi thay đổi thông tin này.";
     private final UserProfileService profileService;
+    private final StepUpService stepUp;
+    private final AvatarService avatars;
 
-    public UserProfileController(UserProfileService profileService) {
+    public UserProfileController(UserProfileService profileService, StepUpService stepUp, AvatarService avatars) {
         this.profileService = profileService;
+        this.stepUp = stepUp;
+        this.avatars = avatars;
     }
 
     @GetMapping("/user/profile")
@@ -38,6 +49,10 @@ public class UserProfileController {
         User user = profileService.getUser(actor.userId());
         model.addAttribute("profileUser", user);
         model.addAttribute("pageTitle", "Hồ sơ cá nhân | UTEExpress");
+        model.addAttribute("avatarUrl", avatars.urlFor(user.getId()).orElse(null));
+        model.addAttribute("stepUpPassword", stepUp.needsPassword(user));
+        model.addAttribute("stepUpEmailOtp", stepUp.needsEmailOtp(user));
+        model.addAttribute("stepUpUnlocked", stepUp.isUnlocked(session));
 
         if (session != null) {
             model.addAttribute("phoneChallengeId", session.getAttribute(PHONE_CHALLENGE_ID));
@@ -72,6 +87,10 @@ public class UserProfileController {
                                  HttpServletRequest request,
                                  RedirectAttributes attributes) {
         AuthenticatedActor actor = AuthenticatedActor.requireCurrent();
+        if (!stepUp.isUnlocked(request.getSession(false))) {
+            attributes.addFlashAttribute("passwordError", STEP_UP_REQUIRED);
+            return "redirect:/user/profile#security-section";
+        }
         if (!newPassword.equals(confirmPassword)) {
             attributes.addFlashAttribute("passwordError", "Mật khẩu xác nhận không khớp với mật khẩu mới.");
             return "redirect:/user/profile#security-section";
@@ -92,6 +111,10 @@ public class UserProfileController {
                                HttpSession session,
                                RedirectAttributes attributes) {
         AuthenticatedActor actor = AuthenticatedActor.requireCurrent();
+        if (!phone.isBlank() && !phone.equals(profileService.getUser(actor.userId()).getPhone()) && !stepUp.isUnlocked(session)) {
+            attributes.addFlashAttribute("errorMessage", STEP_UP_REQUIRED);
+            return "redirect:/user/profile#phone-section";
+        }
         try {
             UUID challengeId = profileService.requestPhoneVerification(actor.userId(), phone);
             session.setAttribute(PHONE_CHALLENGE_ID, challengeId);
@@ -143,7 +166,7 @@ public class UserProfileController {
 
         try {
             profileService.resendPhoneOtp(actor.userId(), challengeId);
-            attributes.addFlashAttribute("successMessage", "Đã gửi lại mã OTP. Vui lòng kiểm tra SMS (hoặc thư mục .local/otp-sms).");
+            attributes.addFlashAttribute("successMessage", "Đã gửi lại mã OTP. Vui lòng kiểm tra tin nhắn SMS.");
         } catch (RegistrationException ex) {
             attributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
@@ -155,6 +178,10 @@ public class UserProfileController {
                                HttpSession session,
                                RedirectAttributes attributes) {
         AuthenticatedActor actor = AuthenticatedActor.requireCurrent();
+        if (!email.isBlank() && !email.equalsIgnoreCase(profileService.getUser(actor.userId()).getEmail()) && !stepUp.isUnlocked(session)) {
+            attributes.addFlashAttribute("errorMessage", STEP_UP_REQUIRED);
+            return "redirect:/user/profile#email-section";
+        }
         try {
             UUID challengeId = profileService.requestEmailVerification(actor.userId(), email);
             session.setAttribute(EMAIL_CHALLENGE_ID, challengeId);
@@ -211,6 +238,60 @@ public class UserProfileController {
             attributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
         return "redirect:/user/profile#email-section";
+    }
+
+    @PostMapping("/user/profile/cancel")
+    public String cancelVerification(HttpSession session) {
+        session.removeAttribute(PHONE_CHALLENGE_ID); session.removeAttribute(PHONE_TARGET);
+        session.removeAttribute(EMAIL_CHALLENGE_ID); session.removeAttribute(EMAIL_TARGET);
+        return "redirect:/user/profile";
+    }
+
+    @PostMapping("/user/profile/avatar")
+    public String uploadAvatar(@RequestParam("avatar") MultipartFile avatar, RedirectAttributes attributes) {
+        AuthenticatedActor actor = AuthenticatedActor.requireCurrent();
+        try {
+            avatars.save(actor.userId(), avatar);
+            attributes.addFlashAttribute("successMessage", "Đã cập nhật ảnh đại diện.");
+        } catch (RegistrationException ex) {
+            attributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/user/profile";
+    }
+
+    @PostMapping(value = "/user/profile/step-up/start", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public Map<String, Object> stepUpStart(@RequestParam(defaultValue = "") String password, HttpSession session) {
+        try {
+            User user = profileService.getUser(AuthenticatedActor.requireCurrent().userId());
+            return Map.of("ok", true, "otpSent", stepUp.start(session, user, password),
+                    "maskedEmail", mask(user.getEmail()));
+        } catch (RegistrationException ex) {
+            return Map.of("ok", false, "message", ex.getMessage());
+        }
+    }
+
+    @PostMapping(value = "/user/profile/step-up/verify", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public Map<String, Object> stepUpVerify(@RequestParam(defaultValue = "") String code, HttpSession session) {
+        boolean ok = stepUp.verify(session, code.trim());
+        return ok ? Map.of("ok", true) : Map.of("ok", false, "message", "Mã không chính xác hoặc đã hết hạn.");
+    }
+
+    @PostMapping(value = "/user/profile/step-up/resend", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public Map<String, Object> stepUpResend(HttpSession session) {
+        try {
+            stepUp.resend(session, profileService.getUser(AuthenticatedActor.requireCurrent().userId()));
+            return Map.of("ok", true);
+        } catch (RegistrationException ex) {
+            return Map.of("ok", false, "message", ex.getMessage());
+        }
+    }
+
+    private static String mask(String email) {
+        int at = email.indexOf('@');
+        return at <= 1 ? email : email.charAt(0) + "***" + email.substring(at);
     }
 
     private void refreshAuthentication(User updatedUser) {

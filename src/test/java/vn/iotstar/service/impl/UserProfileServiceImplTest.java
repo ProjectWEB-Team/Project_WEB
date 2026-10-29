@@ -106,7 +106,6 @@ class UserProfileServiceImplTest {
     void requestPhoneVerificationSendsOtp() {
         User user = sampleUser(1L);
         when(users.findByIdForUpdate(1L)).thenReturn(Optional.of(user));
-        when(users.existsByPhone(anyString())).thenReturn(false);
         when(phoneChallenges.findByUserIdForUpdate(1L)).thenReturn(Optional.empty());
 
         UUID challengeId = service.requestPhoneVerification(1L, "0912345678");
@@ -120,11 +119,28 @@ class UserProfileServiceImplTest {
     void requestPhoneVerificationRejectsDuplicatePhone() {
         User user = sampleUser(1L);
         when(users.findByIdForUpdate(1L)).thenReturn(Optional.of(user));
-        when(users.existsByPhone("+84912345678")).thenReturn(true);
+        User owner = sampleUser(2L); owner.verifyPhone(NOW);
+        when(users.findByPhone("+84912345678")).thenReturn(Optional.of(owner));
 
         assertThatThrownBy(() -> service.requestPhoneVerification(1L, "0912345678"))
                 .isInstanceOf(RegistrationException.class)
-                .hasMessageContaining("đã được sử dụng");
+                .hasMessageContaining("tài khoản khác");
+    }
+
+    @Test
+    void unverifiedClaimOnTheNumberIsReleasedWhenTheRealOwnerVerifiesIt() {
+        User user = sampleUser(1L);
+        User squatter = User.staff("squat", "h", "S", "+84912345678", "s@example.com", vn.iotstar.entity.UserRole.ROLE_USER, NOW);
+        org.springframework.test.util.ReflectionTestUtils.setField(squatter, "id", 2L);
+        String code = "123456";
+        PhoneOtpChallenge challenge = PhoneOtpChallenge.create(user, "VERIFY_PHONE", "+84912345678", encoder.encode(code), NOW, policy);
+        when(users.findByPhone("+84912345678")).thenReturn(Optional.of(squatter));
+        when(phoneChallenges.findByIdForUpdate(challenge.getId())).thenReturn(Optional.of(challenge));
+
+        assertThat(service.verifyPhoneOtp(1L, challenge.getId(), code)).isTrue();
+
+        assertThat(squatter.getPhone()).isNull();
+        assertThat(user.getPhone()).isEqualTo("+84912345678");
     }
 
     @Test

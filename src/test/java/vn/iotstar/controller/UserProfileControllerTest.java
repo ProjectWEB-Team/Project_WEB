@@ -34,6 +34,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 class UserProfileControllerTest {
     @Autowired MockMvc mvc;
     @MockBean UserProfileService profileService;
+    @MockBean vn.iotstar.service.StepUpService stepUp;
+    @MockBean vn.iotstar.service.AvatarService avatars;
     @MockBean UserDetailsService userDetailsService;
     @MockBean JwtService jwt;
 
@@ -112,6 +114,7 @@ class UserProfileControllerTest {
         UUID challengeId = UUID.randomUUID();
         when(profileService.getUser(anyLong())).thenReturn(user);
         when(profileService.requestPhoneVerification(anyLong(), any())).thenReturn(challengeId);
+        when(stepUp.isUnlocked(any())).thenReturn(true);
 
         mvc.perform(post("/user/profile/phone/send-otp")
                         .with(authentication(
@@ -153,6 +156,7 @@ class UserProfileControllerTest {
         UUID challengeId = UUID.randomUUID();
         when(profileService.getUser(anyLong())).thenReturn(user);
         when(profileService.requestEmailVerification(anyLong(), any())).thenReturn(challengeId);
+        when(stepUp.isUnlocked(any())).thenReturn(true);
 
         mvc.perform(post("/user/profile/email/send-otp")
                         .with(authentication(
@@ -204,5 +208,19 @@ class UserProfileControllerTest {
 
         verifyNoInteractions(profileService);
     }
-}
 
+    @Test
+    void changingPhoneWithoutIdentityCheckIsBlocked() throws Exception {
+        User user = sampleUser();
+        stubSessionCheck(user);
+        when(profileService.getUser(anyLong())).thenReturn(user);
+        when(stepUp.isUnlocked(any())).thenReturn(false);
+
+        mvc.perform(post("/user/profile/phone/send-otp")
+                        .with(authentication(new UsernamePasswordAuthenticationToken(user, "password", user.getAuthorities()))).with(csrf())
+                        .param("phone", "0912345678"))
+                .andExpect(flash().attributeExists("errorMessage"));
+
+        verify(profileService, never()).requestPhoneVerification(anyLong(), any());
+    }
+}

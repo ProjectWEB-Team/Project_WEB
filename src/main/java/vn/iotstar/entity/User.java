@@ -23,7 +23,7 @@ public class User implements UserDetails {
     private String passwordHash;
     @Column(name = "full_name", nullable = false, length = 100, columnDefinition = "NVARCHAR(100)")
     private String fullName;
-    @Column(nullable = false, unique = true, length = 20, columnDefinition = "NVARCHAR(20)")
+    @Column(unique = true, length = 20, columnDefinition = "NVARCHAR(20)")
     private String phone;
     @Column(nullable = false, unique = true, length = 100, columnDefinition = "NVARCHAR(100)")
     private String email;
@@ -76,6 +76,8 @@ public class User implements UserDetails {
         this.phoneVerifiedAt = LocalDateTime.ofInstant(now, ZoneOffset.UTC);
         this.status = "ACTIVE";
     }
+    /** Gives up a claimed-but-never-verified phone so its real owner can verify it. */
+    public void releasePhone() { this.phone = null; this.phoneVerifiedAt = null; }
     public void updateEmail(String newEmail, Instant now) {
         if ("LOCKED".equals(status)) throw new IllegalStateException("Account is locked");
         this.email = newEmail;

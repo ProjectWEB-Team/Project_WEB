@@ -81,7 +81,8 @@ public class UserProfileServiceImpl implements UserProfileService {
     public void changePassword(Long userId, String currentPassword, String newPassword) {
         User user = users.findByIdForUpdate(userId)
                 .orElseThrow(() -> new RegistrationException("Không tìm thấy thông tin tài khoản."));
-        if (!encoder.matches(currentPassword, user.getPassword())) {
+        // A Google account has no password it knows; the email code the controller already required stands in.
+        if (user.getGoogleSubject() == null && !encoder.matches(currentPassword, user.getPassword())) {
             throw new RegistrationException("Mật khẩu hiện tại không chính xác.");
         }
         if (newPassword == null || newPassword.length() < 8 || newPassword.getBytes(StandardCharsets.UTF_8).length > 72) {
@@ -105,11 +106,15 @@ public class UserProfileServiceImpl implements UserProfileService {
             if (phoneToSend.equals(user.getPhone())) {
                 throw new RegistrationException("Số điện thoại mới trùng với số điện thoại hiện tại.");
             }
-            if (users.existsByPhone(phoneToSend)) {
-                throw new RegistrationException("Số điện thoại này đã được sử dụng bởi tài khoản khác.");
-            }
+            // A number someone only typed in (never proved with a code) does not block its real owner.
+            users.findByPhone(phoneToSend).filter(o -> !o.getId().equals(userId)).ifPresent(o -> {
+                if (!releasable(o)) throw new RegistrationException("Số điện thoại này đã được tài khoản khác sử dụng.");
+            });
         } else {
             phoneToSend = user.getPhone();
+            if (phoneToSend == null) {
+                throw new RegistrationException("Vui lòng nhập số điện thoại cần liên kết.");
+            }
             if (user.isPhoneVerified()) {
                 throw new RegistrationException("Số điện thoại hiện tại đã được xác thực.");
             }
@@ -151,6 +156,11 @@ public class UserProfileServiceImpl implements UserProfileService {
         User user = challenge.getUser();
         String newPhone = challenge.getTargetPhone();
         if (newPhone != null && !newPhone.isBlank() && !newPhone.equals(user.getPhone())) {
+            users.findByPhone(newPhone).filter(o -> !o.getId().equals(userId)).ifPresent(o -> {
+                if (!releasable(o)) throw new RegistrationException("Số điện thoại này đã được tài khoản khác sử dụng.");
+                o.releasePhone();
+                users.saveAndFlush(o); // free the unique slot before this account takes it
+            });
             user.updatePhone(newPhone, now);
         } else {
             user.verifyPhone(now);
@@ -275,6 +285,11 @@ public class UserProfileServiceImpl implements UserProfileService {
         emailChallenges.flush();
         mailSender.sendOtp(targetEmail, code, challenge.getExpiresAt());
         return challenge.getId();
+    }
+
+    // Only an active account that never verified the number can lose it; pending sign-ups keep theirs.
+    private boolean releasable(User holder) {
+        return holder.isEnabled() && !holder.isPhoneVerified();
     }
 
     private String generateCode() {

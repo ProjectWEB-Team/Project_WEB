@@ -1,461 +1,298 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
-<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
 <jsp:include page="../layout/header.jsp" />
 
-<main class="ute-app ute-profile flex-grow-1 py-4" style="font-family: 'Geist', sans-serif;">
-  <div class="container ute-wrap">
+<c:set var="ctx" value="${pageContext.request.contextPath}" />
+<c:set var="displayName" value="${not empty profileUser.fullName ? profileUser.fullName : profileUser.username}" />
+<c:set var="pendingOtp" value="${not empty phoneChallengeId ? 'phoneOtp' : (not empty emailChallengeId ? 'emailOtp' : '')}" />
 
-    <!-- Flash notifications -->
-    <c:if test="${not empty successMessage}">
-      <div class="alert alert-success alert-dismissible fade show shadow-sm d-flex align-items-center mb-4" role="alert">
-        <i class="bi bi-check-circle-fill fs-5 me-2 text-success"></i>
-        <div class="flex-grow-1"><c:out value="${successMessage}"/></div>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
-      </div>
-    </c:if>
-    <c:if test="${not empty errorMessage}">
-      <div class="alert alert-danger alert-dismissible fade show shadow-sm d-flex align-items-center mb-4" role="alert">
-        <i class="bi bi-exclamation-triangle-fill fs-5 me-2 text-danger"></i>
-        <div class="flex-grow-1"><c:out value="${errorMessage}"/></div>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
-      </div>
-    </c:if>
+<main class="container ute-profile flex-grow-1">
+  <h1>Hồ sơ cá nhân</h1>
 
-    <!-- Profile Header Banner Card -->
-    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden" style="background: linear-gradient(135deg, var(--ink) 0%, #0a1a2e 100%); color: #fff;">
-      <div class="card-body p-4 p-md-5">
-        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-4">
-          <div class="d-flex align-items-center gap-3">
-            <div class="position-relative">
-              <span class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow"
-                    style="width: 80px; height: 80px; font-size: 1.75rem; background: linear-gradient(135deg, #ff6b35 0%, #f7c59f 100%);">
-                <c:choose>
-                  <c:when test="${not empty profileUser.fullName}">
-                    <c:out value="${fn:toUpperCase(fn:substring(profileUser.fullName, 0, 2))}" />
-                  </c:when>
-                  <c:otherwise>
-                    <c:out value="${fn:toUpperCase(fn:substring(profileUser.username, 0, 2))}" />
-                  </c:otherwise>
-                </c:choose>
-              </span>
-            </div>
-            <div>
-              <h1 class="h3 fw-bold mb-1 text-white">
-                <c:out value="${profileUser.fullName != null && !profileUser.fullName.isBlank() ? profileUser.fullName : profileUser.username}" />
-              </h1>
-              <div class="d-flex flex-wrap align-items-center gap-2 small text-white">
-                <span><i class="bi bi-person-badge me-1"></i>@<c:out value="${profileUser.username}" /></span>
-                <span>&bull;</span>
-                <span>
-                  <c:choose>
-                    <c:when test="${profileUser.role == 'ROLE_USER'}">Khách hàng</c:when>
-                    <c:when test="${profileUser.role == 'ROLE_ADMIN'}">Quản trị viên</c:when>
-                    <c:when test="${profileUser.role == 'ROLE_MANAGER'}">Quản lý điều hành</c:when>
-                    <c:when test="${profileUser.role == 'ROLE_HUB_STAFF'}">Nhân viên Hub</c:when>
-                    <c:when test="${profileUser.role == 'ROLE_SHIPPER'}">Nhân viên giao nhận</c:when>
-                    <c:when test="${profileUser.role == 'ROLE_LINEHAUL_DRIVER'}">Tài xế trung chuyển</c:when>
-                    <c:otherwise><c:out value="${profileUser.role}" /></c:otherwise>
-                  </c:choose>
-                </span>
-                <span>&bull;</span>
-                <span>Tham gia: <c:out value="${profileUser.createdAt}" /></span>
-              </div>
-            </div>
-          </div>
+  <c:if test="${empty pendingOtp && not empty successMessage}"><div class="alert alert-success" role="status"><c:out value="${successMessage}"/></div></c:if>
+  <c:if test="${empty pendingOtp && not empty errorMessage}"><div class="alert alert-danger" role="alert"><c:out value="${errorMessage}"/></div></c:if>
+  <c:if test="${not empty passwordError}"><div class="alert alert-danger" role="alert"><c:out value="${passwordError}"/></div></c:if>
 
-          <!-- Quick badges -->
-          <div class="d-flex flex-wrap gap-2">
-            <c:choose>
-              <c:when test="${profileUser.phoneVerified}">
-                <span class="badge bg-success bg-opacity-25 text-success-emphasis border border-success border-opacity-50 px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1">
-                  Đã xác thực SĐT
-                </span>
-              </c:when>
-              <c:otherwise>
-                <span class="badge bg-warning bg-opacity-25 text-warning-emphasis border border-warning border-opacity-50 px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1">
-                  <i class="bi bi-exclamation-triangle-fill text-warning"></i> SĐT chưa xác thực
-                </span>
-              </c:otherwise>
-            </c:choose>
+  <section class="pf-card pf-id" aria-label="Tài khoản">
+    <form id="avatarForm" action="${ctx}/user/profile/avatar" method="post" enctype="multipart/form-data">
+      <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
+      <label class="pf-avatar" for="avatarInput" title="Đổi ảnh đại diện (JPG, PNG, WEBP, tối đa 2MB)">
+        <c:choose>
+          <c:when test="${not empty avatarUrl}"><img src="${ctx}${avatarUrl}" alt="Ảnh đại diện" width="80" height="80"></c:when>
+          <c:otherwise><span aria-hidden="true"><c:out value="${fn:toUpperCase(fn:substring(displayName, 0, 2))}"/></span></c:otherwise>
+        </c:choose>
+        <span class="pf-avatar-edit"><i class="bi bi-camera" aria-hidden="true"></i><span class="visually-hidden">Đổi ảnh đại diện</span></span>
+      </label>
+      <input id="avatarInput" class="visually-hidden" type="file" name="avatar" accept="image/jpeg,image/png,image/webp">
+    </form>
+    <div class="min-w-0">
+      <h2 class="pf-name"><c:out value="${displayName}"/></h2>
+      <p class="pf-sub">@<c:out value="${profileUser.username}"/> · Tham gia <c:out value="${fn:substring(profileUser.createdAt, 0, 10)}"/>
+        <c:if test="${not empty profileUser.googleSubject}"> · <i class="bi bi-google" aria-hidden="true"></i> Google</c:if></p>
+    </div>
+  </section>
 
-            <c:choose>
-              <c:when test="${profileUser.emailVerified}">
-                <span class="badge bg-success bg-opacity-25 text-success-emphasis border border-success border-opacity-50 px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1">
-                  Đã xác thực Email
-                </span>
-              </c:when>
-              <c:otherwise>
-                <span class="badge bg-warning bg-opacity-25 text-warning-emphasis border border-warning border-opacity-50 px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1">
-                  <i class="bi bi-exclamation-triangle-fill text-warning"></i> Email chưa xác thực
-                </span>
-              </c:otherwise>
-            </c:choose>
-
-            <c:if test="${not empty profileUser.googleSubject}">
-              <span class="badge bg-light text-dark px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1">
-                <i class="bi bi-google text-danger"></i> Google Linked
-              </span>
-            </c:if>
-          </div>
-        </div>
-      </div>
+  <section class="pf-card" aria-label="Thông tin đăng nhập">
+    <div class="pf-row">
+      <span class="pf-label">Họ và tên</span>
+      <span class="pf-value"><c:out value="${displayName}"/></span>
+      <button type="button" class="btn btn-outline-secondary btn-sm" data-open="name">Sửa</button>
     </div>
 
-    <!-- Main Content Tabs / Sections -->
-    <div class="row g-4">
-
-      <!-- Navigation Column / Shortcuts -->
-      <div class="col-lg-3">
-        <div class="card border-0 shadow-sm rounded-4 sticky-top" style="top: 2rem;">
-          <div class="list-group list-group-flush rounded-4 py-2">
-            <a href="#info-section" class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3 border-0 active" id="tab-info-btn">
-              <i class="bi bi-person-gear fs-5"></i>
-              <span class="fw-semibold">Thông tin chung</span>
-            </a>
-            <a href="#phone-section" class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3 border-0" id="tab-phone-btn">
-              <i class="bi bi-telephone fs-5"></i>
-              <div class="flex-grow-1">
-                <div class="fw-semibold">Số điện thoại</div>
-                <div class="small text-muted">SMS OTP</div>
-              </div>
-              <c:choose>
-                <c:when test="${profileUser.phoneVerified}"><i class="bi bi-check-circle-fill text-success"></i></c:when>
-                <c:otherwise><i class="bi bi-exclamation-circle-fill text-warning"></i></c:otherwise>
-              </c:choose>
-            </a>
-            <a href="#email-section" class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3 border-0" id="tab-email-btn">
-              <i class="bi bi-envelope-at fs-5"></i>
-              <div class="flex-grow-1">
-                <div class="fw-semibold">Email</div>
-                <div class="small text-muted">Email OTP</div>
-              </div>
-              <c:choose>
-                <c:when test="${profileUser.emailVerified}"><i class="bi bi-check-circle-fill text-success"></i></c:when>
-                <c:otherwise><i class="bi bi-exclamation-circle-fill text-warning"></i></c:otherwise>
-              </c:choose>
-            </a>
-            <a href="#security-section" class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3 border-0" id="tab-security-btn">
-              <i class="bi bi-shield-lock fs-5"></i>
-              <span class="fw-semibold">Đổi mật khẩu</span>
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Detail Panels Column -->
-      <div class="col-lg-9 d-flex flex-column gap-4">
-
-        <!-- 1. THÔNG TIN CHUNG -->
-        <section id="info-section" class="card border-0 shadow-sm rounded-4">
-          <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0">
-            <h2 class="h5 fw-bold mb-1 text-dark d-flex align-items-center gap-2">
-              <i class="bi bi-person-lines-fill text-primary"></i> Thông tin tài khoản
-            </h2>
-            <p class="text-muted small mb-0">Cập nhật họ tên hiển thị và xem thông tin tài khoản.</p>
-          </div>
-          <div class="card-body p-4">
-            <form action="${pageContext.request.contextPath}/user/profile/update-info" method="post">
-              <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
-
-              <div class="row g-3">
-                <div class="col-md-6">
-                  <label class="form-label fw-semibold text-secondary small">Tên đăng nhập (Username)</label>
-                  <input type="text" class="form-control bg-light" value="${fn:escapeXml(profileUser.username)}" readonly disabled />
-                  <div class="form-text">Tên đăng nhập không thể thay đổi sau khi đăng ký.</div>
-                </div>
-
-                <div class="col-md-6">
-                  <label for="fullName" class="form-label fw-semibold text-dark small">Họ và tên <span class="text-danger">*</span></label>
-                  <input type="text" id="fullName" name="fullName" class="form-control"
-                         value="${fn:escapeXml(profileUser.fullName)}" required minlength="2" maxlength="100" />
-                  <div class="form-text">Đây là tên sẽ hiển thị trong hệ thống và trên phiếu gửi hàng của bạn.</div>
-                </div>
-
-                <div class="col-md-6">
-                  <label class="form-label fw-semibold text-secondary small">Vai trò người dùng</label>
-                  <input type="text" class="form-control bg-light" value="${profileUser.role}" readonly disabled />
-                </div>
-
-                <div class="col-md-6">
-                  <label class="form-label fw-semibold text-secondary small">Trạng thái tài khoản</label>
-                  <div>
-                    <span class="badge bg-success text-success bg-opacity-10 fs-6 fw-semibold px-3 py-2 rounded-3">
-                      <i class="bi me-1"></i><c:out value="${profileUser.status}" />
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="mt-4 pt-2 border-top d-flex justify-content-end">
-                <button type="submit" class="btn btn-primary rounded-pill px-4">
-                  <i class="bi bi-save me-1"></i> Lưu thay đổi
-                </button>
-              </div>
-            </form>
-          </div>
-        </section>
-
-        <!-- 2. SỐ ĐIỆN THOẠI & SMS OTP -->
-        <section id="phone-section" class="card border-0 shadow-sm rounded-4">
-          <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0">
-            <div class="d-flex align-items-center justify-content-between">
-              <h2 class="h5 fw-bold mb-1 text-dark d-flex align-items-center gap-2">
-                <i class="bi bi-phone text-success"></i> Số điện thoại
-              </h2>
-              <span class="badge ${profileUser.phoneVerified ? 'bg-success' : 'bg-warning'} px-3 py-2 rounded-pill">
-                ${profileUser.phoneVerified ? 'Đã xác thực' : 'Chưa xác thực'}
-              </span>
-            </div>
-            <p class="text-muted small mb-0">Xác thực số điện thoại để đăng nhập an toàn, nhận mã OTP và liên kết các đơn hàng của bạn.</p>
-          </div>
-
-          <div class="card-body p-4">
-            <!-- Current Phone Info -->
-            <div class="p-3 bg-light rounded-4 mb-4 d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3">
-              <div>
-                <span class="text-secondary small d-block">Số điện thoại hiện tại:</span>
-                <span class="fs-5 fw-bold text-dark font-monospace"><c:out value="${profileUser.phone}" /></span>
-                <c:if test="${profileUser.phoneVerified && not empty profileUser.phoneVerifiedAt}">
-                  <span class="text-success small d-block"><i class="bi bi-check2-circle"></i> Đã xác thực lúc: <c:out value="${profileUser.phoneVerifiedAt}"/></span>
-                </c:if>
-              </div>
-
-              <c:if test="${!profileUser.phoneVerified}">
-                <form action="${pageContext.request.contextPath}/user/profile/phone/send-otp" method="post" class="m-0">
-                  <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
-                  <input type="hidden" name="phone" value="${profileUser.phone}" />
-                  <button type="submit" class="btn btn-warning rounded-pill px-3 fw-semibold">
-                    <i class="bi bi-shield-check me-1"></i> Gửi OTP xác thực số này
-                  </button>
-                </form>
-              </c:if>
-            </div>
-
-            <!-- Active Phone Challenge Input Box -->
-            <c:if test="${not empty phoneChallengeId}">
-              <div class="card border-warning border-2 bg-warning bg-opacity-10 rounded-4 p-4 mb-4">
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                  <h3 class="h6 fw-bold text-dark mb-0 d-flex align-items-center gap-2">
-                    <i class="bi bi-chat-left-dots-fill text-warning"></i> Nhập mã OTP SMS xác nhận
-                  </h3>
-                  <span class="badge bg-warning text-dark">Hiệu lực 5 phút</span>
-                </div>
-                <p class="text-muted small mb-3">
-                  Mã OTP 6 số đã được tạo cho số: <strong class="text-dark"><c:out value="${phoneTarget}" /></strong>.<br>
-                </p>
-
-                <form action="${pageContext.request.contextPath}/user/profile/phone/verify-otp" method="post" class="row g-2 align-items-center">
-                  <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
-                  <div class="col-sm-6 col-md-5">
-                    <input type="text" name="code" class="form-control form-control-lg text-center font-monospace fw-bold tracking-wider"
-                           placeholder="000000" maxlength="6" pattern="[0-9]{6}" required autofocus />
-                  </div>
-                  <div class="col-sm-6 col-md-4">
-                    <button type="submit" class="btn btn-success btn-lg w-100 rounded-pill fw-semibold">
-                      <i class="bi bi-check2-circle me-1"></i> Xác thực ngay
-                    </button>
-                  </div>
-                </form>
-
-                <div class="mt-3">
-                  <form action="${pageContext.request.contextPath}/user/profile/phone/resend-otp" method="post" class="d-inline">
-                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
-                    <button type="submit" class="btn btn-link text-secondary text-decoration-none p-0 small">
-                      <i class="bi bi-arrow-clockwise"></i> Chưa nhận được mã? Gửi lại OTP
-                    </button>
-                  </form>
-                </div>
-              </div>
-            </c:if>
-
-            <!-- Update Phone Form -->
-            <div class="border rounded-4 p-4">
-              <h3 class="h6 fw-bold text-dark mb-2">
-                <i class="bi bi-arrow-repeat text-primary me-1"></i> Đổi hoặc cập nhật số điện thoại mới
-              </h3>
-              <p class="text-muted small mb-3">Hệ thống sẽ gửi mã OTP đến số điện thoại mới. Sau khi nhập đúng mã OTP, số điện thoại mới sẽ được cập nhật và đánh dấu là đã xác thực.</p>
-
-              <form action="${pageContext.request.contextPath}/user/profile/phone/send-otp" method="post">
-                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
-                <div class="row g-2">
-                  <div class="col-md-7">
-                    <div class="input-group">
-                      <span class="input-group-text bg-white"><i class="bi bi-telephone text-muted"></i></span>
-                      <input type="tel" name="phone" class="form-control" placeholder="VD: 0987654321 hoặc +84987654321" required
-                             pattern="^(0|\+84)[35789][0-9]{8}$" title="Số điện thoại di động Việt Nam 10 chữ số (03, 05, 07, 08, 09)" />
-                    </div>
-                  </div>
-                  <div class="col-md-5">
-                    <button type="submit" class="btn btn-outline-primary rounded-pill w-100">
-                      <i class="bi bi-send me-1"></i> Gửi mã OTP xác nhận
-                    </button>
-                  </div>
-                </div>
-                <div class="form-text mt-2">Hỗ trợ các đầu số Viettel, Mobifone, Vinaphone, Vietnamobile, Itelecom (dạng 03x, 05x, 07x, 08x, 09x).</div>
-              </form>
-            </div>
-          </div>
-        </section>
-
-        <!-- 3. EMAIL & EMAIL OTP -->
-        <section id="email-section" class="card border-0 shadow-sm rounded-4">
-          <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0">
-            <div class="d-flex align-items-center justify-content-between">
-              <h2 class="h5 fw-bold mb-1 text-dark d-flex align-items-center gap-2">
-                <i class="bi bi-envelope-check text-info"></i> Email
-              </h2>
-              <span class="badge ${profileUser.emailVerified ? 'bg-success' : 'bg-warning'} px-3 py-2 rounded-pill">
-                ${profileUser.emailVerified ? 'Đã xác thực' : 'Chưa xác thực'}
-              </span>
-            </div>
-            <p class="text-muted small mb-0">Xác thực email để nhận thông báo hành trình đơn hàng, biên lai thanh toán và khôi phục tài khoản khi quên mật khẩu.</p>
-          </div>
-
-          <div class="card-body p-4">
-            <!-- Current Email Info -->
-            <div class="p-3 bg-light rounded-4 mb-4 d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3">
-              <div>
-                <span class="text-secondary small d-block">Email hiện tại:</span>
-                <span class="fs-5 fw-bold text-dark"><c:out value="${profileUser.email}" /></span>
-                <c:if test="${profileUser.emailVerified && not empty profileUser.emailVerifiedAt}">
-                  <span class="text-success small d-block"><i class="bi bi-check2-circle"></i> Đã xác thực lúc: <c:out value="${profileUser.emailVerifiedAt}"/></span>
-                </c:if>
-              </div>
-
-              <c:if test="${!profileUser.emailVerified}">
-                <form action="${pageContext.request.contextPath}/user/profile/email/send-otp" method="post" class="m-0">
-                  <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
-                  <input type="hidden" name="email" value="${profileUser.email}" />
-                  <button type="submit" class="btn btn-warning rounded-pill px-3 fw-semibold">
-                    <i class="bi bi-shield-check me-1"></i> Gửi OTP xác thực email này
-                  </button>
-                </form>
-              </c:if>
-            </div>
-
-            <!-- Active Email Challenge Input Box -->
-            <c:if test="${not empty emailChallengeId}">
-              <div class="card border-info border-2 bg-info bg-opacity-10 rounded-4 p-4 mb-4">
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                  <h3 class="h6 fw-bold text-dark mb-0 d-flex align-items-center gap-2">
-                    <i class="bi bi-mailbox2 text-info"></i> Nhập mã OTP Email xác nhận
-                  </h3>
-                  <span class="badge bg-info text-dark">Hiệu lực 5 phút</span>
-                </div>
-                <p class="text-muted small mb-3">
-                  Mã OTP đã được gửi đến địa chỉ: <strong class="text-dark"><c:out value="${emailTarget}" /></strong>.<br>
-                  Vui lòng kiểm tra hộp thư đến (inbox) hoặc thư rác (Spam/Junk).
-                </p>
-
-                <form action="${pageContext.request.contextPath}/user/profile/email/verify-otp" method="post" class="row g-2 align-items-center">
-                  <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
-                  <div class="col-sm-6 col-md-5">
-                    <input type="text" name="code" class="form-control form-control-lg text-center font-monospace fw-bold tracking-wider"
-                           placeholder="000000" maxlength="6" pattern="[0-9]{6}" required autofocus />
-                  </div>
-                  <div class="col-sm-6 col-md-4">
-                    <button type="submit" class="btn btn-success btn-lg w-100 rounded-pill fw-semibold">
-                      <i class="bi bi-check2-circle me-1"></i> Xác thực ngay
-                    </button>
-                  </div>
-                </form>
-
-                <div class="mt-3">
-                  <form action="${pageContext.request.contextPath}/user/profile/email/resend-otp" method="post" class="d-inline">
-                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
-                    <button type="submit" class="btn btn-link text-secondary text-decoration-none p-0 small">
-                      <i class="bi bi-arrow-clockwise"></i> Chưa nhận được email? Gửi lại mã OTP
-                    </button>
-                  </form>
-                </div>
-              </div>
-            </c:if>
-
-            <!-- Update Email Form -->
-            <div class="border rounded-4 p-4">
-              <h3 class="h6 fw-bold text-dark mb-2">
-                <i class="bi bi-envelope-plus text-primary me-1"></i> Đổi hoặc cập nhật email mới
-              </h3>
-              <p class="text-muted small mb-3">Hệ thống sẽ gửi email chứa mã OTP xác thực tới địa chỉ mới. Sau khi nhập đúng mã OTP, email tài khoản sẽ được cập nhật.</p>
-
-              <form action="${pageContext.request.contextPath}/user/profile/email/send-otp" method="post">
-                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
-                <div class="row g-2">
-                  <div class="col-md-7">
-                    <div class="input-group">
-                      <span class="input-group-text bg-white"><i class="bi bi-envelope text-muted"></i></span>
-                      <input type="email" name="email" class="form-control" placeholder="VD: yourname@gmail.com" required maxlength="100" />
-                    </div>
-                  </div>
-                  <div class="col-md-5">
-                    <button type="submit" class="btn btn-outline-primary rounded-pill w-100">
-                      <i class="bi bi-send me-1"></i> Gửi mã OTP xác thực
-                    </button>
-                  </div>
-                </div>
-                <div class="form-text mt-2">Mã OTP sẽ được gửi từ máy chủ Gmail của UTEExpress qua cổng kết nối bảo mật TLS.</div>
-              </form>
-            </div>
-          </div>
-        </section>
-
-        <!-- 4. BẢO MẬT & ĐỔI MẬT KHẨU -->
-        <section id="security-section" class="card border-0 shadow-sm rounded-4 ${not empty passwordError ? 'border-danger border-2' : ''}">
-          <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0">
-            <h2 class="h5 fw-bold mb-1 text-dark d-flex align-items-center gap-2">
-              <i class="bi bi-shield-lock-fill text-danger"></i> Đổi mật khẩu đăng nhập
-            </h2>
-            <p class="text-muted small mb-0">Đổi mật khẩu định kỳ để nâng cao tính bảo mật cho tài khoản.</p>
-          </div>
-          <div class="card-body p-4">
-            <form action="${pageContext.request.contextPath}/user/profile/change-password" method="post">
-              <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
-
-              <div class="row g-3">
-                <div class="col-12">
-                  <label for="currentPassword" class="form-label fw-semibold text-dark small">Mật khẩu hiện tại <span class="text-danger">*</span></label>
-                  <input type="password" id="currentPassword" name="currentPassword" class="form-control ${not empty passwordError ? 'is-invalid' : ''}" required />
-                </div>
-
-                <div class="col-md-6">
-                  <label for="newPassword" class="form-label fw-semibold text-dark small">Mật khẩu mới <span class="text-danger">*</span></label>
-                  <input type="password" id="newPassword" name="newPassword" class="form-control ${not empty passwordError ? 'is-invalid' : ''}" required minlength="8" maxlength="72" />
-                  <div class="form-text">Tối thiểu 8 ký tự, tối đa 72 byte.</div>
-                </div>
-
-                <div class="col-md-6">
-                  <label for="confirmPassword" class="form-label fw-semibold text-dark small">Xác nhận mật khẩu mới <span class="text-danger">*</span></label>
-                  <input type="password" id="confirmPassword" name="confirmPassword" class="form-control ${not empty passwordError ? 'is-invalid' : ''}" required minlength="8" maxlength="72" />
-                </div>
-              </div>
-
-              <c:if test="${not empty passwordError}">
-                <div class="col-12 mt-3">
-                  <div class="alert alert-danger alert-dismissible fade show p-3" role="alert">
-                    <i class="bi bi-exclamation-circle-fill me-2"></i>
-                    <c:out value="${passwordError}" />
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
-                  </div>
-                </div>
-              </c:if>
-
-              <div class="mt-4 pt-2 border-top d-flex justify-content-end">
-                <button type="submit" class="btn btn-danger rounded-pill px-4">
-                  <i class="bi bi-key me-1"></i> Cập nhật mật khẩu mới
-                </button>
-              </div>
-            </form>
-          </div>
-        </section>
-
-      </div>
+    <div class="pf-row">
+      <span class="pf-label">Số điện thoại</span>
+      <span class="pf-value">
+        <c:choose>
+          <c:when test="${empty profileUser.phone}"><span class="muted">Chưa liên kết</span></c:when>
+          <c:otherwise>
+            <c:out value="${profileUser.phone}"/>
+            <span class="pf-pill ${profileUser.phoneVerified ? 'pf-ok' : 'pf-warn'}">${profileUser.phoneVerified ? 'Đã xác thực' : 'Chưa xác thực'}</span>
+          </c:otherwise>
+        </c:choose>
+      </span>
+      <span class="d-flex gap-2">
+        <c:if test="${not empty profileUser.phone && not profileUser.phoneVerified}">
+          <form action="${ctx}/user/profile/phone/send-otp" method="post">
+            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
+            <input type="hidden" name="phone" value="${profileUser.phone}" />
+            <button type="submit" class="btn btn-primary btn-sm">Xác thực</button>
+          </form>
+        </c:if>
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-open="phone" data-secure>${empty profileUser.phone ? 'Thêm' : 'Đổi'}</button>
+      </span>
     </div>
 
-  </div>
+    <div class="pf-row">
+      <span class="pf-label">Email</span>
+      <span class="pf-value">
+        <c:out value="${profileUser.email}"/>
+        <span class="pf-pill ${profileUser.emailVerified ? 'pf-ok' : 'pf-warn'}">${profileUser.emailVerified ? 'Đã xác thực' : 'Chưa xác thực'}</span>
+      </span>
+      <span class="d-flex gap-2">
+        <c:if test="${not profileUser.emailVerified}">
+          <form action="${ctx}/user/profile/email/send-otp" method="post">
+            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
+            <input type="hidden" name="email" value="${profileUser.email}" />
+            <button type="submit" class="btn btn-primary btn-sm">Xác thực</button>
+          </form>
+        </c:if>
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-open="email" data-secure>Đổi</button>
+      </span>
+    </div>
+
+    <div class="pf-row">
+      <span class="pf-label">Mật khẩu</span>
+      <span class="pf-value">${empty profileUser.googleSubject ? '••••••••' : '<span class="muted">Chưa đặt</span>'}</span>
+      <button type="button" class="btn btn-outline-secondary btn-sm" data-open="password" data-secure>${empty profileUser.googleSubject ? 'Đổi' : 'Đặt'}</button>
+    </div>
+  </section>
 </main>
 
-<jsp:include page="../layout/footer.jsp" />
+<p id="pfFlash" hidden><c:out value="${errorMessage}"/></p>
+<!-- One dialog for every step. It cannot be dismissed from outside: the user finishes or cancels. -->
+<div class="modal fade" id="pfModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="pfTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content pf-modal">
+      <div class="modal-header"><h2 class="modal-title" id="pfTitle"></h2></div>
+      <div class="modal-body">
+        <p id="pfError" class="text-danger" role="alert" hidden></p>
 
+        <div data-pane="pass" data-title="Nhập mật khẩu hiện tại" hidden>
+          <label class="visually-hidden" for="pfPassword">Mật khẩu hiện tại</label>
+          <input id="pfPassword" type="password" class="form-control" autocomplete="current-password">
+          <div class="pf-foot"><button type="button" class="btn btn-cancel" data-cancel>Hủy</button><button type="button" class="btn btn-primary" id="pfPassGo">Tiếp tục</button></div>
+        </div>
+
+        <div data-pane="otp" data-title="Nhập mã xác minh" hidden>
+          <p class="pf-to">Mã đã gửi tới <strong id="pfMail"></strong></p>
+          <div class="pf-boxes" data-boxes="step" aria-label="Mã 6 số"></div>
+          <button type="button" class="btn btn-primary w-100" id="pfOtpGo">Xác minh</button>
+          <div class="pf-foot"><button type="button" class="btn btn-link" id="pfResend">Gửi lại mã</button><button type="button" class="btn btn-cancel" data-cancel>Hủy</button></div>
+        </div>
+
+        <form data-pane="name" data-title="Sửa họ và tên" action="${ctx}/user/profile/update-info" method="post" hidden>
+          <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
+          <label class="visually-hidden" for="pfName">Họ và tên</label>
+          <input id="pfName" type="text" name="fullName" class="form-control" value="${fn:escapeXml(profileUser.fullName)}" required minlength="2" maxlength="100">
+          <div class="pf-foot"><button type="button" class="btn btn-cancel" data-cancel>Hủy</button><button type="submit" class="btn btn-accent">Lưu</button></div>
+        </form>
+
+        <form data-pane="phone" data-title="Nhập số điện thoại mới" action="${ctx}/user/profile/phone/send-otp" method="post" hidden>
+          <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
+          <label class="visually-hidden" for="pfPhone">Số điện thoại mới</label>
+          <input id="pfPhone" type="tel" name="phone" class="form-control" placeholder="09xx xxx xxx" required pattern="^(0|\+84)[35789][0-9]{8}$" inputmode="tel" autocomplete="tel">
+          <div class="pf-foot"><button type="button" class="btn btn-cancel" data-cancel>Hủy</button><button type="submit" class="btn btn-accent">Gửi mã</button></div>
+        </form>
+
+        <form data-pane="email" data-title="Nhập email mới" action="${ctx}/user/profile/email/send-otp" method="post" hidden>
+          <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
+          <label class="visually-hidden" for="pfEmail">Email mới</label>
+          <input id="pfEmail" type="email" name="email" class="form-control" placeholder="ten@gmail.com" maxlength="100" required autocomplete="email">
+          <div class="pf-foot"><button type="button" class="btn btn-cancel" data-cancel>Hủy</button><button type="submit" class="btn btn-accent">Gửi mã</button></div>
+        </form>
+
+        <form data-pane="password" data-title="Mật khẩu mới" action="${ctx}/user/profile/change-password" method="post" hidden>
+          <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
+          <input type="hidden" name="currentPassword" id="pfCurrent">
+          <label class="form-label" for="pfNew">Mật khẩu mới</label>
+          <input id="pfNew" type="password" name="newPassword" class="form-control mb-3" minlength="8" maxlength="72" required autocomplete="new-password">
+          <label class="form-label" for="pfConfirm">Nhập lại</label>
+          <input id="pfConfirm" type="password" name="confirmPassword" class="form-control" minlength="8" maxlength="72" required autocomplete="new-password">
+          <div class="pf-foot"><button type="button" class="btn btn-cancel" data-cancel>Hủy</button><button type="submit" class="btn btn-accent">Cập nhật</button></div>
+        </form>
+
+        <form data-pane="phoneOtp" data-title="Nhập mã OTP" action="${ctx}/user/profile/phone/verify-otp" method="post" hidden>
+          <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
+          <input type="hidden" name="code" data-code>
+          <p class="pf-to">Mã đã gửi tới <strong><c:out value="${phoneTarget}"/></strong></p>
+          <div class="pf-boxes" data-boxes="submit" aria-label="Mã 6 số"></div>
+          <button type="submit" class="btn btn-accent w-100">Xác nhận</button>
+          <div class="pf-foot">
+            <button type="submit" class="btn btn-link" formaction="${ctx}/user/profile/phone/resend-otp" formnovalidate data-resend>Gửi lại mã</button>
+            <button type="button" class="btn btn-cancel" data-cancel>Hủy</button>
+          </div>
+        </form>
+
+        <form data-pane="emailOtp" data-title="Nhập mã OTP" action="${ctx}/user/profile/email/verify-otp" method="post" hidden>
+          <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
+          <input type="hidden" name="code" data-code>
+          <p class="pf-to">Mã đã gửi tới <strong><c:out value="${emailTarget}"/></strong></p>
+          <div class="pf-boxes" data-boxes="submit" aria-label="Mã 6 số"></div>
+          <button type="submit" class="btn btn-accent w-100">Xác nhận</button>
+          <div class="pf-foot">
+            <button type="submit" class="btn btn-link" formaction="${ctx}/user/profile/email/resend-otp" formnovalidate data-resend>Gửi lại mã</button>
+            <button type="button" class="btn btn-cancel" data-cancel>Hủy</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Bootstrap's script loads in the footer, after this block.
+document.addEventListener('DOMContentLoaded', function () {
+  var ctx = '${ctx}', csrf = {n: '${_csrf.parameterName}', v: '${_csrf.token}'};
+  var needPass = ${stepUpPassword}, unlocked = ${stepUpUnlocked}, pending = '${pendingOtp}';
+  var flashError = document.getElementById('pfFlash').textContent;
+  var modalEl = document.getElementById('pfModal'), errEl = document.getElementById('pfError'), titleEl = document.getElementById('pfTitle');
+  var modal = new bootstrap.Modal(modalEl);
+  var action = null, password = '', current = '', stepBoxes;
+
+  function fail(msg) { errEl.textContent = msg || ''; errEl.hidden = !msg; }
+  function pane(name) {
+    current = name; fail('');
+    modalEl.querySelectorAll('[data-pane]').forEach(function (p) { p.hidden = p.dataset.pane !== name; });
+    var p = modalEl.querySelector('[data-pane="' + name + '"]');
+    titleEl.textContent = p.dataset.title;
+    var first = p.querySelector('.pf-boxes input, input:not([type=hidden])');
+    setTimeout(function () { if (first) first.focus(); }, 200);
+  }
+  function post(path, data) {
+    var body = new URLSearchParams(data); body.set(csrf.n, csrf.v);
+    return fetch(ctx + path, {method: 'POST', headers: {'Accept': 'application/json'}, body: body}).then(function (r) { return r.json(); });
+  }
+
+  // Six one-digit boxes that feed one value; typing, pasting and backspace move between them.
+  function boxes(el, onValue, onFull) {
+    var inputs = [];
+    for (var i = 0; i < 6; i++) {
+      var b = document.createElement('input');
+      b.type = 'text'; b.inputMode = 'numeric'; b.maxLength = 1; b.autocomplete = i === 0 ? 'one-time-code' : 'off';
+      b.setAttribute('aria-label', 'Chữ số ' + (i + 1));
+      el.appendChild(b); inputs.push(b);
+    }
+    function value() { return inputs.map(function (x) { return x.value; }).join(''); }
+    function sync() { var v = value(); onValue(v); if (v.length === 6 && onFull) onFull(v); }
+    inputs.forEach(function (b, i) {
+      b.addEventListener('input', function () {
+        b.value = b.value.replace(/\D/g, '').slice(-1);
+        if (b.value && inputs[i + 1]) inputs[i + 1].focus();
+        sync();
+      });
+      b.addEventListener('keydown', function (e) {
+        if (e.key === 'Backspace' && !b.value && inputs[i - 1]) { inputs[i - 1].focus(); inputs[i - 1].value = ''; sync(); }
+      });
+      b.addEventListener('paste', function (e) {
+        var t = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 6);
+        if (!t) return;
+        e.preventDefault();
+        inputs.forEach(function (x, j) { x.value = t[j] || ''; });
+        inputs[Math.min(t.length, 5)].focus(); sync();
+      });
+    });
+    return {value: value, clear: function () { inputs.forEach(function (x) { x.value = ''; }); inputs[0].focus(); }};
+  }
+
+  function cooldown(btn, seconds) {
+    var label = btn.textContent, left = seconds; btn.disabled = true;
+    var t = setInterval(function () {
+      left--; btn.textContent = left > 0 ? label + ' (' + left + 's)' : label;
+      if (left <= 0) { clearInterval(t); btn.disabled = false; }
+    }, 1000);
+    btn.textContent = label + ' (' + left + 's)';
+  }
+
+  // Step-up code (checked by AJAX)
+  stepBoxes = boxes(modalEl.querySelector('[data-boxes="step"]'), function () {}, function () { document.getElementById('pfOtpGo').click(); });
+  // Phone / email codes (plain form posts)
+  modalEl.querySelectorAll('form[data-pane$="Otp"]').forEach(function (f) {
+    var hidden = f.querySelector('[data-code]');
+    boxes(f.querySelector('[data-boxes]'), function (v) { hidden.value = v; }, function () { f.requestSubmit(); });
+    cooldown(f.querySelector('[data-resend]'), 60);
+  });
+
+  function ready() {
+    unlocked = true;
+    if (action === 'password') document.getElementById('pfCurrent').value = password;
+    pane(action);
+  }
+  function begin(res) {
+    if (!res.ok) { fail(res.message); return; }
+    if (res.otpSent) { document.getElementById('pfMail').textContent = res.maskedEmail; pane('otp'); cooldown(document.getElementById('pfResend'), 60); }
+    else { ready(); }
+  }
+
+  document.querySelectorAll('[data-open]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      action = btn.dataset.open; password = '';
+      modal.show();
+      if (!btn.hasAttribute('data-secure')) { pane(action); return; }
+      // Changing the password needs the typed password itself, so it always asks.
+      if (unlocked && !(action === 'password' && needPass)) { ready(); }
+      else if (needPass) { pane('pass'); }
+      else { pane('otp'); post('/user/profile/step-up/start', {}).then(begin); }
+    });
+  });
+  document.getElementById('pfPassGo').addEventListener('click', function () {
+    password = document.getElementById('pfPassword').value;
+    post('/user/profile/step-up/start', {password: password}).then(begin);
+  });
+  document.getElementById('pfPassword').addEventListener('keydown', function (e) { if (e.key === 'Enter') document.getElementById('pfPassGo').click(); });
+  document.getElementById('pfOtpGo').addEventListener('click', function () {
+    post('/user/profile/step-up/verify', {code: stepBoxes.value()}).then(function (res) {
+      if (res.ok) ready(); else { fail(res.message); stepBoxes.clear(); }
+    });
+  });
+  document.getElementById('pfResend').addEventListener('click', function () {
+    var b = this; post('/user/profile/step-up/resend', {}).then(function (res) { if (res.ok) cooldown(b, 60); else fail(res.message); });
+  });
+  modalEl.querySelectorAll('[data-cancel]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      if (current === 'phoneOtp' || current === 'emailOtp') {
+        post('/user/profile/cancel', {}).finally(function () { modal.hide(); });
+      } else { modal.hide(); }
+    });
+  });
+
+  var avatarInput = document.getElementById('avatarInput');
+  if (avatarInput) avatarInput.addEventListener('change', function () { if (avatarInput.files.length) document.getElementById('avatarForm').submit(); });
+
+  // A code is waiting (after sending, resending or a wrong code): reopen straight on its step.
+  if (pending) { modal.show(); pane(pending); fail(flashError); }
+});
+</script>
+
+<jsp:include page="../layout/footer.jsp" />

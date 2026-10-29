@@ -11,3 +11,4 @@ V20__email_otp.sql - Email OTP challenge table
 V21__account_security_version.sql - Account security version column
 V22__notification_email_outbox.sql - Notification email outbox table
 V23__phone_otp_verify_purpose.sql - Phone OTP verify purpose + target_phone column
+V24__users_phone_optional.sql - users.phone nullable (Google accounts link a phone later)
