@@ -23,6 +23,7 @@
         </div>
         <a class="btn ute-btn-ghost ute-btn-warm" href="${pageContext.request.contextPath}/user/shipment-fees/${shipment.id}">Xem phí hoàn và phụ thu &rarr;</a>
     </div>
+    <c:if test="${not empty notice}"><div class="alert alert-success mb-0" role="status"><c:out value="${notice}"/></div></c:if>
     <c:if test="${not empty error}"><div class="alert alert-danger mb-0" role="alert"><c:out value="${error}"/></div></c:if>
     <section class="ute-app-card ute-detail-top">
         <div>
@@ -52,9 +53,15 @@
         <c:choose>
             <c:when test="${shipment.currentStatus == 'WAITING_FOR_PAYMENT'}">
                 <p>Thanh toán cước trực tuyến để đơn chuyển sang chờ bàn giao. Đơn chưa thanh toán sẽ tự hủy khi quá hạn thanh toán.</p>
+                <c:if test="${vnpayEnabled}">
+                    <form method="post" action="${pageContext.request.contextPath}/user/shipments/${shipment.id}/vnpay" class="mb-2">
+                        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                        <button class="btn btn-ute-accent" type="submit">Thanh toán qua VNPay</button>
+                    </form>
+                </c:if>
                 <form method="post" action="${pageContext.request.contextPath}/user/shipments/${shipment.id}/confirm-payment">
                     <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
-                    <button class="btn btn-ute-accent" type="submit">Xác nhận thanh toán (demo)</button>
+                    <button class="btn ${vnpayEnabled ? 'btn-outline-secondary btn-sm' : 'btn-ute-accent'}" type="submit">Xác nhận thanh toán (demo)</button>
                 </form>
             </c:when>
             <c:when test="${shipment.currentStatus == 'WAITING_FOR_HANDOVER'}">
