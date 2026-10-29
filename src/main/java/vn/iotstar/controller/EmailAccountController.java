@@ -47,7 +47,7 @@ public class EmailAccountController {
             remember(session, accounts.register(form), "REGISTRATION");
             return "redirect:/auth/email/verify";
         } catch (RegistrationException exception) {
-            model.addAttribute("error", exception.getMessage());
+            RegistrationController.showUnder(errors, model, exception);
         } catch (DataIntegrityViolationException exception) {
             model.addAttribute("error", RegistrationController.DUPLICATE_ERROR);
         } finally {
