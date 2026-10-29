@@ -13,7 +13,6 @@ import org.springframework.security.web.context.HttpSessionSecurityContextReposi
 import org.springframework.stereotype.Component;
 import vn.iotstar.entity.User;
 import vn.iotstar.exception.GoogleAccountException;
-import vn.iotstar.exception.RegistrationException;
 import vn.iotstar.service.GoogleAccountService;
 
 import java.io.IOException;
@@ -58,12 +57,15 @@ public class GoogleLoginSuccessHandler implements AuthenticationSuccessHandler {
         request.getSession().removeAttribute(VerifiedGoogleIdentity.SESSION_ATTRIBUTE);
         clearAuthentication(request, response);
         try {
-            User account = accounts.findActiveAccount(identity).orElseGet(() -> accounts.register(identity));
-            sessionAuthenticator.signIn(account, request, response);
-            response.sendRedirect(request.getContextPath() + "/user/shipments/create");
-        } catch (RegistrationException exception) {
-            clearAuthentication(request, response);
-            response.sendRedirect(request.getContextPath() + "/login?googleError=email");
+            Optional<User> account = accounts.findActiveAccount(identity);
+            if (account.isPresent()) {
+                sessionAuthenticator.signIn(account.get(), request, response);
+                response.sendRedirect(request.getContextPath() + "/user/shipments/create");
+                return;
+            }
+            request.changeSessionId();
+            request.getSession().setAttribute(VerifiedGoogleIdentity.SESSION_ATTRIBUTE, identity);
+            response.sendRedirect(request.getContextPath() + "/auth/google/complete");
         } catch (GoogleAccountException exception) {
             reject(request, response);
         }

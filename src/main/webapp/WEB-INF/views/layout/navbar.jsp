@@ -36,7 +36,7 @@
                     <u:navlink href="/user/shipments">Đơn của tôi</u:navlink>
                     <u:navlink href="/user/incoming">Đơn đang đến</u:navlink>
                     <u:navlink href="/user/wallet">Ví</u:navlink>
-                    <u:navlink href="/user/profile">Tài khoản</u:navlink>
+                    <c:if test="${emailLoginEnabled}"><u:navlink href="/user/email">Email của tôi</u:navlink></c:if>
                 </c:if>
                 <c:if test="${pageContext.request.isUserInRole('HUB_STAFF')}">
                     <u:navlink href="/hub/pickups">Lấy hàng</u:navlink>
@@ -97,11 +97,9 @@
                             </c:when>
                             <c:otherwise>
                                 <div class="ute-user-pill">
-                                    <a class="ute-user-avatar-link" href="${ctx}/user/profile">
-                                        <span class="ute-user-avatar"><c:out value="${fn:toUpperCase(fn:substring(displayName, 0, 2))}" /></span>
-                                    </a>
+                                    <span class="ute-user-avatar"><c:out value="${fn:toUpperCase(fn:substring(displayName, 0, 2))}" /></span>
                                     <div class="ute-user-meta">
-                                        <a class="ute-user-name" href="${ctx}/user/profile" style="text-decoration: none;" title="<c:out value='${me.name}' />"><c:out value="${displayName}" /></a>
+                                        <span class="ute-user-name" title="<c:out value='${me.name}' />"><c:out value="${displayName}" /></span>
                                         <span class="ute-user-role">
                                             <c:choose>
                                                 <c:when test="${pageContext.request.isUserInRole('USER')}">Khách hàng</c:when>

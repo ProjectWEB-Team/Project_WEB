@@ -41,7 +41,7 @@ public class RegistrationController {
     private static final String REGISTRATION = "REGISTRATION";
     private static final String LOGIN = "LOGIN";
     private static final String RESET = "PASSWORD_RESET";
-    static final String DUPLICATE_ERROR = "Thông tin đăng ký đã được sử dụng. Hãy kiểm tra lại số điện thoại, email và tên đăng nhập.";
+    static final String DUPLICATE_ERROR = "Số điện thoại, email hoặc tên đăng nhập đã được sử dụng. Nếu bạn đã có tài khoản, hãy đăng nhập.";
     static final String CLOSED_NOTICE = "Đăng ký và đăng nhập bằng mã điện thoại đang tạm đóng. Vui lòng dùng tài khoản đã có.";
     private static final String VERIFY_ERROR = "Mã không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra hoặc yêu cầu mã mới.";
 
@@ -102,7 +102,7 @@ public class RegistrationController {
             return "redirect:/auth/verify-phone";
         } catch (RegistrationException exception) {
             // Service messages are written to be safe to show (no secrets, no codes).
-            showUnder(errors, model, exception);
+            model.addAttribute("error", exception.getMessage());
             return "auth/register";
         } catch (DataIntegrityViolationException exception) {
             model.addAttribute("error", DUPLICATE_ERROR);
@@ -110,12 +110,6 @@ public class RegistrationController {
         } finally {
             form.setPassword("");
         }
-    }
-
-    /** Shows a message under its form field when the service named one, otherwise as the general alert. */
-    static void showUnder(BindingResult errors, Model model, RegistrationException exception) {
-        if (exception.getField() != null) errors.rejectValue(exception.getField(), "registration", exception.getMessage());
-        else model.addAttribute("error", exception.getMessage());
     }
 
     @GetMapping("/auth/phone-login")

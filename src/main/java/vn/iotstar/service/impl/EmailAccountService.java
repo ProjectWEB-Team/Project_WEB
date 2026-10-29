@@ -47,8 +47,7 @@ public class EmailAccountService {
     }
 
     public Challenge register(RegisterUserRequest request) {
-        if (request == null || !validator.validate(request).isEmpty()) throw invalid();
-        if (!validPassword(request.getPassword())) throw RegistrationException.weakPassword();
+        if (request == null || !validator.validate(request).isEmpty() || !validPassword(request.getPassword())) throw invalid();
         String email = normalizeEmail(request.getEmail());
         String phone = VietnamPhoneNormalizer.normalize(request.getPhone());
         User user = users.findByEmailForUpdate(email).orElse(null);
@@ -56,13 +55,12 @@ public class EmailAccountService {
             if (!customer(user) || !"INACTIVE".equals(user.getStatus()) || user.getGoogleSubject() != null
                     || user.isEmailVerified() || user.isPhoneVerified() || !user.getPhone().equals(phone)
                     || !user.getUsername().equals(request.getUsername())
-                    || !encoder.matches(request.getPassword(), user.getPassword())) throw RegistrationException.emailTaken();
+                    || !encoder.matches(request.getPassword(), user.getPassword())) throw invalid();
             EmailOtpChallenge pending = challenges.findByUserIdForUpdate(user.getId()).orElseThrow(this::invalid);
             if (!"REGISTRATION".equals(pending.getPurpose()) || pending.getConsumedAt() != null) throw invalid();
             return issue(user, "REGISTRATION", pending);
         }
-        if (users.existsByPhone(phone)) throw RegistrationException.phoneTaken();
-        if (users.existsByUsername(request.getUsername())) throw RegistrationException.usernameTaken();
+        if (users.existsByUsername(request.getUsername()) || users.existsByPhone(phone)) throw invalid();
         user = users.saveAndFlush(User.registerPending(request.getUsername(), encoder.encode(request.getPassword()),
                 request.getFullName().strip(), phone, email, clock.instant()));
         return issue(user, "REGISTRATION", null);
