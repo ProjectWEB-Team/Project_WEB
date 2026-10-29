@@ -82,7 +82,7 @@ public class ManagerOperationsRepository {
                 summary = "Hàng thất lạc cần điều tra";
             }
             case "HANDOVER" -> {
-                select = "select e.id, null, e.fromHub.id from Handover e where (e.fromHub.id in :hubIds or e.toHub.id in :hubIds) "
+                select = "select e.id, null, e.fromHub.id, e.status, e.fromHub.name, e.toHub.name from Handover e where (e.fromHub.id in :hubIds or e.toHub.id in :hubIds) "
                         + "and e.status in ('PENDING_ACCEPTANCE', 'ACCEPTED', 'IN_TRANSIT')";
                 summary = "Bàn giao chờ nhận";
             }
@@ -92,7 +92,17 @@ public class ManagerOperationsRepository {
                 .setParameter("hubIds", hubIds).setMaxResults(id == null ? 25 : 1);
         if (id != null) query.setParameter("id", id);
         return query.getResultList().stream().map(row -> new OperationalWorkItemResponse(kind, (Long) row[0],
-                (Long) row[1], (Long) row[2], summary)).toList();
+                (Long) row[1], (Long) row[2], "HANDOVER".equals(kind) ? handoverSummary(row) : summary)).toList();
+    }
+
+    /** One line that says where the handover is and who must act next. */
+    private static String handoverSummary(Object[] row) {
+        String route = row[4] + " → " + row[5];
+        return switch (String.valueOf(row[3])) {
+            case "PENDING_ACCEPTANCE" -> "Bàn giao " + route + ": chờ tài xế nhận";
+            case "ACCEPTED" -> "Bàn giao " + route + ": đã nhận, chờ xuất phát";
+            default -> "Bàn giao " + route + ": đang vận chuyển, chờ hub đích nhận";
+        };
     }
 
     public long countOutboundContainers(Collection<Long> hubIds) {
