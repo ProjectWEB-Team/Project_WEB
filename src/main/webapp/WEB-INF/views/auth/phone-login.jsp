@@ -7,6 +7,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Đăng nhập bằng điện thoại | UTEExpress</title>
+    <link rel="icon" type="image/png" href="${pageContext.request.contextPath}/assets/images/favicon.png">
+    <link rel="apple-touch-icon" href="${pageContext.request.contextPath}/assets/images/uteexpress-square-logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="${pageContext.request.contextPath}/assets/css/ute-express.css" rel="stylesheet">

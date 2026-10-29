@@ -42,7 +42,11 @@ Thumbs.db
 *.jpeg
 *.svg
 !src/main/webapp/assets/images/uteexpress-logo.svg
+!src/main/webapp/assets/images/uteexpress-square-logo.png
+!src/main/webapp/assets/images/favicon.png
+!src/main/resources/static/favicon.ico
 *.ico
+!src/main/resources/static/favicon.ico
 *.pdf
 *.mp4
 
