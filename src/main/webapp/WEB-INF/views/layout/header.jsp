@@ -8,6 +8,10 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title><c:out value="${pageTitle}" default="UTEExpress - Hệ thống Quản lý Chuỗi Giao nhận Logistics" /></title>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="${pageContext.request.contextPath}/assets/images/favicon.png">
+    <link rel="apple-touch-icon" href="${pageContext.request.contextPath}/assets/images/uteexpress-square-logo.png">
+
     <!-- Google Fonts: Geist -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

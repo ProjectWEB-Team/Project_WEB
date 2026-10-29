@@ -6,6 +6,7 @@
      Pages with their own <head> (no layout/header.jsp) still get the whole skin from here. --%>
 <c:set var="ctx" value="${pageContext.request.contextPath}" />
 <c:set var="me" value="${pageContext.request.userPrincipal}" />
+<c:set var="displayName" value="${not empty userDisplayName ? userDisplayName : (not empty me ? me.name : '')}" />
 <c:set var="rail" value="${pageContext.request.isUserInRole('HUB_STAFF') or pageContext.request.isUserInRole('MANAGER') or pageContext.request.isUserInRole('ADMIN')}" />
 <c:if test="${empty uteAssetsLoaded}">
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -73,9 +74,9 @@
                             <c:when test="${rail}">
                                 <div class="ute-sidebar-account">
                                     <div class="ute-sidebar-account-user">
-                                        <span class="ute-user-avatar${pageContext.request.isUserInRole('HUB_STAFF') ? '' : ' is-dark'}"><c:out value="${fn:toUpperCase(fn:substring(me.name, 0, 2))}" /></span>
+                                        <span class="ute-user-avatar${pageContext.request.isUserInRole('HUB_STAFF') ? '' : ' is-dark'}"><c:out value="${fn:toUpperCase(fn:substring(displayName, 0, 2))}" /></span>
                                         <div class="ute-user-meta">
-                                            <span class="ute-user-name"><c:out value="${me.name}" /></span>
+                                            <span class="ute-user-name" title="<c:out value='${me.name}' />"><c:out value="${displayName}" /></span>
                                             <span class="ute-user-role">
                                                 <c:choose>
                                                     <c:when test="${pageContext.request.isUserInRole('ADMIN')}">Quản trị viên hệ thống</c:when>
@@ -96,9 +97,9 @@
                             </c:when>
                             <c:otherwise>
                                 <div class="ute-user-pill">
-                                    <span class="ute-user-avatar"><c:out value="${fn:toUpperCase(fn:substring(me.name, 0, 2))}" /></span>
+                                    <span class="ute-user-avatar"><c:out value="${fn:toUpperCase(fn:substring(displayName, 0, 2))}" /></span>
                                     <div class="ute-user-meta">
-                                        <span class="ute-user-name"><c:out value="${me.name}" /></span>
+                                        <span class="ute-user-name" title="<c:out value='${me.name}' />"><c:out value="${displayName}" /></span>
                                         <span class="ute-user-role">
                                             <c:choose>
                                                 <c:when test="${pageContext.request.isUserInRole('USER')}">Khách hàng</c:when>
