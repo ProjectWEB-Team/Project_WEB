@@ -1,0 +1,14 @@
+# Phase 05 Migration Manifest
+# Migrations applied in Phase 05 (Intake, Route, Custody, Finance alignment + OTP)
+
+V14__phase_05_intake_service_code.sql - Intake service code schema
+V15__phase_05_route_key_alignment.sql - Route key alignment
+V16__phase_05_custody_alignment.sql - Custody alignment
+V17__phase_05_finance_alignment.sql - Finance alignment
+V18__otp_password_reset_purpose.sql - OTP password reset purpose extension
+V19__optimistic_locking_money_records.sql - Optimistic locking for money records
+V20__email_otp.sql - Email OTP challenge table
+V21__account_security_version.sql - Account security version column
+V22__notification_email_outbox.sql - Notification email outbox table
+V23__phone_otp_verify_purpose.sql - Phone OTP verify purpose + target_phone column
+V24__users_phone_optional.sql - users.phone nullable (Google accounts link a phone later)

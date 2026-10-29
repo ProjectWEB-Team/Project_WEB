@@ -21,3 +21,4 @@ db/migration/V19__optimistic_locking_money_records.sql
 db/migration/V20__email_otp.sql
 db/migration/V21__account_security_version.sql
 db/migration/V22__notification_email_outbox.sql
+db/migration/V23__phone_otp_verify_purpose.sql
