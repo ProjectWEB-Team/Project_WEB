@@ -76,6 +76,14 @@ class EmailAccountServiceTest {
         assertThat(challenge.getFailedAttempts()).isEqualTo(5);
         assertThat(service.verify(challenge.getId(), "123456", "REGISTRATION", null, null)).isFalse();
     }
+    @Test void checkingACodeDoesNotConsumeItButWrongCodesStillCount() {
+        User user = pending(); user.verifyEmail(NOW); var challenge = challenge(user, "PASSWORD_RESET");
+        assertThat(service.check(challenge.getId(), "654321", "PASSWORD_RESET", null)).isFalse();
+        assertThat(challenge.getFailedAttempts()).isEqualTo(1);
+        assertThat(service.check(challenge.getId(), "123456", "PASSWORD_RESET", null)).isTrue();
+        assertThat(service.check(challenge.getId(), "123456", "PASSWORD_RESET", null)).isTrue();
+        assertThat(service.verify(challenge.getId(), "123456", "PASSWORD_RESET", null, "NewPassword123!")).isTrue();
+    }
     @Test void expiryAndWrongPurposeCannotActivate() {
         var challenge = challenge(pending(), "REGISTRATION");
         assertThat(service.verify(challenge.getId(), "123456", "PASSWORD_RESET", null, "NewPass123!")).isFalse();

@@ -10,37 +10,34 @@
     <section class="ute-home-hero" aria-labelledby="hero-title">
         <div class="ute-wrap">
             <div>
-                <h1 id="hero-title">Gửi hàng đi mọi tỉnh thành, theo dõi từng bước</h1>
-                <p class="ute-lead">UTEExpress là dịch vụ giao nhận hàng. Bạn tạo đơn trên web, shipper đến lấy hoặc bạn mang ra bưu cục, rồi theo dõi hàng cho đến khi tới tay người nhận.</p>
-                <div class="ute-home-actions">
-                    <div class="ute-action-card">
-                        <h2>Tra cứu vận đơn</h2>
-                        <form class="ute-search" action="${ctx}/tracking" method="get" role="search">
-                            <label class="visually-hidden" for="hero-code">Mã vận đơn</label>
-                            <input id="hero-code" type="text" name="code" placeholder="Nhập mã, ví dụ UTX-20261027-0001" maxlength="50" autocomplete="off" required aria-describedby="hero-help">
-                            <button type="submit" class="btn btn-ute-accent">Tra cứu</button>
-                        </form>
-                        <p id="hero-help">Mã nằm trên biên nhận hoặc tin nhắn xác nhận. Không cần đăng nhập.</p>
-                    </div>
-                    <div class="ute-action-card">
-                        <h2>Muốn gửi hàng?</h2>
-                        <div class="d-flex flex-wrap gap-2"><a class="btn btn-ute-accent" href="${ctx}/user/shipments/create">Tạo đơn gửi hàng</a><a class="btn btn-outline-secondary" href="${ctx}/pricing">Xem bảng giá</a></div>
-                        <p>Báo giá hiện ngay trước khi bạn xác nhận. Cần đăng nhập để tạo đơn; xem bảng giá thì không cần.</p>
+                <p class="ute-hero-tag"><span aria-hidden="true"></span>UTE<b>Express</b></p>
+                <h1 id="hero-title">Gửi hàng toàn quốc, theo dõi từng bước</h1>
+                <div class="ute-action-card">
+                    <h2>Tra cứu vận đơn</h2>
+                    <form class="ute-search" action="${ctx}/tracking" method="get" role="search">
+                        <label class="visually-hidden" for="hero-code">Mã vận đơn</label>
+                        <input id="hero-code" type="text" name="code" placeholder="Nhập mã vận đơn (VD: UTX-20261027-0001)" maxlength="50" autocomplete="off" required>
+                        <button type="submit" class="btn btn-ute-accent">Tra cứu</button>
+                    </form>
+                    <hr>
+                    <div class="ute-action-row">
+                        <h2>Bạn muốn gửi hàng?</h2>
+                        <div class="d-flex flex-wrap gap-3"><a class="btn btn-ute-accent" href="${ctx}/user/shipments/create">Tạo đơn gửi hàng</a><a class="btn btn-outline-secondary" href="${ctx}/pricing">Xem bảng giá</a></div>
                     </div>
                 </div>
             </div>
             <div class="ute-example" aria-label="Ví dụ trang theo dõi">
-                <p class="ute-example-tag">Ví dụ minh họa: trang theo dõi một đơn</p>
                 <div class="ute-example-top">
-                    <p class="ute-example-code">UTX-20261027-0001</p>
+                    <p class="ute-example-tag">Vận đơn minh họa</p>
                     <span class="badge badge-in-transit">Đang trung chuyển</span>
                 </div>
-                <p class="mb-3 text-muted">Dự kiến giao trước 31/10/2026</p>
+                <p class="ute-example-code">UTX-20261027-0001</p>
+                <p class="ute-example-eta">Dự kiến giao trước 31/10/2026</p>
                 <ol class="ute-timeline">
                     <li><strong>Đã lấy hàng</strong><span>27/10 09:12 · Bưu cục Thủ Đức</span></li>
                     <li><strong>Tại bưu cục gốc</strong><span>27/10 11:40 · Hub TP. Hồ Chí Minh</span></li>
                     <li class="is-now"><strong>Đang trung chuyển</strong><span>27/10 14:40 · Chạy liên tỉnh</span></li>
-                    <li><strong>Giao tận tay</strong><span>Dự kiến trước 31/10</span></li>
+                    <li class="is-next"><strong>Giao tận tay</strong><span>Dự kiến trước 31/10</span></li>
                 </ol>
                 <dl class="ute-example-facts">
                     <div><dt>Gửi từ</dt><dd>Thủ Đức, TP. Hồ Chí Minh</dd></div>
@@ -67,7 +64,6 @@
     <section class="ute-home-sec alt" aria-labelledby="how-title">
         <div class="ute-wrap">
             <h2 id="how-title">Gửi hàng gồm 4 bước</h2>
-            <p class="ute-sec-lead">Bấm từng bước để xem bạn làm gì và hệ thống làm gì.</p>
             <div class="ute-tabs" data-tabs>
                 <div class="ute-tablist" role="tablist" aria-label="Các bước gửi hàng">
                     <button type="button" role="tab" id="tab-1" aria-controls="panel-1" aria-selected="true"><span>1</span> Tạo đơn</button>
@@ -78,19 +74,18 @@
 
                 <div class="ute-tabpanel" role="tabpanel" id="panel-1" aria-labelledby="tab-1">
                     <div>
-                        <h3>Điền thông tin và xem giá ngay</h3>
+                        <h3>Tạo đơn, xem giá ngay</h3>
                         <ul class="ute-ticks">
-                            <li>Người gửi và người nhận: chọn tỉnh, phường/xã từ danh sách có sẵn.</li>
-                            <li>Kiện hàng: khối lượng, kích thước, giá trị khai báo, tiền thu hộ COD nếu có.</li>
-                            <li>Chọn dịch vụ Tiêu chuẩn, Nhanh hoặc Hỏa tốc.</li>
-                            <li>Bấm "Xem báo giá": cước hiện ngay trước khi bạn xác nhận.</li>
+                            <li>Điền địa chỉ gửi và nhận.</li>
+                            <li>Nhập thông tin kiện hàng và COD nếu có.</li>
+                            <li>Chọn dịch vụ: Tiêu chuẩn, Nhanh hoặc Hỏa tốc.</li>
+                            <li>Xem báo giá và xác nhận đơn.</li>
                         </ul>
                         <a class="btn btn-ute-accent mt-3" href="${ctx}/user/shipments/create">Tạo đơn gửi hàng</a>
                     </div>
                     <div class="ute-mock" aria-label="Ví dụ báo giá">
-                        <p class="ute-example-tag">Ví dụ minh họa: màn báo giá</p>
+                        <p class="ute-example-tag">Chi tiết cước phí <span class="badge badge-in-transit">Tiêu chuẩn</span></p>
                         <div class="ute-mock-row"><span>Cước vận chuyển</span><b>34.000 đ</b></div>
-                        <div class="ute-mock-row"><span>Phụ phí khối lượng</span><b>0 đ</b></div>
                         <div class="ute-mock-row"><span>Phí thu hộ COD</span><b>4.000 đ</b></div>
                         <div class="ute-mock-total"><span>Tổng cước</span><b>38.000 đ</b></div>
                     </div>
@@ -191,9 +186,8 @@
     <section id="faq" class="ute-home-sec alt" aria-labelledby="faq-title">
         <div class="ute-wrap">
             <h2 id="faq-title">Câu hỏi thường gặp</h2>
-            <p class="ute-sec-lead">&nbsp;</p>
             <div class="ute-faq-list">
-                <details><summary>Tôi tra cứu đơn bằng cách nào?</summary><p>Nhập mã vận đơn có dạng UTX-… vào ô tra cứu. Bạn không cần đăng nhập và sẽ thấy hành trình của đơn.</p></details>
+                <details><summary>Tra cứu vận đơn như thế nào?</summary><p>Nhập mã vận đơn có dạng UTX-… vào ô tra cứu. Bạn không cần đăng nhập và sẽ thấy hành trình của đơn.</p></details>
                 <details><summary>Cước phí tính thế nào?</summary><p>Hệ thống báo giá theo dịch vụ, vùng, khối lượng và kích thước. Bạn thấy giá trước khi xác nhận.</p></details>
                 <details><summary>Đơn chờ thanh toán có hạn không?</summary><p>Có. Đơn thanh toán trực tuyến quá hạn sẽ tự hủy, và trang chi tiết đơn báo rõ lý do.</p></details>
                 <details><summary>Thu hộ COD hoạt động ra sao?</summary><p>Shipper thu tiền khi giao. Quản lý đối soát theo ca rồi tiền về ví của bạn.</p></details>
@@ -202,13 +196,14 @@
         </div>
     </section>
 
-    <section class="ute-home-cta" aria-labelledby="cta-title">
-        <div class="ute-wrap">
-            <div>
-                <h2 id="cta-title">Sẵn sàng gửi đơn đầu tiên?</h2>
-                <p>Đăng ký, xem báo giá và tạo đơn ngay trên web.</p>
+    <!-- BANNER KÊU GỌI HÀNH ĐỘNG (FIGMA cta-section: 1920x187) -->
+    <section class="ute-footer-cta-section" aria-labelledby="cta-title">
+        <div class="ute-footer-cta-content">
+            <div class="ute-footer-cta-text">
+                <h2 id="cta-title" class="ute-footer-cta-title">Sẵn sàng gửi đơn đầu tiên?</h2>
+                <p class="ute-footer-cta-desc">Tạo đơn, xem cước và theo dõi hàng hóa ngay trên web.</p>
             </div>
-            <a class="btn btn-ute-accent" href="${ctx}/user/shipments/create">Tạo đơn gửi hàng</a>
+            <a class="ute-footer-cta-btn" href="${ctx}/user/shipments/create">Tạo đơn gửi hàng</a>
         </div>
     </section>
 

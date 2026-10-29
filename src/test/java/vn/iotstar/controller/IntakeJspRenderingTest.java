@@ -91,7 +91,7 @@ class IntakeJspRenderingTest {
     void senderListRendersRowsAndEscapesNames() throws Exception {
         when(shipments.listMine(eq(null), anyInt())).thenReturn(new PageImpl<>(List.of(new ShipmentSummaryResponse(42L,
                 "UTX-1", "<b>Receiver</b>", ShipmentStatus.WAITING_FOR_HANDOVER, new BigDecimal("25000"), "UNPAID", AT))));
-        assertThat(html("/user/shipments")).contains("UTX-1", "&lt;b&gt;Receiver&lt;/b&gt;", "25,000", "/user/shipments/42");
+        assertThat(html("/user/shipments")).contains("UTX-1", "&lt;b&gt;Receiver&lt;/b&gt;", "25.000 đ", "/user/shipments/42");
     }
 
     @Test

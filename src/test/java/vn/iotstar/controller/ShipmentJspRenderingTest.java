@@ -129,7 +129,7 @@ class ShipmentJspRenderingTest {
                 "id=\"shipment-create-button\"", "Owner &lt;b&gt;example&lt;/b&gt;",
                 "2 Receiver Street &amp; Annex")
                 .doesNotContain("Owner <b>example</b>");
-        assertThat(quote.body()).contains("35.000đ");
+        assertThat(quote.body()).contains("35.000 đ");
         assertThat(quote.body()).contains("class=\"nav-link active\" href=\"/user/shipments/create\" aria-current=\"page\"")
                 .doesNotContain("class=\"nav-link active\" href=\"/user/shipments\"");
         assertThat(quote.body()).containsPattern("<option[^>]*value=\"79\"[^>]*selected=\"selected\"")

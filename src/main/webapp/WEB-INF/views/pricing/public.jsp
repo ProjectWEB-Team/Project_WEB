@@ -4,12 +4,19 @@
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <c:set var="pageTitle" value="Bảng giá cước | UTEExpress" scope="request" />
 <jsp:include page="/WEB-INF/views/layout/header.jsp" />
-<main class="container ute-pricing">
-    <h1>Bảng giá cước</h1>
-    <p class="ute-lead">Cước tính theo dịch vụ, tuyến (miền gửi đến miền nhận) và khối lượng. Giá dưới đây là giá đang áp dụng. Giá chính thức hiện khi bạn tạo đơn.</p>
+<main class="ute-home ute-pricing flex-grow-1">
+    <div class="ute-page-hero">
+        <div class="ute-wrap">
+            <p class="ute-hero-tag"><span aria-hidden="true"></span>UTE<b>Express</b></p>
+            <h1>Bảng giá cước</h1>
+            <p class="ute-lead">Cước tính theo dịch vụ, tuyến (miền gửi đến miền nhận) và khối lượng. Giá dưới đây là giá đang áp dụng. Giá chính thức hiện khi bạn tạo đơn.</p>
+        </div>
+    </div>
 
+    <div class="ute-wrap">
     <section class="ute-estimate" aria-labelledby="est-title">
         <h2 id="est-title">Ước tính cước nhanh</h2>
+        <p class="ute-estimate-sub">Điền thông tin để xem cước tham khảo trước khi tạo đơn.</p>
         <form method="get" action="${pageContext.request.contextPath}/pricing" class="ute-estimate-form">
             <label>Dịch vụ
                 <select name="serviceCode">
@@ -31,11 +38,14 @@
                 </select></label>
             <label>Khối lượng (gram)
                 <input type="number" name="weightGrams" min="1" max="1000000" inputmode="numeric" required value="<c:out value='${empty param.weightGrams ? 500 : param.weightGrams}'/>"></label>
-            <label>Giá trị khai báo (đ, nếu có)
-                <input type="number" name="declaredValue" min="0" inputmode="numeric" value="<c:out value='${param.declaredValue}'/>"></label>
-            <label>Tiền thu hộ COD (đ, nếu có)
-                <input type="number" name="codAmount" min="0" inputmode="numeric" value="<c:out value='${param.codAmount}'/>"></label>
-            <button type="submit" class="btn btn-ute-accent">Ước tính</button>
+            <label>Giá trị khai báo (đ)
+                <input type="number" name="declaredValue" min="0" inputmode="numeric" placeholder="Nếu có" value="<c:out value='${param.declaredValue}'/>"></label>
+            <label>Tiền thu hộ COD (đ)
+                <input type="number" name="codAmount" min="0" inputmode="numeric" placeholder="Nếu có" value="<c:out value='${param.codAmount}'/>"></label>
+            <div class="ute-estimate-action">
+                <p>Cước tham khảo tự động theo biểu phí niêm yết. Cước chính thức được khóa khi xác nhận tạo vận đơn.</p>
+                <button type="submit" class="btn btn-ute-accent">Ước tính cước</button>
+            </div>
         </form>
         <c:if test="${asked}">
             <div class="ute-estimate-result" role="status" aria-live="polite">
@@ -52,16 +62,17 @@
         </c:if>
     </section>
 
-    <section aria-labelledby="table-title">
+    <section class="ute-price-tables" aria-labelledby="table-title">
         <h2 id="table-title">Bảng giá đang áp dụng</h2>
+        <p class="ute-estimate-sub">Giá hiển thị khi tạo đơn là giá chính thức. Bảng dưới để tham khảo trước.</p>
         <c:choose>
             <c:when test="${empty policies}"><p class="text-muted">Chưa có bảng giá nào đang áp dụng.</p></c:when>
             <c:otherwise>
                 <c:forEach items="${['STANDARD', 'FAST', 'EXPRESS']}" var="svc">
-                    <h3 class="ute-svc-title"><c:choose><c:when test="${svc == 'STANDARD'}">Dịch vụ Tiêu chuẩn</c:when><c:when test="${svc == 'FAST'}">Dịch vụ Nhanh</c:when><c:otherwise>Dịch vụ Hỏa tốc</c:otherwise></c:choose></h3>
+                    <h3 class="ute-svc-title"><c:choose><c:when test="${svc == 'STANDARD'}">Dịch vụ Tiêu chuẩn</c:when><c:when test="${svc == 'FAST'}">Dịch vụ Nhanh</c:when><c:otherwise>Dịch vụ Hỏa tốc</c:otherwise></c:choose><span><c:choose><c:when test="${svc == 'STANDARD'}">Nội địa · 3–5 ngày</c:when><c:when test="${svc == 'FAST'}">Nội địa · 1–2 ngày</c:when><c:otherwise>Nội địa · Trong ngày</c:otherwise></c:choose></span></h3>
                     <div class="table-responsive">
                         <table class="table">
-                            <thead><tr><th>Tuyến</th><th>Khối lượng đầu</th><th>Giá khởi điểm</th><th>Mỗi bước vượt</th><th>Phí bảo hiểm</th><th>Phí thu hộ COD</th></tr></thead>
+                            <thead><tr><th>Tuyến</th><th>KL đầu</th><th>Giá khởi điểm</th><th>Mỗi bước vượt</th><th>Phí bảo hiểm</th><th>Phí thu hộ COD</th></tr></thead>
                             <tbody>
                             <c:forEach items="${policies}" var="p">
                                 <c:if test="${p.serviceCode == svc}">
@@ -69,9 +80,9 @@
                                     <td><strong><c:forEach items="${[p.fromRegion, p.toRegion]}" var="r" varStatus="st"><c:choose><c:when test="${r == 'NORTH'}">Bắc</c:when><c:when test="${r == 'CENTRAL'}">Trung</c:when><c:when test="${r == 'SOUTH'}">Nam</c:when><c:otherwise><c:out value="${r}"/></c:otherwise></c:choose><c:if test="${st.first}"> → </c:if></c:forEach></strong></td>
                                     <td>đến <fmt:formatNumber value="${p.baseWeightG}" pattern="#,##0" var="f_baseWeightG"/>${fn:replace(f_baseWeightG, ',', '.')} g</td>
                                     <td><fmt:formatNumber value="${p.basePrice}" pattern="#,##0" var="f_basePrice"/>${fn:replace(f_basePrice, ',', '.')} đ</td>
-                                    <td>+<fmt:formatNumber value="${p.extraWeightPrice}" pattern="#,##0" var="f_extraWeightPrice"/>${fn:replace(f_extraWeightPrice, ',', '.')} đ mỗi <fmt:formatNumber value="${p.extraWeightStepG}" pattern="#,##0" var="f_extraWeightStepG"/>${fn:replace(f_extraWeightStepG, ',', '.')} g</td>
-                                    <td><c:out value="${empty p.insuranceRatePercent ? 0 : p.insuranceRatePercent}"/>% giá trị khai báo</td>
-                                    <td><c:out value="${empty p.codFeePercent ? 0 : p.codFeePercent}"/>% tiền thu hộ</td>
+                                    <td>+<fmt:formatNumber value="${p.extraWeightPrice}" pattern="#,##0" var="f_extraWeightPrice"/>${fn:replace(f_extraWeightPrice, ',', '.')} đ / <fmt:formatNumber value="${p.extraWeightStepG}" pattern="#,##0" var="f_extraWeightStepG"/>${fn:replace(f_extraWeightStepG, ',', '.')} g</td>
+                                    <td><fmt:formatNumber value="${empty p.insuranceRatePercent ? 0 : p.insuranceRatePercent}" pattern="0.00"/>% giá trị khai báo</td>
+                                    <td><fmt:formatNumber value="${empty p.codFeePercent ? 0 : p.codFeePercent}" pattern="0.00"/>% tiền thu hộ</td>
                                 </tr>
                                 </c:if>
                             </c:forEach>
@@ -81,8 +92,11 @@
                 </c:forEach>
             </c:otherwise>
         </c:choose>
-        <p class="text-muted">Cước tính theo khối lượng thực tế, làm tròn đến đồng. Có thể có phụ phí khi bưu cục đo lại kiện hàng. Bảng giá có thể thay đổi, giá chính thức là giá hiển thị khi bạn xác nhận tạo đơn.</p>
-        <a class="btn btn-ute-accent" href="${pageContext.request.contextPath}/user/shipments/create">Tạo đơn gửi hàng</a>
+        <div class="ute-price-note">
+            <div><b>Lưu ý</b><p>Cước tính theo khối lượng thực tế, làm tròn đến đồng. Có thể có phụ phí khi bưu cục đo lại kiện hàng. Bảng giá có thể thay đổi, giá chính thức là giá hiển thị khi bạn xác nhận tạo đơn.</p></div>
+            <a class="btn btn-ute-accent" href="${pageContext.request.contextPath}/user/shipments/create">Tạo đơn gửi hàng</a>
+        </div>
     </section>
+    </div>
 </main>
 <jsp:include page="/WEB-INF/views/layout/footer.jsp" />

@@ -10,54 +10,53 @@
 </head>
 <body class="bg-light">
 <jsp:include page="/WEB-INF/views/layout/navbar.jsp" />
-<main class="container py-4">
-    <h1 class="h3">Phân loại tại hub</h1>
-    <p class="text-muted">Nhận hàng vào hub của bạn, rồi để hệ thống chỉ ra hub kế tiếp theo tuyến.</p>
+<main class="ute-staff flex-grow-1">
+    <h1>Phân loại &amp; Tiếp nhận kiện hàng tại Hub</h1>
+    <p class="ute-staff-sub">Cân đo khối lượng, kích thước thực tế khi nhận kiện vào Hub và tự động xác định Hub trung chuyển kế tiếp theo quy tắc tuyến.</p>
     <c:if test="${not empty operationMessage}"><div class="alert alert-info"><c:out value="${operationMessage}"/></div></c:if>
     <c:if test="${not empty sortingDecision}">
-        <div class="alert alert-success">
-            Hub kế tiếp: <strong><c:out value="${sortingDecision.nextHubCode}"/></strong>
-            <span class="ms-2"><c:out value="${sortingDecision.destinationGrouping}"/></span>
-            <span class="ms-2">Sẵn sàng đóng bao: <c:out value="${sortingDecision.containerReady}"/></span>
+        <div class="ute-result-banner">
+            <strong>&#10003; Hub kế tiếp: <c:out value="${sortingDecision.nextHubCode}"/></strong>
+            <span>Nhóm đích: <c:out value="${sortingDecision.destinationGrouping}"/> &middot; Sẵn sàng đóng bao: <c:out value="${sortingDecision.containerReady ? 'CÓ' : 'CHƯA'}"/></span>
         </div>
     </c:if>
-    <div class="row g-3">
-        <section class="col-md-6"><div class="card"><div class="card-body">
-            <h2 class="h5">Nhận hàng vào hub</h2>
-            <form method="post" action="${pageContext.request.contextPath}/hub/inbound">
-                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-                <label class="form-label" for="inboundShipmentId">ID đơn</label>
-                <input id="inboundShipmentId" name="shipmentId" type="number" min="1" class="form-control" required>
-                <p class="text-muted mt-2">Với đơn khách tự mang tới: quét kiện và nhập số đo thực tế. Tiền mặt gồm cước chưa trả và phụ thu (nếu khách đồng ý).</p>
-                <label class="form-label" for="trackingNumber">Mã vận đơn trên kiện</label>
-                <input id="trackingNumber" name="trackingNumber" class="form-control">
-                <label class="form-label" for="actualWeightGrams">Khối lượng thực tế (g)</label>
-                <input id="actualWeightGrams" name="actualWeightGrams" type="number" min="1" class="form-control">
-                <label class="form-label" for="actualLengthCm">Dài (cm)</label>
-                <input id="actualLengthCm" name="actualLengthCm" type="number" min="1" class="form-control">
-                <label class="form-label" for="actualWidthCm">Rộng (cm)</label>
-                <input id="actualWidthCm" name="actualWidthCm" type="number" min="1" class="form-control">
-                <label class="form-label" for="actualHeightCm">Cao (cm)</label>
-                <input id="actualHeightCm" name="actualHeightCm" type="number" min="1" class="form-control">
-                <label class="form-label" for="cashReceived">Tiền mặt đã nhận (VND)</label>
-                <input id="cashReceived" name="cashReceived" type="number" min="0" step="1" class="form-control">
-                <label class="form-label" for="surchargeDecision">Lựa chọn của người gửi nếu phát sinh phụ thu</label>
+    <section class="ute-staff-card">
+        <div>
+            <h2 class="ute-staff-h2">1. Nhận kiện hàng vào Hub &amp; Cân đo khối lượng thực tế</h2>
+            <p class="ute-staff-note">Với đơn khách tự mang tới quầy hoặc Shipper lấy về: quét mã vận đơn, nhập số đo thực tế và ghi nhận tiền mặt thu tại quầy (nếu có).</p>
+        </div>
+        <form class="ute-form-grid" method="post" action="${pageContext.request.contextPath}/hub/inbound">
+            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+            <div><label for="inboundShipmentId">ID đơn hàng</label><input id="inboundShipmentId" name="shipmentId" type="number" min="1" class="form-control" required></div>
+            <div><label for="trackingNumber">Mã vận đơn trên kiện</label><input id="trackingNumber" name="trackingNumber" class="form-control"></div>
+            <div><label for="actualWeightGrams">Khối lượng thực tế (g)</label><input id="actualWeightGrams" name="actualWeightGrams" type="number" min="1" class="form-control"></div>
+            <div><label for="actualLengthCm">Dài (cm)</label><input id="actualLengthCm" name="actualLengthCm" type="number" min="1" class="form-control"></div>
+            <div><label for="actualWidthCm">Rộng (cm)</label><input id="actualWidthCm" name="actualWidthCm" type="number" min="1" class="form-control"></div>
+            <div><label for="actualHeightCm">Cao (cm)</label><input id="actualHeightCm" name="actualHeightCm" type="number" min="1" class="form-control"></div>
+            <div><label for="cashReceived">Tiền mặt đã nhận tại quầy (VND)</label><input id="cashReceived" name="cashReceived" type="number" min="0" step="1" class="form-control"></div>
+            <div>
+                <label for="surchargeDecision">Xử lý nếu phát sinh phụ thu vượt cân</label>
                 <select id="surchargeDecision" name="surchargeDecision" class="form-select">
-                    <option value="">Chưa quyết định</option><option value="ACCEPT">Đồng ý và trả tiền mặt</option>
+                    <option value="">Chưa quyết định</option><option value="ACCEPT">Đồng ý và trả tiền mặt ngay tại quầy</option>
                     <option value="PAY_ONLINE">Yêu cầu thanh toán phụ thu bằng ví / VNPay demo</option><option value="REJECT">Từ chối phụ thu và hủy đơn</option>
                 </select>
-                <button class="btn btn-primary mt-3" type="submit">Nhận vào hub</button>
-            </form>
-        </div></div></section>
-        <section class="col-md-6"><div class="card"><div class="card-body">
-            <h2 class="h5">Phân loại theo tuyến</h2>
-            <form method="post" action="${pageContext.request.contextPath}/hub/sorter">
-                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-                <label class="form-label" for="sortShipmentId">ID đơn</label>
+            </div>
+            <div class="ute-form-grid-foot">
+                <p>Hệ thống tự động tính lại khối lượng quy đổi (Dài &times; Rộng &times; Cao / 6000) và gợi ý mã tuyến đóng bao.</p>
+                <button class="btn btn-ute-primary" type="submit">Nhận kiện vào Hub</button>
+            </div>
+        </form>
+    </section>
+    <section class="ute-staff-card">
+        <h2 class="ute-staff-h2">2. Phân loại theo tuyến &amp; Chỉ định Hub kế tiếp</h2>
+        <form class="ute-staff-form" method="post" action="${pageContext.request.contextPath}/hub/sorter">
+            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+            <div>
+                <label for="sortShipmentId">Nhập ID đơn hàng hoặc quét mã kiện cần phân tuyến</label>
                 <input id="sortShipmentId" name="shipmentId" type="number" min="1" class="form-control" required>
-                <button class="btn btn-success mt-3" type="submit">Xác định hub kế tiếp</button>
-            </form>
-        </div></div></section>
-    </div>
+            </div>
+            <button class="btn btn-ute-orange" type="submit">Xác định Hub kế tiếp</button>
+        </form>
+    </section>
 </main>
 <jsp:include page="/WEB-INF/views/layout/footer.jsp" />

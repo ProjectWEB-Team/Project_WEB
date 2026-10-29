@@ -80,6 +80,7 @@ class PermissionMatrixRouteTest {
             new Route("POST", "/auth/forgot-password", PUBLIC),
             new Route("GET", "/auth/reset-password", PUBLIC),
             new Route("POST", "/auth/reset-password", PUBLIC),
+            new Route("POST", "/auth/check-reset-otp", PUBLIC),
             new Route("GET", "/auth/google/complete", PUBLIC),
             new Route("POST", "/auth/google/complete", PUBLIC),
             new Route("GET", "/tracking", PUBLIC),

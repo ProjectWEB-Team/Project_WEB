@@ -19,7 +19,7 @@ public class OtpConfiguration {
     public Clock applicationClock() { return Clock.systemUTC(); }
 
     @Bean @ConditionalOnMissingBean(OtpDelivery.class)
-    public OtpDelivery otpDelivery(OtpProperties properties, Environment environment) {
+    public OtpDelivery otpDelivery(OtpProperties properties, Environment environment, Clock clock) {
         properties.validate();
         if ("local-inbox".equals(properties.getDeliveryMode())) {
             if (!environment.acceptsProfiles(Profiles.of("otp-local")))

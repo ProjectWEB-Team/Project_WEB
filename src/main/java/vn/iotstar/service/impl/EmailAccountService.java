@@ -92,20 +92,32 @@ public class EmailAccountService {
         return issue(challenge.getUser(), purpose, challenge);
     }
 
+    /** Checks the code without consuming it, so the reset page can ask for the new password only after a correct code. */
+    public boolean check(UUID id, String code, String purpose, Long currentUserId) {
+        return proof(id, code, purpose, currentUserId) != null;
+    }
+
     public boolean verify(UUID id, String code, String purpose, Long currentUserId, String newPassword) {
-        if (id == null || ("PASSWORD_RESET".equals(purpose) && !validPassword(newPassword))) return false;
-        EmailOtpChallenge challenge = challenges.findByIdForUpdate(id).orElse(null);
+        if ("PASSWORD_RESET".equals(purpose) && !validPassword(newPassword)) return false;
+        EmailOtpChallenge challenge = proof(id, code, purpose, currentUserId);
+        if (challenge == null) return false;
         Instant now = clock.instant();
-        if (challenge == null || !challenge.usable(purpose, now, policy.getMaxAttempts())
-                || !eligible(challenge.getUser(), purpose, currentUserId)) return false;
-        if (code == null || !code.matches("[0-9]{6}") || !encoder.matches(code, challenge.getCodeHash())) {
-            challenge.reject();
-            return false;
-        }
         challenge.consume(now);
         if ("PASSWORD_RESET".equals(purpose)) challenge.getUser().changePassword(encoder.encode(newPassword));
         else challenge.getUser().verifyEmail(now);
         return true;
+    }
+
+    private EmailOtpChallenge proof(UUID id, String code, String purpose, Long currentUserId) {
+        if (id == null) return null;
+        EmailOtpChallenge challenge = challenges.findByIdForUpdate(id).orElse(null);
+        if (challenge == null || !challenge.usable(purpose, clock.instant(), policy.getMaxAttempts())
+                || !eligible(challenge.getUser(), purpose, currentUserId)) return null;
+        if (code == null || !code.matches("[0-9]{6}") || !encoder.matches(code, challenge.getCodeHash())) {
+            challenge.reject();
+            return null;
+        }
+        return challenge;
     }
 
     private boolean eligible(User user, String purpose, Long currentUserId) {

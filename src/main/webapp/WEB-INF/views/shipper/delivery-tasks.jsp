@@ -4,9 +4,12 @@
 <c:set var="pageTitle" value="Nhiệm vụ giao hàng | UTEExpress" scope="request" />
 <jsp:include page="/WEB-INF/views/layout/header.jsp" />
 <main class="container ute-page-medium">
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
-        <h1 class="h2 mb-0">Giao hàng hôm nay</h1>
-        <a class="btn btn-outline-secondary btn-sm" href="${pageContext.request.contextPath}/shipper/return-tasks">Giao hàng hoàn</a>
+    <div class="ute-task-bar">
+        <div>
+            <h1>Giao hàng hôm nay</h1>
+            <p>Cập nhật trạng thái giao nhận và đối soát tiền thu hộ COD trực tiếp.</p>
+        </div>
+        <a class="btn ute-btn-ghost" href="${pageContext.request.contextPath}/shipper/return-tasks">Giao hàng hoàn</a>
     </div>
 
     <c:if test="${not empty successMessage}"><div class="alert alert-success" role="status"><c:out value="${successMessage}"/></div></c:if>
@@ -17,7 +20,7 @@
             <div class="ute-empty"><h2 class="h4">Chưa có đơn nào để giao</h2><p class="text-muted mb-0">Khi bưu cục phân công, đơn sẽ hiện ở đây. Nếu bạn vừa nhận hàng tại bưu cục, hãy quét đơn ở mục "Bắt đầu giao" bên dưới.</p></div>
         </c:when>
         <c:otherwise>
-            <p class="text-muted"><c:out value="${tasks.size()}"/> đơn đang giao</p>
+            <h2 class="ute-staff-h3 ute-task-count">2. Danh sách đơn đang giao (<c:out value="${tasks.size()}"/> đơn)</h2>
             <ul class="ute-task-list">
                 <c:forEach items="${tasks}" var="task">
                     <li class="ute-task">
@@ -43,7 +46,7 @@
                                         <label>Hình thức thu cước
                                             <select name="shippingFeePaymentMethod"><option value="CASH">Tiền mặt</option><option value="VNPAY">VNPAY</option></select></label>
                                     </div>
-                                    <button type="submit" class="btn btn-ute-accent w-100">Thu tiền và xác nhận đã giao</button>
+                                    <button type="submit" class="btn btn-ute-accent">Thu tiền &amp; Xác nhận đã giao</button>
                                 </form>
                             </c:when>
                             <c:when test="${task.eligibleForDelivery}">
@@ -51,7 +54,7 @@
                                     <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
                                     <input type="hidden" name="shipmentId" value="${task.shipmentId}"/>
                                     <p class="text-muted mb-2">Đã thu đủ tiền.</p>
-                                    <button type="submit" class="btn btn-ute-accent w-100">Xác nhận đã giao</button>
+                                    <button type="submit" class="btn btn-ute-accent">Xác nhận đã giao</button>
                                 </form>
                             </c:when>
                         </c:choose>
@@ -72,7 +75,7 @@
                                 <label>Ghi chú <input type="text" maxlength="255" name="note"></label>
                                 <label>Ngày giao lại (nếu hẹn lại) <input type="date" name="rescheduledDate"></label>
                                 <label>Ảnh bằng chứng <input type="file" name="evidence" accept="image/*"></label>
-                                <button type="submit" class="btn btn-outline-secondary w-100">Ghi nhận không giao được</button>
+                                <button type="submit" class="btn ute-btn-ghost">Ghi nhận không giao được</button>
                             </form>
                         </details>
                     </li>
@@ -82,7 +85,7 @@
     </c:choose>
 
     <section class="ute-scan" aria-labelledby="scan-title">
-        <h2 id="scan-title" class="h5">Bắt đầu giao (quét tại bưu cục)</h2>
+        <h2 id="scan-title" class="ute-staff-h3">1. Bắt đầu giao (Quét nhận đơn tại bưu cục)</h2>
         <form action="${pageContext.request.contextPath}/shipper/delivery-tasks/scan" method="post" class="ute-task-form">
             <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
             <label>Bưu cục của bạn
@@ -92,7 +95,7 @@
                 </select></label>
             <label>Mã đơn
                 <input type="number" name="shipmentId" required inputmode="numeric" placeholder="Số thứ tự đơn hiển thị trên phiếu"></label>
-            <button type="submit" class="btn btn-primary w-100">Quét xuất kho</button>
+            <button type="submit" class="btn btn-ink">Quét xuất kho</button>
         </form>
     </section>
 </main>

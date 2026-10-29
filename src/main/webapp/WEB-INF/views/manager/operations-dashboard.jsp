@@ -10,29 +10,31 @@
 </head>
 <body class="bg-light">
 <jsp:include page="/WEB-INF/views/layout/navbar.jsp" />
-<main class="container py-4">
-    <header class="mb-4">
-        <h1 class="h3 mb-1">Bảng điều hành</h1>
-        <p class="text-muted mb-0">Phạm vi: <c:out value="${dashboard.scopeLabel}"/></p>
-    </header>
-    <div class="row row-cols-1 row-cols-md-3 g-3" aria-label="Chỉ số vận hành trong phạm vi">
-        <div class="col"><div class="card h-100"><div class="card-body"><h2 class="h6">Đang nhận tại hub</h2><p class="display-6 mb-0"><c:out value="${dashboard.inboundCount}"/></p></div></div></div>
-        <div class="col"><div class="card h-100"><div class="card-body"><h2 class="h6">Bao chờ xuất</h2><p class="display-6 mb-0"><c:out value="${dashboard.outboundCount}"/></p></div></div></div>
-        <div class="col"><div class="card h-100"><div class="card-body"><h2 class="h6">Tồn chờ phân loại</h2><p class="display-6 mb-0"><c:out value="${dashboard.sortingBacklogCount}"/></p></div></div></div>
-        <div class="col"><div class="card h-100"><div class="card-body"><h2 class="h6">Phiếu bàn giao đang mở</h2><p class="display-6 mb-0"><c:out value="${dashboard.activeHandoverCount}"/></p></div></div></div>
-        <div class="col"><div class="card h-100"><div class="card-body"><h2 class="h6">Chuyến đang chạy</h2><p class="display-6 mb-0"><c:out value="${dashboard.activeTripCount}"/></p></div></div></div>
-        <div class="col"><div class="card h-100"><div class="card-body"><h2 class="h6">Tuyến bị chặn</h2><p class="display-6 mb-0"><c:out value="${dashboard.blockedRouteCount}"/></p></div></div></div>
-        <div class="col w-100"><div class="card h-100"><div class="card-body d-flex align-items-center justify-content-between gap-3"><h2 class="h6 mb-0">Sự cố cần xử lý</h2><p class="display-6 mb-0"><c:out value="${dashboard.actionableIncidentCount}"/></p></div></div></div>
+<main class="ute-staff flex-grow-1">
+    <h1>Bảng điều hành</h1>
+    <p class="ute-staff-sub">Phạm vi: <c:out value="${dashboard.scopeLabel}"/></p>
+    <div class="ute-kpi-grid" aria-label="Chỉ số vận hành trong phạm vi">
+        <div class="ute-kpi"><h2>Đang nhận tại hub</h2><p><c:out value="${dashboard.inboundCount}"/> kiện</p></div>
+        <div class="ute-kpi"><h2>Bao chờ xuất</h2><p><c:out value="${dashboard.outboundCount}"/> bao</p></div>
+        <div class="ute-kpi"><h2>Tồn chờ phân loại</h2><p><c:out value="${dashboard.sortingBacklogCount}"/> kiện</p></div>
+        <div class="ute-kpi"><h2>Phiếu bàn giao đang mở</h2><p><c:out value="${dashboard.activeHandoverCount}"/> phiếu</p></div>
+        <div class="ute-kpi"><h2>Chuyến đang chạy</h2><p><c:out value="${dashboard.activeTripCount}"/> chuyến</p></div>
+        <div class="ute-kpi"><h2>Tuyến bị chặn</h2><p><c:out value="${dashboard.blockedRouteCount}"/> tuyến</p></div>
+        <div class="ute-kpi"><h2>Sự cố cần xử lý</h2><p><c:out value="${dashboard.actionableIncidentCount}"/> việc</p></div>
     </div>
-    <section class="mt-4">
-        <h2 class="h5">Việc cần xử lý</h2>
-        <p class="text-muted">Tối đa 25 việc mỗi loại trong phạm vi của bạn.</p>
-        <ul class="list-group">
+    <section>
+        <h2 class="ute-staff-h2">Việc cần xử lý</h2>
+        <p class="ute-staff-sub">Tối đa 25 việc mỗi loại trong phạm vi của bạn.</p>
+        <div class="ute-work-card">
+            <p class="ute-work-head">${empty workItems ? 0 : workItems.size()} việc đang chờ xử lý</p>
             <c:forEach items="${workItems}" var="item">
-                <li class="list-group-item"><a href="${pageContext.request.contextPath}/manager/operations/work/${item.kind}/${item.id}"><c:out value="${item.summary}"/> #<c:out value="${item.id}"/></a></li>
+                <div class="ute-work-row">
+                    <strong><c:out value="${item.summary}"/> &middot; #<c:out value="${item.id}"/></strong>
+                    <a class="btn ute-btn-view" href="${pageContext.request.contextPath}/manager/operations/work/${item.kind}/${item.id}">Mở xử lý</a>
+                </div>
             </c:forEach>
-            <c:if test="${empty workItems}"><li class="list-group-item text-muted">Không có việc cần xử lý trong phạm vi này.</li></c:if>
-        </ul>
+            <c:if test="${empty workItems}"><p class="ute-work-empty">Không có việc cần xử lý trong phạm vi này.</p></c:if>
+        </div>
     </section>
 </main>
 <jsp:include page="/WEB-INF/views/layout/footer.jsp" />

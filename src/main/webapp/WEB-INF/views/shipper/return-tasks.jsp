@@ -11,10 +11,14 @@
 </head>
 <body class="bg-light">
 <jsp:include page="/WEB-INF/views/layout/navbar.jsp" />
-<main class="container py-4 ute-page-medium">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3">Nhiệm vụ giao hàng hoàn</h1>
-        <a class="btn btn-outline-secondary btn-sm" href="${pageContext.request.contextPath}/shipper/delivery-tasks">Quay lại giao hàng</a>
+<main class="ute-app flex-grow-1">
+  <div class="ute-wrap">
+    <div class="ute-app-head">
+        <div>
+            <h1>Nhiệm vụ giao hàng hoàn</h1>
+            <p>Trả kiện hàng hoàn về cho người gửi, thu các khoản phí còn thiếu và xác nhận đã trả hàng.</p>
+        </div>
+        <a class="btn ute-btn-ghost" href="${pageContext.request.contextPath}/shipper/delivery-tasks">Quay lại giao hàng</a>
     </div>
 
     <c:if test="${not empty successMessage}">
@@ -30,14 +34,12 @@
         </div>
     </c:if>
 
-    <div class="card shadow-sm">
-        <div class="card-header bg-white py-3">
-            <h2 class="h5 mb-0">Giao trả hàng cho người gửi</h2>
-        </div>
-        <div class="card-body p-0">
+    <div class="ute-app-card">
+        <div class="ute-app-card-head"><h2>Giao trả hàng cho người gửi</h2></div>
+        <div>
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
+                <table class="table ute-list-table align-middle mb-0">
+                    <thead>
                     <tr>
                         <th>Mã vận đơn</th>
                         <th>Người gửi</th>
@@ -64,7 +66,7 @@
                                         <form action="${pageContext.request.contextPath}/shipper/return-tasks/confirm" method="post">
                                             <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
                                             <input type="hidden" name="shipmentId" value="${task.shipmentId}"/>
-                                            <button type="submit" class="btn btn-warning btn-sm">Xác nhận đã trả hàng</button>
+                                            <button type="submit" class="btn btn-ute-orange">Xác nhận đã trả hàng</button>
                                         </form>
                                     </td>
                                 </tr>
@@ -76,6 +78,7 @@
             </div>
         </div>
     </div>
+  </div>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <jsp:include page="/WEB-INF/views/layout/footer.jsp" />
