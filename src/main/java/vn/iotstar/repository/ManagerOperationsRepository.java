@@ -95,6 +95,68 @@ public class ManagerOperationsRepository {
                 (Long) row[1], (Long) row[2], "HANDOVER".equals(kind) ? handoverSummary(row) : summary)).toList();
     }
 
+    /** Everything a supervisor needs to follow one handover: route, driver, trip, containers and their shipments. */
+    public Optional<java.util.Map<String, Object>> handoverDetail(Collection<Long> hubIds, Long id) {
+        var found = entityManager.createQuery("select h from Handover h join fetch h.fromHub join fetch h.toHub join fetch h.receiverDriver "
+                        + "left join fetch h.transportTrip where h.id = :id and (h.fromHub.id in :hubIds or h.toHub.id in :hubIds)", vn.iotstar.entity.Handover.class)
+                .setParameter("id", id).setParameter("hubIds", hubIds).getResultStream().findFirst();
+        if (found.isEmpty()) return Optional.empty();
+        var h = found.get();
+        List<java.util.Map<String, Object>> containers = new java.util.ArrayList<>();
+        for (var hc : entityManager.createQuery("select hc from HandoverContainer hc join fetch hc.container where hc.handover.id = :id order by hc.id",
+                vn.iotstar.entity.HandoverContainer.class).setParameter("id", id).getResultList()) {
+            var shipments = entityManager.createQuery("select ci.shipment.id, ci.shipment.trackingNumber from ContainerItem ci where ci.container.id = :cid order by ci.shipment.id", Object[].class)
+                    .setParameter("cid", hc.getContainer().getId()).getResultList().stream()
+                    .map(r -> java.util.Map.<String, Object>of("id", r[0], "tracking", r[1])).toList();
+            containers.add(java.util.Map.of("code", hc.getContainer().getContainerCode(), "status", hc.getStatus(), "shipments", shipments));
+        }
+        boolean reassignable = h.isPending() && h.getTransportTrip() == null && hubIds.contains(h.getFromHub().getId());
+        List<java.util.Map<String, Object>> drivers = reassignable ? activeDriversAt(h.getFromHub().getId()).stream()
+                .filter(p -> !p.getUser().getId().equals(h.getReceiverDriver().getId()))
+                .map(p -> java.util.Map.<String, Object>of("id", p.getUser().getId(), "name", p.getUser().getFullName())).toList() : List.of();
+        var map = new java.util.LinkedHashMap<String, Object>();
+        map.put("id", h.getId());
+        map.put("status", h.getStatus());
+        map.put("fromHub", h.getFromHub().getName());
+        map.put("toHub", h.getToHub().getName());
+        map.put("driver", h.getReceiverDriver().getFullName());
+        map.put("trip", h.getTransportTrip() == null ? "" : h.getTransportTrip().getTripCode());
+        map.put("expected", h.getExpectedContainers());
+        map.put("accepted", h.getAcceptedContainers());
+        map.put("containers", containers);
+        map.put("reassignable", reassignable);
+        map.put("drivers", drivers);
+        return Optional.of(map);
+    }
+
+    public List<EmployeeProfile> activeDriversAt(Long hubId) {
+        return entityManager.createQuery("select p from EmployeeProfile p join fetch p.user where p.position = 'LINEHAUL_DRIVER' "
+                + "and p.status = 'ACTIVE' and p.hub.id = :hubId order by p.user.fullName", EmployeeProfile.class)
+                .setParameter("hubId", hubId).getResultList();
+    }
+
+    /** Cancels a handover nobody has accepted and recreates it for another driver, keeping the same sealed containers. */
+    public Long reassignDriver(Collection<Long> hubIds, Long handoverId, Long driverUserId) {
+        var original = entityManager.createQuery("select h from Handover h join fetch h.fromHub join fetch h.toHub join fetch h.receiverDriver "
+                        + "left join fetch h.transportTrip where h.id = :id", vn.iotstar.entity.Handover.class)
+                .setParameter("id", handoverId).setLockMode(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE).getResultStream().findFirst().orElse(null);
+        if (original == null || !hubIds.contains(original.getFromHub().getId())) return null;
+        if (!original.isPending() || original.getTransportTrip() != null) throw new IllegalStateException("Chỉ đổi được tài xế khi chưa ai nhận bàn giao.");
+        var driver = activeDriversAt(original.getFromHub().getId()).stream().filter(p -> p.getUser().getId().equals(driverUserId)).findFirst().orElse(null);
+        if (driver == null) throw new IllegalArgumentException("Tài xế không thuộc bưu cục xuất.");
+        var replacement = vn.iotstar.entity.Handover.pending(original.getFromHub(), original.getToHub(), original.getSenderEmployee(),
+                driver.getUser(), original.getExpectedContainers(), original);
+        original.cancelForCorrection();
+        entityManager.flush(); // the old custody must be closed before the same containers are claimed again
+        original.linkReplacement(replacement);
+        entityManager.persist(replacement);
+        for (var hc : entityManager.createQuery("select hc from HandoverContainer hc join fetch hc.container where hc.handover.id = :id",
+                vn.iotstar.entity.HandoverContainer.class).setParameter("id", handoverId).getResultList()) {
+            entityManager.persist(vn.iotstar.entity.HandoverContainer.expected(replacement, hc.getContainer()));
+        }
+        return replacement.getId();
+    }
+
     /** One line that says where the handover is and who must act next. */
     private static String handoverSummary(Object[] row) {
         String route = row[4] + " → " + row[5];
