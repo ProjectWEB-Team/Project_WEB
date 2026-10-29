@@ -12,7 +12,7 @@
 <jsp:include page="/WEB-INF/views/layout/navbar.jsp" />
 <main class="ute-staff flex-grow-1">
     <h1>Phân loại &amp; Tiếp nhận kiện hàng tại Hub</h1>
-    <p class="ute-staff-sub">Cân đo khối lượng, kích thước thực tế khi nhận kiện vào Hub và tự động xác định Hub trung chuyển kế tiếp theo quy tắc tuyến.</p>
+    <p class="ute-staff-sub">Cân đo kiện hàng khi nhận vào Hub; hệ thống xác định Hub kế tiếp.</p>
     <c:if test="${not empty operationMessage}"><div class="alert alert-info"><c:out value="${operationMessage}"/></div></c:if>
     <c:if test="${not empty sortingDecision}">
         <div class="ute-result-banner">
@@ -23,7 +23,7 @@
     <section class="ute-staff-card">
         <div>
             <h2 class="ute-staff-h2">1. Nhận kiện hàng vào Hub &amp; Cân đo khối lượng thực tế</h2>
-            <p class="ute-staff-note">Với đơn khách tự mang tới quầy hoặc Shipper lấy về: quét mã vận đơn, nhập số đo thực tế và ghi nhận tiền mặt thu tại quầy (nếu có).</p>
+            <p class="ute-staff-note">Quét mã vận đơn, nhập số đo thực tế và tiền mặt thu tại quầy (nếu có).</p>
         </div>
         <form class="ute-form-grid" method="post" action="${pageContext.request.contextPath}/hub/inbound">
             <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
@@ -42,7 +42,7 @@
                 </select>
             </div>
             <div class="ute-form-grid-foot">
-                <p>Hệ thống tự động tính lại khối lượng quy đổi (Dài &times; Rộng &times; Cao / 6000) và gợi ý mã tuyến đóng bao.</p>
+                <p>Khối lượng quy đổi = Dài &times; Rộng &times; Cao / 6000.</p>
                 <button class="btn btn-ute-primary" type="submit">Nhận kiện vào Hub</button>
             </div>
         </form>

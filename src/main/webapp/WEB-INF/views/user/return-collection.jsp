@@ -46,7 +46,7 @@
 <h2>Thu phí hoàn bằng tiền mặt tại hub</h2><form action="${pageContext.request.contextPath}/hub/return-collection/cash" method="post">
 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"><label>Mã ID vận đơn<input name="shipmentId" type="number" required></label>
 <button>Xác nhận đã thu đủ nghĩa vụ phí được hệ thống tính</button></form>
-<p>Người gửi thanh toán bằng ví/VNPay demo tại trang phí vận đơn, nhân viên xác minh danh tính và bàn giao sau khi đã trả đủ phí.</p></main>
+<p>Người gửi trả phí bằng ví hoặc VNPay (demo) ở trang phí vận đơn; nhân viên bàn giao sau khi đã trả đủ.</p></main>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <jsp:include page="/WEB-INF/views/layout/footer.jsp" />
 

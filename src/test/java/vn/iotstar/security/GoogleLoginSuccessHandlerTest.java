@@ -59,29 +59,29 @@ class GoogleLoginSuccessHandlerTest {
     }
 
     @Test
-    void newGoogleIdentityClearsAuthenticationAndStoresOnlyExpiringSignupProof() throws Exception {
+    void newGoogleIdentityGetsAnAccountWithoutAskingForAPhone() throws Exception {
+        User account = new User(8L, "g_new", "hash", UserRole.ROLE_USER, "ACTIVE");
+        when(accounts.findActiveAccount(any())).thenReturn(Optional.empty());
+        when(accounts.register(any())).thenReturn(account);
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
-        OAuth2AuthenticationToken authentication = authentication(true);
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        request.getSession().setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
-                SecurityContextHolder.getContext());
-        String oldSessionId = request.getSession().getId();
+
+        handler.onAuthenticationSuccess(request, response, authentication(true));
+
+        verify(sessions).signIn(eq(account), eq(request), eq(response));
+        assertThat(response.getRedirectedUrl()).isEqualTo("/user/shipments/create");
+    }
+
+    @Test
+    void googleEmailOwnedByAnotherAccountReportsEmailError() throws Exception {
         when(accounts.findActiveAccount(any())).thenReturn(Optional.empty());
+        when(accounts.register(any())).thenThrow(vn.iotstar.exception.RegistrationException.emailTaken());
+        MockHttpServletResponse response = new MockHttpServletResponse();
 
-        handler.onAuthenticationSuccess(request, response, authentication);
+        handler.onAuthenticationSuccess(new MockHttpServletRequest(), response, authentication(true));
 
-        assertThat(response.getRedirectedUrl()).isEqualTo("/auth/google/complete");
-        assertThat(request.getSession().getId()).isNotEqualTo(oldSessionId);
+        assertThat(response.getRedirectedUrl()).isEqualTo("/login?googleError=email");
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
-        assertThat(request.getSession().getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY))
-                .isNull();
-        VerifiedGoogleIdentity proof = (VerifiedGoogleIdentity) request.getSession()
-                .getAttribute(VerifiedGoogleIdentity.SESSION_ATTRIBUTE);
-        assertThat(proof.subject()).isEqualTo("google-sub-123");
-        assertThat(proof.email()).isEqualTo("owner@example.test");
-        assertThat(proof.isCurrent(NOW.plusSeconds(599))).isTrue();
-        assertThat(proof.isCurrent(NOW.plusSeconds(600))).isFalse();
         verifyNoInteractions(sessions);
     }
 

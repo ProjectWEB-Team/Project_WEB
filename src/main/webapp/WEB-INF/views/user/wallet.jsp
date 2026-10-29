@@ -122,7 +122,7 @@
                 <h2 class="h5 mb-3 text-ute-dark">Lịch sử biến động số dư</h2>
                 <c:choose>
                     <c:when test="${empty transactions}">
-                        <div class="ute-empty"><strong>Chưa có giao dịch nào</strong><p>Khi bạn có giao dịch nạp/rút, trạng thái và ngày cập nhật sẽ hiện ở đây.</p></div>
+                        <div class="ute-empty"><strong>Chưa có giao dịch nào</strong><p>Giao dịch sẽ hiện ở đây.</p></div>
                     </c:when>
                     <c:otherwise>
                         <div class="table-responsive">
@@ -163,7 +163,7 @@
                 <h2 class="h5 mb-3 text-ute-dark">Lệnh rút tiền của tôi</h2>
                 <c:choose>
                     <c:when test="${empty withdrawals}">
-                        <div class="ute-empty"><strong>Chưa có lệnh rút tiền nào</strong><p>Sau khi gửi yêu cầu, trạng thái xử lý và thông tin lệnh sẽ được cập nhật ở đây.</p></div>
+                        <div class="ute-empty"><strong>Chưa có lệnh rút tiền nào</strong><p>Lệnh rút tiền sẽ hiện ở đây.</p></div>
                     </c:when>
                     <c:otherwise>
                         <div class="table-responsive">

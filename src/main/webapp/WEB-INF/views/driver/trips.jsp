@@ -20,7 +20,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <div>
             <h1 class="h3 fw-bold mb-1 text-ink">Chuyến xe trung chuyển được giao</h1>
-            <p class="text-muted small mb-0">Theo dõi hành trình, báo xe tới nơi và nhận bàn giao bao hàng theo ca.</p>
+            <p class="text-muted small mb-0">Theo dõi chuyến, báo tới nơi và nhận bàn giao.</p>
         </div>
         <div class="d-flex gap-2">
             <a href="#handover-section" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
@@ -71,7 +71,7 @@
                                 <tr>
                                     <td colspan="4" class="text-center py-5 text-muted">
                                         <i class="bi bi-truck fs-1 d-block mb-2 text-secondary opacity-50"></i>
-                                        Chưa có chuyến xe nào được bàn giao hoặc đang chạy trong ca hiện tại.
+                                        Chưa có chuyến xe trong ca.
                                     </td>
                                 </tr>
                             </c:when>
@@ -147,7 +147,7 @@
 
             <div class="pt-3 border-top mt-3 text-muted small d-flex justify-content-between align-items-center">
                 <span>Hiển thị ${fn:length(tripPicks)} / ${fn:length(tripPicks)} chuyến</span>
-                <span class="fst-italic">* Báo tới nơi chưa phải là hub đích đã hoàn tất nhận hàng; hub đích cần kiểm đếm bàn giao.</span>
+                <span class="fst-italic">* Báo tới nơi chưa phải hub đích đã nhận hàng.</span>
             </div>
         </div>
     </div>
@@ -161,7 +161,7 @@
                     <h2 class="h5 fw-bold mb-2 text-ink">
                         <i class="bi bi-truck me-2 text-warning"></i>Nhận bàn giao &amp; Gán phương tiện
                     </h2>
-                    <p class="text-muted small mb-3">Tài xế nhận phiếu bàn giao từ kho xuất phát và chọn phương tiện vận chuyển trước khi xuất phát.</p>
+                    <p class="text-muted small mb-3">Nhận phiếu bàn giao và chọn phương tiện trước khi xuất phát.</p>
 
                     <form method="post" action="${pageContext.request.contextPath}/driver/handovers/accept">
                         <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
@@ -200,7 +200,7 @@
                     <h2 class="h5 fw-bold mb-2 text-ink">
                         <i class="bi bi-upc-scan me-2 text-primary"></i>Quét bao hàng kiểm đếm
                     </h2>
-                    <p class="text-muted small mb-3">Xác thực quét từng bao hàng đã bàn giao lên xe để đảm bảo không thất lạc kiện hàng.</p>
+                    <p class="text-muted small mb-3">Quét từng bao hàng lên xe.</p>
 
                     <form method="post" action="${pageContext.request.contextPath}/driver/handovers/scan">
                         <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>

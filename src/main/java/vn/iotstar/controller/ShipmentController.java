@@ -28,8 +28,10 @@ import java.util.UUID;
 public class ShipmentController {
     private static final String QUOTED_DRAFT = ShipmentController.class.getName() + ".quotedDraft";
     private final ShipmentService shipmentService;
-    public ShipmentController(ShipmentService shipmentService) {
+    private final org.springframework.beans.factory.ObjectProvider<vn.iotstar.service.VnpayService> vnpay;
+    public ShipmentController(ShipmentService shipmentService, org.springframework.beans.factory.ObjectProvider<vn.iotstar.service.VnpayService> vnpay) {
         this.shipmentService = shipmentService;
+        this.vnpay = vnpay;
     }
 
     @GetMapping
@@ -110,6 +112,8 @@ public class ShipmentController {
     @GetMapping("/{shipmentId}")
     public String detail(@PathVariable Long shipmentId, Model model) {
         model.addAttribute("shipment", shipmentService.getDetail(shipmentId));
+        var gateway = vnpay.getIfAvailable();
+        model.addAttribute("vnpayEnabled", gateway != null && gateway.enabled());
         return "shipment/detail";
     }
 

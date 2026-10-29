@@ -252,6 +252,50 @@ class ShipmentServiceImplTest {
         verify(shipmentEventRepository, times(2)).save(any(ShipmentEvent.class)); // created + one PAYMENT_CONFIRMED
     }
 
+    @Test
+    void gatewayConfirmationPaysOnceChecksTheAmountAndIgnoresReplays() {
+        User sender = authenticate(7L, "owner");
+        Shipment shipment = Shipment.create("UTX-GW", sender, "S", "0900000001", "a", "R", "+84900000002", "b");
+        shipment.applyIntake(null, "HCM", "Q1", "SELF_DROPOFF", "SENDER", "NO_INSPECTION", 500, 1, 1, 1, BigDecimal.ZERO,
+                BigDecimal.ZERO, new BigDecimal("45000"), "PENDING", ShipmentStatus.WAITING_FOR_PAYMENT, CREATED_AT);
+        ReflectionTestUtils.setField(shipment, "id", 42L);
+        Payment payment = Payment.shippingFee(shipment, "SENDER", new BigDecimal("45000"), "VNPAY", "PENDING");
+        when(shipmentRepository.findByIdForUpdate(42L)).thenReturn(Optional.of(shipment));
+        when(paymentRepository.findFirstByShipmentIdAndPaymentType(42L, "SHIPPING_FEE")).thenReturn(Optional.of(payment));
+
+        assertThat(shipmentService.confirmGatewayPayment(42L, "9999", new BigDecimal("1000")))
+                .isEqualTo(vn.iotstar.dto.shipment.GatewayPaymentResult.AMOUNT_MISMATCH);
+        assertThat(payment.getStatus()).isEqualTo("PENDING");
+
+        assertThat(shipmentService.confirmGatewayPayment(42L, "9999", new BigDecimal("45000")))
+                .isEqualTo(vn.iotstar.dto.shipment.GatewayPaymentResult.CONFIRMED);
+        assertThat(payment.getStatus()).isEqualTo("PAID");
+        assertThat(payment.getTransactionRef()).isEqualTo("VNPAY-9999");
+        assertThat(shipment.getCurrentStatus()).isEqualTo(ShipmentStatus.WAITING_FOR_HANDOVER);
+
+        assertThat(shipmentService.confirmGatewayPayment(42L, "9999", new BigDecimal("45000")))
+                .isEqualTo(vn.iotstar.dto.shipment.GatewayPaymentResult.ALREADY_CONFIRMED);
+        verify(shipmentEventRepository, times(1)).save(any(ShipmentEvent.class));
+    }
+
+    @Test
+    void gatewayConfirmationForAnUnknownShipmentOrACancelledOneChangesNothing() {
+        assertThat(shipmentService.confirmGatewayPayment(404L, "1", BigDecimal.TEN))
+                .isEqualTo(vn.iotstar.dto.shipment.GatewayPaymentResult.NOT_FOUND);
+
+        User sender = authenticate(7L, "owner");
+        Shipment cancelled = Shipment.create("UTX-X", sender, "S", "0900000001", "a", "R", "+84900000002", "b");
+        cancelled.applyIntake(null, "HCM", "Q1", "SELF_DROPOFF", "SENDER", "NO_INSPECTION", 500, 1, 1, 1, BigDecimal.ZERO,
+                BigDecimal.ZERO, BigDecimal.TEN, "PENDING", ShipmentStatus.CANCELLED, CREATED_AT);
+        Payment payment = Payment.shippingFee(cancelled, "SENDER", BigDecimal.TEN, "VNPAY", "PENDING");
+        when(shipmentRepository.findByIdForUpdate(5L)).thenReturn(Optional.of(cancelled));
+        when(paymentRepository.findFirstByShipmentIdAndPaymentType(5L, "SHIPPING_FEE")).thenReturn(Optional.of(payment));
+
+        assertThat(shipmentService.confirmGatewayPayment(5L, "1", BigDecimal.TEN))
+                .isEqualTo(vn.iotstar.dto.shipment.GatewayPaymentResult.NOT_PAYABLE);
+        assertThat(payment.getStatus()).isEqualTo("PENDING");
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"SENDER", "RECEIVER"})
     void cashPaymentSkipsOnlineWaitAndReceiverPayerCannotUseOnlineMethod(String payer) {

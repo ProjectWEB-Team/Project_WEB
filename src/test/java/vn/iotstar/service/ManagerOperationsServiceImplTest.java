@@ -96,6 +96,18 @@ class ManagerOperationsServiceImplTest {
         verify(managerOperationsRepository, never()).findWorkItem(anyList(), eq("PAYMENT"), anyLong());
     }
 
+    @Test void reassigningAHandoverIsScopedToTheManagersHubsAndNeverTouchesOtherOnes() {
+        User manager = user(71L, UserRole.ROLE_MANAGER); authenticate(manager);
+        when(managerOperationsRepository.findActiveProfileByUserId(71L)).thenReturn(Optional.of(EmployeeProfile.active(manager, hub(11L, "SOC-A"), "MANAGER")));
+        when(managerOperationsRepository.findHubSubtreeIds(11L)).thenReturn(List.of(11L, 12L));
+        when(managerOperationsRepository.reassignDriver(List.of(11L, 12L), 5L, 30L)).thenReturn(6L);
+        when(managerOperationsRepository.reassignDriver(List.of(11L, 12L), 9L, 30L)).thenReturn(null);
+
+        assertThat(service.reassignHandoverDriver(5L, 30L)).isEqualTo(6L);
+        assertThatThrownBy(() -> service.reassignHandoverDriver(9L, 30L)).isInstanceOf(HubOperationAccessDeniedException.class);
+        assertThatThrownBy(() -> service.reassignHandoverDriver(5L, null)).isInstanceOf(HubOperationAccessDeniedException.class);
+    }
+
     @Test void nonManagerCannotReadWorkItemDetailsOrList() {
         authenticate(user(7L, UserRole.ROLE_USER));
         assertThatThrownBy(service::getWorkItems).isInstanceOf(HubOperationAccessDeniedException.class);

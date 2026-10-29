@@ -15,6 +15,7 @@
     <link href="${pageContext.request.contextPath}/assets/css/ute-modern.css" rel="stylesheet">
 </head>
 <body class="ute-auth">
+<a class="ute-auth-home" href="${pageContext.request.contextPath}/"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/></svg>Trang chủ</a>
 <main class="container ute-auth-main">
     <div class="ute-auth-layout">
         <section class="ute-auth-brand" aria-label="UTEexpress"><jsp:include page="/WEB-INF/views/layout/logo.jsp" /><p>Giao nhanh. Trọn niềm tin.</p></section>
@@ -23,7 +24,7 @@
             <section class="card ute-auth-card ute-auth-card-sm">
                 <div class="card-body p-4 p-md-5">
                     <h1 class="h3 mb-2">Tạo tài khoản</h1>
-                    <p class="text-muted mb-4">${emailRegistration ? 'Xác thực email để bắt đầu gửi hàng. ' : ''}Điền thông tin của bạn, sau đó chọn cách nhận mã xác thực.</p>
+                    <p class="text-muted mb-4">${emailRegistration ? 'Xác thực email để bắt đầu gửi hàng. ' : ''}Điền thông tin, rồi chọn cách nhận mã xác thực.</p>
                     <c:if test="${not empty otpClosedNotice}"><div class="alert alert-warning" role="status"><c:out value="${otpClosedNotice}"/></div></c:if>
                     <c:if test="${not empty error}"><div class="alert alert-danger" role="alert"><c:out value="${error}"/></div></c:if>
                     <form:form method="post" id="registerForm" action="${pageContext.request.contextPath}${emailRegistration ? '/auth/email/register' : '/register'}" modelAttribute="registerUserRequest">

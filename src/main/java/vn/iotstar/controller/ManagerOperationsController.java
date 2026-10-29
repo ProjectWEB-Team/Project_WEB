@@ -25,6 +25,20 @@ public class ManagerOperationsController {
     @GetMapping("/manager/operations/work/{kind}/{id}")
     public String workItem(@PathVariable String kind, @PathVariable Long id, Model model) {
         model.addAttribute("item", managerOperationsService.getWorkItem(kind, id));
+        if ("HANDOVER".equals(kind)) model.addAttribute("handover", managerOperationsService.getHandoverDetail(id));
         return "manager/operation-work-item";
+    }
+
+    @org.springframework.web.bind.annotation.PostMapping("/manager/operations/handovers/{id}/reassign")
+    public String reassign(@PathVariable Long id, @org.springframework.web.bind.annotation.RequestParam Long driverId,
+                           org.springframework.web.servlet.mvc.support.RedirectAttributes flash) {
+        try {
+            Long created = managerOperationsService.reassignHandoverDriver(id, driverId);
+            flash.addFlashAttribute("notice", "Đã đổi tài xế. Phiếu bàn giao mới #" + created + ".");
+            return "redirect:/manager/operations/work/HANDOVER/" + created;
+        } catch (IllegalStateException | IllegalArgumentException exception) {
+            flash.addFlashAttribute("error", exception.getMessage());
+            return "redirect:/manager/operations/work/HANDOVER/" + id;
+        }
     }
 }

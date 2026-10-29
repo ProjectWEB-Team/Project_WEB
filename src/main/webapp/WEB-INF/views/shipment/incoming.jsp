@@ -21,13 +21,13 @@
     <div class="ute-app-head">
         <div>
             <h1>Đơn hàng đang giao đến bạn</h1>
-            <p>Để bảo vệ quyền riêng tư, thông tin mã vận đơn và người gửi được che một phần. Nhập đúng mã vận đơn để mở khóa địa chỉ và số tiền cần thanh toán.</p>
+            <p>Mã vận đơn và người gửi được che một phần. Nhập đúng mã để mở khóa.</p>
         </div>
     </div>
     <section class="ute-app-card">
         <div class="ute-app-card-head">
             <h2>Danh sách đơn đang đến số điện thoại của bạn (${shipments.totalElements} đơn)</h2>
-            <p>Thông tin người gửi được che một phần. Chọn một đơn để mở chi tiết và nhập mã vận đơn nhằm mở khóa.</p>
+            <p>Chọn một đơn rồi nhập mã vận đơn để mở khóa.</p>
         </div>
         <c:choose>
             <c:when test="${shipments.totalElements == 0}"><p class="mb-0 text-ute-muted">Chưa có đơn nào gửi đến bạn.</p></c:when>

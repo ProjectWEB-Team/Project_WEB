@@ -19,7 +19,7 @@
     <div class="ute-app-head">
         <div>
             <h1>Nhiệm vụ lấy hàng của tôi</h1>
-            <p>Đến địa chỉ người gửi được phân công, kiểm tra kiện hàng, thu tiền mặt cước (nếu có) và quét mã vận đơn xác nhận đã lấy.</p>
+            <p>Đến địa chỉ người gửi, kiểm tra kiện hàng, thu cước tiền mặt (nếu có) và quét mã xác nhận đã lấy.</p>
         </div>
     </div>
     <c:choose>

@@ -6,7 +6,7 @@
 <main class="container py-4">
   <div class="mb-4">
     <h1 class="h3 fw-bold text-ink mb-1">Đối soát và quyết toán</h1>
-    <p class="text-muted small mb-0">Quản lý kiểm đếm dòng tiền COD, hoàn phí vận chuyển và bồi thường sự cố hàng hoá.</p>
+    <p class="text-muted small mb-0">Đối soát tiền COD, phí hoàn và bồi thường.</p>
   </div>
 
   <c:if test="${not empty successMessage}">
@@ -64,13 +64,13 @@
         <h2 class="h5 fw-bold text-ink mb-1">
           <i class="bi bi-wallet2 me-2 text-primary"></i>Khoản thu cần đối soát — <span class="badge bg-secondary-subtle text-secondary-emphasis"><c:out value="${selectedMethod}"/></span>
         </h2>
-        <p class="text-muted small mb-0">Mức kỳ vọng lấy từ khoản thu đã ghi nhận. Nhập số tiền thực tế đã bàn giao hoặc xác minh cho từng khoản.</p>
+        <p class="text-muted small mb-0">Nhập số tiền thực tế đã nhận cho từng khoản.</p>
       </div>
 
       <c:if test="${empty expectedItems}">
         <div class="text-center py-5 text-muted">
           <i class="bi bi-receipt fs-1 d-block mb-2 text-secondary opacity-50"></i>
-          Không có khoản thu nào trong lựa chọn hiện tại. Vui lòng chọn Shipper và Ngày để tải danh sách.
+          Chọn Shipper và Ngày để tải danh sách.
         </div>
       </c:if>
 
@@ -85,7 +85,7 @@
             <div class="p-3 bg-light rounded-3 mb-3 border">
               <label class="form-label fw-semibold small">Bằng chứng xác minh khoản tiền đã nhận</label>
               <input class="form-control rounded-3" name="settlementEvidence" maxlength="255" placeholder="Mã tham chiếu ngân hàng, mã giao dịch sao kê..." required>
-              <p class="text-muted small mb-0 mt-1">Ghi mã tham chiếu và căn cứ đã kiểm tra. Chỉ xác nhận sau khi đối chiếu chứng từ nhận tiền.</p>
+              <p class="text-muted small mb-0 mt-1">Ghi mã tham chiếu và căn cứ đối chiếu.</p>
             </div>
           </c:if>
 

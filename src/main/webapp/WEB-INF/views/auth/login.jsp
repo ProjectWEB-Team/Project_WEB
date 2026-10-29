@@ -14,6 +14,7 @@
     <link href="${pageContext.request.contextPath}/assets/css/ute-modern.css" rel="stylesheet">
 </head>
 <body class="ute-auth">
+<a class="ute-auth-home" href="${pageContext.request.contextPath}/"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/></svg>Trang chủ</a>
 <main class="container ute-auth-main">
     <div class="ute-auth-layout">
         <section class="ute-auth-brand" aria-label="UTEexpress"><jsp:include page="/WEB-INF/views/layout/logo.jsp" /><p>Giao nhanh. Trọn niềm tin.</p></section>
@@ -23,7 +24,7 @@
                     <h1 class="h3 mb-2">Đăng nhập</h1>
                     <p class="text-muted mb-4">Gửi hàng và theo dõi hành trình tại một nơi.</p>
                     <c:if test="${not empty param.error}"><div class="alert alert-danger" role="alert">Tên đăng nhập hoặc mật khẩu không đúng.</div></c:if>
-                    <c:if test="${not empty param.googleError}"><div class="alert alert-danger" role="alert">Không thể đăng nhập bằng Google. Vui lòng thử lại hoặc chọn cách đăng nhập khác.</div></c:if>
+                    <c:if test="${not empty param.googleError}"><div class="alert alert-danger" role="alert">${param.googleError == 'email' ? 'Email Google này đã có tài khoản đăng ký bằng cách khác. Hãy đăng nhập bằng tên đăng nhập hoặc số điện thoại đã dùng.' : 'Không thể đăng nhập bằng Google. Vui lòng thử lại hoặc chọn cách đăng nhập khác.'}</div></c:if>
                     <c:if test="${not empty param.phoneError}"><div class="alert alert-danger" role="alert">Không thể đăng nhập bằng điện thoại. Vui lòng thử lại hoặc chọn cách đăng nhập khác.</div></c:if>
                     <c:if test="${not empty param.logout}"><div class="alert alert-success" role="status">Bạn đã đăng xuất.</div></c:if>
                     <c:if test="${not empty param.reset}"><div class="alert alert-success" role="status">Đã đặt lại mật khẩu. Hãy đăng nhập bằng mật khẩu mới.</div></c:if>

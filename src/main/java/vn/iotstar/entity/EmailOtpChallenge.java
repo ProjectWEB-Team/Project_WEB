@@ -24,24 +24,33 @@ public class EmailOtpChallenge {
     @Version private long version;
 
     protected EmailOtpChallenge() { }
-    public static EmailOtpChallenge create(User user, String purpose, String hash, Instant now, OtpProperties policy) {
+    public static EmailOtpChallenge create(User user, String purpose, String targetEmail, String hash, Instant now, OtpProperties policy) {
         EmailOtpChallenge challenge = new EmailOtpChallenge();
         challenge.id = UUID.randomUUID(); challenge.user = user; challenge.sendWindowStartedAt = now;
-        challenge.issue(purpose, hash, now, policy);
+        challenge.issue(purpose, targetEmail, hash, now, policy);
         return challenge;
     }
-    public void issue(String purpose, String hash, Instant now, OtpProperties policy) {
+    public static EmailOtpChallenge create(User user, String purpose, String hash, Instant now, OtpProperties policy) {
+        return create(user, purpose, user != null ? user.getEmail() : null, hash, now, policy);
+    }
+    public void issue(String purpose, String targetEmail, String hash, Instant now, OtpProperties policy) {
         if (lastSentAt != null && now.isBefore(lastSentAt.plus(policy.getResendCooldown()))) throw limited();
         if (!now.isBefore(sendWindowStartedAt.plus(policy.getSendWindow()))) {
             sendWindowStartedAt = now; sendCount = 0;
         }
         if (sendCount >= policy.getMaxSends()) throw limited();
-        this.purpose = purpose; email = user.getEmail(); codeHash = hash;
+        this.purpose = purpose;
+        this.email = (targetEmail != null && !targetEmail.isBlank()) ? targetEmail : (user != null ? user.getEmail() : "");
+        codeHash = hash;
         expiresAt = now.plus(policy.getLifetime()); consumedAt = null; failedAttempts = 0;
         lastSentAt = now; sendCount++;
     }
+    public void issue(String purpose, String hash, Instant now, OtpProperties policy) {
+        issue(purpose, user != null ? user.getEmail() : null, hash, now, policy);
+    }
     public boolean usable(String requiredPurpose, Instant now, int maxAttempts) {
-        return purpose.equals(requiredPurpose) && email.equals(user.getEmail()) && consumedAt == null
+        boolean emailMatch = "VERIFY_EMAIL".equals(purpose) || email.equals(user.getEmail());
+        return purpose.equals(requiredPurpose) && emailMatch && consumedAt == null
                 && now.isBefore(expiresAt) && failedAttempts < maxAttempts && user.isAccountNonLocked();
     }
     public void reject() { failedAttempts++; }

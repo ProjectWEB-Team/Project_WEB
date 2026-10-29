@@ -21,7 +21,7 @@
     <div class="ute-app-head">
         <div>
             <h1>Đơn đã gửi của tôi</h1>
-            <p>Theo dõi trạng thái toàn trình, đối soát tiền thu hộ COD và quản lý tất cả vận đơn bạn đã tạo.</p>
+            <p>Theo dõi vận đơn và tiền thu hộ COD.</p>
         </div>
         <div class="ute-app-head-actions">
             <form method="get" class="m-0">
@@ -40,7 +40,7 @@
     <section class="ute-app-card">
         <div class="ute-app-card-head">
             <h2>Danh sách vận đơn đã gửi (${shipments.totalElements} đơn)</h2>
-            <p>Nhấp vào mã vận đơn hoặc nút Xem chi tiết để xem lộ trình bàn giao, hủy đơn hoặc thanh toán phụ thu.</p>
+            <p>Bấm vào mã vận đơn để xem chi tiết.</p>
         </div>
         <c:choose>
             <c:when test="${shipments.totalElements == 0}"><p class="mb-0 text-ute-muted">Chưa có đơn nào.</p></c:when>

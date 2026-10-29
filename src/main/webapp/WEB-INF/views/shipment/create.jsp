@@ -22,7 +22,7 @@
 
     <p class="ute-hero-eyebrow"><span class="ute-hero-eyebrow-bar"></span>UTE<span class="text-accent">Express</span></p>
     <h1 class="h3 mb-1">Tạo vận đơn</h1>
-    <p class="text-ute-muted mb-4">Điền thông tin, xem báo giá rồi chọn cách gửi hàng. Bạn có thể quay lại để chỉnh sửa trước khi tạo đơn.</p>
+    <p class="text-ute-muted mb-4">Điền thông tin, xem báo giá rồi chọn cách gửi hàng.</p>
     <nav id="shipment-step-navigation" aria-label="Các bước tạo vận đơn" hidden>
         <ol class="shipment-steps">
             <li><button type="button" data-step-target="0" aria-controls="shipment-step-1">1. Người gửi và nhận</button></li>
@@ -40,7 +40,7 @@
         <c:if test="${not empty quote}"><input type="hidden" name="quoteReference" value="<c:out value='${quoteReference}'/>"></c:if>
         <section id="shipment-step-1" data-shipment-step="0" class="card-ute p-4 mb-3" aria-labelledby="shipment-step-title-1">
             <h2 id="shipment-step-title-1" class="h5 text-ute-primary" tabindex="-1">1. Người gửi và người nhận</h2>
-            <p class="small text-ute-muted">Địa chỉ theo địa giới từ 01/07/2025: 34 tỉnh/thành và 3.321 phường/xã. Chọn tỉnh/thành, phường/xã rồi nhập số nhà, tên đường hoặc thôn/ấp.</p>
+            <p class="small text-ute-muted">Địa giới từ 01/07/2025: 34 tỉnh/thành, 3.321 phường/xã.</p>
             <fieldset class="row g-3 mb-4" data-address-group="sender">
                 <legend class="h6 mt-3">Thông tin người gửi</legend>
                 <div class="col-md-6"><label class="form-label" for="senderName">Họ và tên</label><form:input id="senderName" path="senderName" cssClass="form-control" cssErrorClass="form-control is-invalid" htmlEscape="true" required="required" maxlength="100" autocomplete="name"/><form:errors path="senderName" cssClass="invalid-feedback d-block" htmlEscape="true"/></div>
@@ -87,11 +87,11 @@
                 <div class="col-12"><p id="receiver-area-status" class="small text-ute-muted mb-0" role="status" aria-live="polite">Chọn địa chỉ để tự xác định vùng tính cước.</p></div>
                 <div class="col-12"><label class="form-label" for="receiverAddress">Địa chỉ chi tiết (Số nhà, tên đường)</label><form:input id="receiverAddress" path="receiverAddress" cssClass="form-control" cssErrorClass="form-control is-invalid" htmlEscape="true" required="required" maxlength="180" placeholder="Ví dụ: 12 Nguyễn Huệ, tòa nhà A, tầng 2" autocomplete="address-line1"/><form:errors path="receiverAddress" cssClass="invalid-feedback d-block" htmlEscape="true"/><div class="form-text">Không nhập lại tỉnh/thành và phường/xã đã chọn.</div></div>
             </fieldset>
-            <noscript><p class="alert alert-warning">Vui lòng bật JavaScript để chọn địa chỉ liên kết và xem từng bước tạo đơn.</p></noscript>
+            <noscript><p class="alert alert-warning">Cần bật JavaScript để tạo đơn.</p></noscript>
         </section>
         <section id="shipment-step-2" data-shipment-step="1" class="card-ute p-4 mb-3" aria-labelledby="shipment-step-title-2">
             <h2 id="shipment-step-title-2" class="h5 text-ute-primary" tabindex="-1">2. Thông tin kiện hàng, Dịch vụ vận chuyển &amp; Thu hộ COD</h2>
-            <p class="small text-ute-muted">Chọn gói dịch vụ phù hợp với thời gian toàn trình mong muốn và khai báo khối lượng, kích thước thực tế của kiện hàng.</p>
+            <p class="small text-ute-muted">Chọn gói dịch vụ và khai báo khối lượng, kích thước thực tế.</p>
             <div class="row g-3">
                         <div class="col-md-4"><label class="form-label" for="serviceCode">Dịch vụ</label><form:select id="serviceCode" path="serviceCode" required="required" cssClass="form-select" cssErrorClass="form-select is-invalid"><form:option value="STANDARD" label="Tiêu chuẩn"/><form:option value="FAST" label="Nhanh"/><form:option value="EXPRESS" label="Hỏa tốc"/></form:select><form:errors path="serviceCode" cssClass="invalid-feedback d-block" htmlEscape="true"/></div>
 
@@ -107,12 +107,12 @@
         </section>
         <section id="shipment-step-3" data-shipment-step="2" class="card-ute p-4 mb-3" aria-labelledby="shipment-step-title-3">
             <h2 id="shipment-step-title-3" class="h5 text-ute-primary" tabindex="-1">3. Chi tiết cước phí vận chuyển &amp; Hình thức thanh toán</h2>
-            <p class="small text-ute-muted">Báo giá được tính tự động theo tuyến và bảng giá hiện hành. Chọn bên trả cước và phương thức thanh toán bên dưới.</p>
+            <p class="small text-ute-muted">Cước tính tự động theo tuyến và bảng giá hiện hành.</p>
             <div class="row g-3">
                         <div class="col-md-6"><label class="form-label" for="feePayer">Người trả cước</label><form:select id="feePayer" path="feePayer" required="required" cssClass="form-select" cssErrorClass="form-select is-invalid"><form:option value="SENDER" label="Người gửi"/><form:option value="RECEIVER" label="Người nhận"/></form:select><form:errors path="feePayer" cssClass="invalid-feedback d-block" htmlEscape="true"/></div>
-                        <div class="col-md-6"><label class="form-label" for="paymentMethod">Hình thức</label><form:select id="paymentMethod" path="paymentMethod" required="required" cssClass="form-select" cssErrorClass="form-select is-invalid"><form:option value="VNPAY" label="Trực tuyến (demo)"/><form:option value="CASH" label="Tiền mặt"/></form:select><form:errors path="paymentMethod" cssClass="invalid-feedback d-block" htmlEscape="true"/></div>
+                        <div class="col-md-6"><label class="form-label" for="paymentMethod">Hình thức</label><form:select id="paymentMethod" path="paymentMethod" required="required" cssClass="form-select" cssErrorClass="form-select is-invalid"><form:option value="VNPAY" label="Trực tuyến (VNPay)"/><form:option value="CASH" label="Tiền mặt"/></form:select><form:errors path="paymentMethod" cssClass="invalid-feedback d-block" htmlEscape="true"/></div>
             </div>
-            <p class="small text-ute-muted mt-3 mb-0">Tiền mặt do người gửi trả được thu khi shipper lấy hàng hoặc khi bạn mang ra bưu cục. Người nhận trả cước thì thu khi giao hàng. Không thu tiền lúc tạo đơn.</p>
+            <p class="small text-ute-muted mt-3 mb-0">Tiền mặt: thu khi shipper lấy hàng hoặc khi bạn ra bưu cục. Người nhận trả cước: thu khi giao. Không thu lúc tạo đơn.</p>
             <p class="small text-ute-muted mt-2">Nếu người nhận trả cước, chọn hình thức tiền mặt.</p>
             <c:if test="${not empty quote}">
                 <div id="shipment-quote" class="ute-quote-card">

@@ -5,7 +5,7 @@
 
 <main class="container-fluid px-lg-4 py-4 flex-grow-1">
     <h1 class="h3 mb-1 text-ute-dark">Mạng lưới bưu cục và tuyến</h1>
-    <p class="text-ute-muted ute-network-intro">Cây 3 cấp: SOC → hub vùng → bưu cục giao. Mã, loại và cấp không đổi sau khi tạo. Bưu cục không bị xoá, chỉ ngừng hoạt động khi không còn đơn, nhân viên, bao, chuyến, phiếu bàn giao hay quy tắc định tuyến nào phụ thuộc.</p>
+    <p class="text-ute-muted ute-network-intro">Cây 3 cấp: SOC → hub vùng → bưu cục giao. Mã, loại và cấp không đổi sau khi tạo. Bưu cục chỉ ngừng hoạt động khi không còn dữ liệu phụ thuộc.</p>
 
     <c:if test="${not empty successMessage}"><div class="alert alert-success" role="status"><c:out value="${successMessage}"/></div></c:if>
     <c:if test="${not empty errorMessage}"><div class="alert alert-danger" role="alert"><c:out value="${errorMessage}"/></div></c:if>
