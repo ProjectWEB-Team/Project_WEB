@@ -24,7 +24,7 @@ public class OtpConfiguration {
         if ("local-inbox".equals(properties.getDeliveryMode())) {
             if (!environment.acceptsProfiles(Profiles.of("otp-local")))
                 throw new IllegalStateException("Local OTP delivery requires the otp-local profile");
-            Path inbox = Path.of(".local", "otp-inbox").toAbsolutePath().normalize();
+            Path inbox = Path.of(properties.getInboxDir() != null ? properties.getInboxDir() : ".local/otp-sms").toAbsolutePath().normalize();
             return (id, phone, code, expiry) -> {
                 try {
                     Files.createDirectories(inbox);

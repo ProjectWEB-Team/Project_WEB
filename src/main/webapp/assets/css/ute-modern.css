@@ -113,6 +113,12 @@ main button:not(.btn):hover { background: #2A3F5F; }
 .alert { border: 0; border-radius: var(--r-md); font-weight: 500; }
 .alert-danger { background: #FDE2E2; color: #991B1B; }
 .alert-success { background: #DDF3E4; color: #14532D; }
+
+/* ---------- Navbar user pill ---------- */
+.ute-user-name { text-decoration: none !important; color: var(--ink) !important; font-weight: 600; }
+.ute-user-name:hover { text-decoration: underline; text-underline-offset: 3px; }
+.ute-user-avatar-link { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; cursor: pointer; }
+.ute-user-avatar-link:hover .ute-user-avatar { background: var(--tint); }
 .alert-warning { background: #FFF1D6; color: #7A4A00; }
 .alert-info { background: #DDEBFF; color: #0F3D78; }
 .alert-danger::before { content: "✕ "; font-weight: 700; }
