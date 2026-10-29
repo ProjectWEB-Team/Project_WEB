@@ -81,6 +81,8 @@ public class SecurityConfig {
                         .requestMatchers("/", "/home", "/tracking/**", "/pricing", "/calculator/**", "/auth/**", "/login",
                                 "/register", "/oauth2/authorization/google", "/login/oauth2/code/google",
                                 "/assets/**", "/webjars/**", "/error").permitAll()
+                        // VNPay calls these itself; both trust only the signed parameters.
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/payment/vnpay/return", "/payment/vnpay/ipn").permitAll()
                         .requestMatchers("/ws", "/ws/**").authenticated()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/manager/**").hasAnyRole("ADMIN", "MANAGER")

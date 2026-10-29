@@ -212,6 +212,50 @@ public class ShipmentServiceImpl implements ShipmentService {
 
     @Override
     @Transactional(readOnly = true)
+    public java.math.BigDecimal onlinePaymentAmount(Long shipmentId) {
+        AuthenticatedActor actor = AuthenticatedActor.requireCurrent();
+        Shipment shipment = shipmentRepository.findById(shipmentId).orElseThrow(ShipmentAccessDeniedException::new);
+        if (!shipment.getSender().getId().equals(actor.userId())) {
+            throw new ShipmentAccessDeniedException();
+        }
+        Payment payment = paymentRepository.findFirstByShipmentIdAndPaymentType(shipmentId, SHIPPING_FEE)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment"));
+        if (!"SENDER".equals(payment.getPayerType()) || !"VNPAY".equals(payment.getMethod())) {
+            throw new IllegalArgumentException("Đơn này không thanh toán trực tuyến.");
+        }
+        if ("PAID".equals(payment.getStatus()) || shipment.getCurrentStatus() != ShipmentStatus.WAITING_FOR_PAYMENT) {
+            throw new IllegalArgumentException("Đơn không còn ở trạng thái chờ thanh toán.");
+        }
+        return payment.getAmount();
+    }
+
+    @Override
+    @Transactional
+    public vn.iotstar.dto.shipment.GatewayPaymentResult confirmGatewayPayment(Long shipmentId, String gatewayRef, java.math.BigDecimal paidAmount) {
+        Shipment shipment = shipmentRepository.findByIdForUpdate(shipmentId).orElse(null);
+        Payment payment = shipment == null ? null
+                : paymentRepository.findFirstByShipmentIdAndPaymentType(shipmentId, SHIPPING_FEE).orElse(null);
+        if (payment == null || !"SENDER".equals(payment.getPayerType()) || !"VNPAY".equals(payment.getMethod())) {
+            return vn.iotstar.dto.shipment.GatewayPaymentResult.NOT_FOUND;
+        }
+        if (payment.getAmount().compareTo(paidAmount) != 0) {
+            return vn.iotstar.dto.shipment.GatewayPaymentResult.AMOUNT_MISMATCH;
+        }
+        if ("PAID".equals(payment.getStatus())) {
+            return vn.iotstar.dto.shipment.GatewayPaymentResult.ALREADY_CONFIRMED;
+        }
+        if (shipment.getCurrentStatus() != ShipmentStatus.WAITING_FOR_PAYMENT) {
+            return vn.iotstar.dto.shipment.GatewayPaymentResult.NOT_PAYABLE;
+        }
+        payment.markPaid("VNPAY-" + gatewayRef);
+        shipment.confirmOnlinePayment(serverTime());
+        shipmentEventRepository.save(ShipmentEvent.of(shipment, shipment.getSender(),
+                "PAYMENT_CONFIRMED", "Thanh toán VNPay thành công"));
+        return vn.iotstar.dto.shipment.GatewayPaymentResult.CONFIRMED;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Page<ShipmentSummaryResponse> listMine(ShipmentStatus status, int page) {
         AuthenticatedActor actor = AuthenticatedActor.requireCurrent();
         PageRequest pageable = PageRequest.of(Math.max(page, 0), 10);
