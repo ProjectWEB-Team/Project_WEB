@@ -31,7 +31,7 @@
                     <a href="${pageContext.request.contextPath}/" class="ute-footer-logo-link" aria-label="UTEexpress — Trang chủ">
                         <jsp:include page="/WEB-INF/views/layout/logo.jsp" />
                     </a>
-                    <p class="ute-footer-brand-desc">Dịch vụ giao nhận hàng hóa nội địa — tạo đơn nhanh, cước phí minh bạch, theo dõi hành trình từng bước.</p>
+                    <p class="ute-footer-brand-desc">Giao nhận hàng nội địa: tạo đơn nhanh, cước rõ ràng, theo dõi từng bước.</p>
                 </div>
 
                 <!-- CỘT 2: DỊCH VỤ (w: 190px, all-caps "DỊCH VỤ") -->

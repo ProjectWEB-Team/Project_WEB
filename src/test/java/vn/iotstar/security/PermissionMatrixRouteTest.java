@@ -138,6 +138,7 @@ class PermissionMatrixRouteTest {
             new Route("POST", "/admin/overdue-returns", ADMIN),
             // Manager workspace.
             new Route("GET", "/manager/operations", MANAGER),
+            new Route("POST", "/manager/operations/handovers/{id}/reassign", MANAGER),
             new Route("GET", "/manager/operations/work/{kind}/{id}", MANAGER),
             new Route("GET", "/manager/reconciliation", MANAGER),
             new Route("GET", "/manager/reconciliation/detail", MANAGER),

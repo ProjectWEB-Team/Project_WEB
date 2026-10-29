@@ -5,7 +5,7 @@
 
 <main class="ute-staff flex-grow-1">
     <h1>Quản lý Bảng giá cước &amp; Phụ phí</h1>
-    <p class="ute-staff-sub">Giá gói đầu áp dụng cho khối lượng cơ bản; mỗi bước khối lượng thêm cộng "giá thêm". Chỉ dòng đang áp dụng mới được dùng để báo giá. Đơn đang báo giá dở sẽ được yêu cầu báo giá lại khi giá đổi.</p>
+    <p class="ute-staff-sub">Giá gói đầu áp dụng cho khối lượng cơ bản; mỗi bước thêm cộng "giá thêm". Chỉ dòng đang áp dụng được dùng để báo giá.</p>
 
     <c:if test="${not empty successMessage}"><div class="alert alert-success" role="status"><c:out value="${successMessage}"/></div></c:if>
     <c:if test="${not empty errorMessage}"><div class="alert alert-danger" role="alert"><c:out value="${errorMessage}"/></div></c:if>
@@ -13,7 +13,7 @@
     <section class="ute-app-card">
         <div class="ute-app-card-head">
             <h2>Danh mục chính sách giá cước theo Dịch vụ &amp; Tuyến vùng (${policies.size()} tuyến)</h2>
-            <p>Chỉnh sửa trực tiếp giá gói đầu, đơn giá bước vượt, tỷ lệ phí bảo hiểm (%) và phí thu hộ COD (%) rồi bấm Lưu trên từng dòng.</p>
+            <p>Sửa trực tiếp rồi bấm Lưu trên từng dòng.</p>
         </div>
         <div class="table-responsive">
         <table class="table ute-list-table align-middle">

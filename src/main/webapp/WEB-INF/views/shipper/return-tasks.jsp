@@ -16,7 +16,7 @@
     <div class="ute-app-head">
         <div>
             <h1>Nhiệm vụ giao hàng hoàn</h1>
-            <p>Trả kiện hàng hoàn về cho người gửi, thu các khoản phí còn thiếu và xác nhận đã trả hàng.</p>
+            <p>Trả hàng hoàn cho người gửi, thu phí còn thiếu và xác nhận.</p>
         </div>
         <a class="btn ute-btn-ghost" href="${pageContext.request.contextPath}/shipper/delivery-tasks">Quay lại giao hàng</a>
     </div>

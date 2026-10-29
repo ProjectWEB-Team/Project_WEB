@@ -173,8 +173,8 @@ class ShipmentJspRenderingTest {
 
     @ParameterizedTest
     @CsvSource({
-            "WAITING_FOR_PAYMENT,PENDING,VNPAY,SENDER,SELF_DROPOFF,Thanh toán cước trực tuyến",
-            "WAITING_FOR_HANDOVER,UNPAID,CASH,SENDER,HOME_PICKUP,Cước phí tiền mặt sẽ được thu khi bàn giao",
+            "WAITING_FOR_PAYMENT,PENDING,VNPAY,SENDER,SELF_DROPOFF,Thanh toán cước để đơn",
+            "WAITING_FOR_HANDOVER,UNPAID,CASH,SENDER,HOME_PICKUP,Cước tiền mặt thu khi bàn giao",
             "WAITING_FOR_HANDOVER,UNPAID,CASH,RECEIVER,SELF_DROPOFF,Cước phí sẽ được thu từ người nhận"
     })
     void detailRendersTheApplicablePaymentAndHandoverInstructions(ShipmentStatus status, String paymentStatus,

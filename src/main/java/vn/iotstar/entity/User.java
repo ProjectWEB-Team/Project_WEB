@@ -60,6 +60,11 @@ public class User implements UserDetails {
     public String getEmail() { return email; }
     public String getGoogleSubject() { return googleSubject; }
     public long getSecurityVersion() { return securityVersion; }
+    /** A customer who started signing up and never proved a phone, an email or a Google identity. */
+    public boolean isUnfinishedRegistration() {
+        return role == UserRole.ROLE_USER && "INACTIVE".equals(status) && googleSubject == null
+                && phoneVerifiedAt == null && emailVerifiedAt == null;
+    }
     public boolean isPhoneVerified() { return phoneVerifiedAt != null; }
     public boolean isEmailVerified() { return emailVerifiedAt != null; }
     public LocalDateTime getCreatedAt() { return createdAt; }

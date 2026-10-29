@@ -209,4 +209,5 @@
 
 </main>
 
+<jsp:include page="layout/contact-fab.jsp" />
 <jsp:include page="layout/footer.jsp" />

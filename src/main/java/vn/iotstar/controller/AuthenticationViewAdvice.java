@@ -13,11 +13,23 @@ import vn.iotstar.entity.User;
 public class AuthenticationViewAdvice {
     private final ObjectProvider<ClientRegistrationRepository> registrations;
     private final boolean emailEnabled;
+    private final ObjectProvider<vn.iotstar.service.AvatarService> avatars;
 
     public AuthenticationViewAdvice(ObjectProvider<ClientRegistrationRepository> registrations,
-                                    @Value("${uteexpress.mail.enabled:false}") boolean emailEnabled) {
+                                    @Value("${uteexpress.mail.enabled:false}") boolean emailEnabled,
+                                    ObjectProvider<vn.iotstar.service.AvatarService> avatars) {
         this.registrations = registrations;
         this.emailEnabled = emailEnabled;
+        this.avatars = avatars;
+    }
+
+    @ModelAttribute("userAvatarUrl")
+    public String userAvatarUrl(Authentication authentication) {
+        var service = avatars.getIfAvailable();
+        if (service != null && authentication != null && authentication.getPrincipal() instanceof User user && user.getId() != null) {
+            return service.urlFor(user.getId()).orElse(null);
+        }
+        return null;
     }
 
     @ModelAttribute("googleLoginEnabled")

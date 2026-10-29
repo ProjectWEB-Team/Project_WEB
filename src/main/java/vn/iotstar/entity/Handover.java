@@ -71,4 +71,6 @@ public class Handover {
     public Handover getReplacesHandover() { return replacesHandover; }
     public Handover getReplacementHandover() { return replacementHandover; }
     public TransportTrip getTransportTrip() { return transportTrip; }
+    public EmployeeProfile getSenderEmployee() { return senderEmployee; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
 }

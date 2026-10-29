@@ -58,6 +58,24 @@ public class ManagerOperationsServiceImpl implements ManagerOperationsService {
                 .orElseThrow(HubOperationAccessDeniedException::new);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.Map<String, Object> getHandoverDetail(Long id) {
+        Scope scope = resolveScope(AuthenticatedActor.requireCurrent());
+        if (id == null || id <= 0 || scope.hubIds().isEmpty()) throw new HubOperationAccessDeniedException();
+        return managerOperationsRepository.handoverDetail(scope.hubIds(), id).orElseThrow(HubOperationAccessDeniedException::new);
+    }
+
+    @Override
+    @Transactional
+    public Long reassignHandoverDriver(Long handoverId, Long driverUserId) {
+        Scope scope = resolveScope(AuthenticatedActor.requireCurrent());
+        if (handoverId == null || driverUserId == null || scope.hubIds().isEmpty()) throw new HubOperationAccessDeniedException();
+        Long created = managerOperationsRepository.reassignDriver(scope.hubIds(), handoverId, driverUserId);
+        if (created == null) throw new HubOperationAccessDeniedException();
+        return created;
+    }
+
     private Scope resolveScope(AuthenticatedActor actor) {
         if (actor.hasRole(UserRole.ROLE_ADMIN)) {
             List<Long> allHubIds = managerOperationsRepository.findAllActiveHubIds();

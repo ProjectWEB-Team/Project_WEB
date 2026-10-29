@@ -25,7 +25,7 @@
         <section class="ute-track-result" aria-live="polite">
             <div>
                 <h2 class="ute-track-error">Không tìm thấy mã <c:out value="${code}"/></h2>
-                <p class="mb-0">Kiểm tra lại từng ký tự trong mã. Mã có dạng UTX, ngày tạo và số thứ tự, ví dụ UTX-20261027-0001. Nếu vẫn không thấy, đơn có thể chưa được tạo thành công.</p>
+                <p class="mb-0">Kiểm tra lại mã. Mã có dạng UTX-20261027-0001.</p>
             </div>
         </section>
     </c:if>
@@ -41,7 +41,7 @@
                         <strong>Bưu cục hiện tại: <c:out value="${tracking.currentHubName}" default="Chưa đến bưu cục"/></strong>
                         <span>Thời gian giao dự kiến: chưa có ước tính.</span>
                     </div>
-                    <p class="ute-track-note">Lưu ý bảo mật: Trang tra cứu công khai chỉ hiển thị tiến trình vận chuyển của kiện hàng, ẩn họ tên và số điện thoại người gửi/nhận.</p>
+                    <p class="ute-track-note">Trang công khai ẩn tên và số điện thoại người gửi, người nhận.</p>
                 </div>
                 <div>
                     <h2 class="ute-track-events-title">Chi tiết hành trình vận đơn (${fn:length(tracking.events)} mốc cập nhật)</h2>

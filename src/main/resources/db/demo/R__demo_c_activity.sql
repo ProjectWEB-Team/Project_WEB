@@ -246,8 +246,8 @@ UPDATE dbo.parcel_containers SET status = N'LOADED' WHERE id = @c1;
 UPDATE dbo.parcel_containers SET status = N'SEALED' WHERE id = @c2;
 
 INSERT dbo.handovers (from_hub_id, to_hub_id, sender_employee_id, receiver_driver_id, expected_containers, accepted_containers, status, created_at, accepted_at)
-VALUES (@hcm, @south, @hubStaffHcm, @drvHcm, 1, 1, N'IN_TRANSIT', DATEADD(HOUR, -4, SYSDATETIME()), DATEADD(HOUR, -3, SYSDATETIME())),
-       (@hn,  @north, @hubStaffHn,  @drvHn,  1, 0, N'PENDING_ACCEPTANCE', DATEADD(HOUR, -1, SYSDATETIME()), NULL);
+VALUES (@hcm, @south, (SELECT id FROM dbo.employee_profiles WHERE user_id = @hubStaffHcm), @drvHcm, 1, 1, N'IN_TRANSIT', DATEADD(HOUR, -4, SYSDATETIME()), DATEADD(HOUR, -3, SYSDATETIME())),
+       (@hn,  @north, (SELECT id FROM dbo.employee_profiles WHERE user_id = @hubStaffHn),  @drvHn,  1, 0, N'PENDING_ACCEPTANCE', DATEADD(HOUR, -1, SYSDATETIME()), NULL);
 DECLARE @h1 BIGINT = (SELECT TOP 1 id FROM dbo.handovers WHERE from_hub_id = @hcm AND receiver_driver_id = @drvHcm ORDER BY id DESC);
 DECLARE @h2 BIGINT = (SELECT TOP 1 id FROM dbo.handovers WHERE from_hub_id = @hn AND receiver_driver_id = @drvHn ORDER BY id DESC);
 INSERT dbo.transport_trips (trip_code, origin_hub_id, destination_hub_id, driver_user_id, vehicle_id, departure_time, status, handover_id, accepted_at, started_at, accepted_by_user_id, started_by_user_id)

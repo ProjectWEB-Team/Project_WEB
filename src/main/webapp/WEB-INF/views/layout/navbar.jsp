@@ -74,7 +74,7 @@
                             <c:when test="${rail}">
                                 <div class="ute-sidebar-account">
                                     <div class="ute-sidebar-account-user">
-                                        <span class="ute-user-avatar${pageContext.request.isUserInRole('HUB_STAFF') ? '' : ' is-dark'}"><c:out value="${fn:toUpperCase(fn:substring(displayName, 0, 2))}" /></span>
+                                        <c:choose><c:when test="${not empty userAvatarUrl}"><img class="ute-user-avatar-img" src="${ctx}${userAvatarUrl}" alt="" width="32" height="32"></c:when><c:otherwise><span class="ute-user-avatar${pageContext.request.isUserInRole('HUB_STAFF') ? '' : ' is-dark'}"><c:out value="${fn:toUpperCase(fn:substring(displayName, 0, 2))}" /></span></c:otherwise></c:choose>
                                         <div class="ute-user-meta">
                                             <span class="ute-user-name" title="<c:out value='${me.name}' />"><c:out value="${displayName}" /></span>
                                             <span class="ute-user-role">
@@ -98,7 +98,7 @@
                             <c:otherwise>
                                 <div class="ute-user-pill">
                                     <a class="ute-user-avatar-link" href="${ctx}/user/profile">
-                                        <span class="ute-user-avatar"><c:out value="${fn:toUpperCase(fn:substring(displayName, 0, 2))}" /></span>
+                                        <c:choose><c:when test="${not empty userAvatarUrl}"><img class="ute-user-avatar-img" src="${ctx}${userAvatarUrl}" alt="" width="32" height="32"></c:when><c:otherwise><span class="ute-user-avatar"><c:out value="${fn:toUpperCase(fn:substring(displayName, 0, 2))}" /></span></c:otherwise></c:choose>
                                     </a>
                                     <div class="ute-user-meta">
                                         <a class="ute-user-name" href="${ctx}/user/profile" style="text-decoration: none;" title="<c:out value='${me.name}' />"><c:out value="${displayName}" /></a>

@@ -257,11 +257,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
   document.querySelectorAll('[data-open]').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      action = btn.dataset.open; password = '';
+      action = btn.dataset.open;
       modal.show();
       if (!btn.hasAttribute('data-secure')) { pane(action); return; }
-      // Changing the password needs the typed password itself, so it always asks.
-      if (unlocked && !(action === 'password' && needPass)) { ready(); }
+      // A password change needs the typed password; ask only if it was not given earlier on this page.
+      if (unlocked && !(action === 'password' && needPass && !password)) { ready(); }
       else if (needPass) { pane('pass'); }
       else { pane('otp'); post('/user/profile/step-up/start', {}).then(begin); }
     });

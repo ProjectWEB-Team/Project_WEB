@@ -152,8 +152,10 @@ class EmailAccountServiceTest {
         when(challenges.findByUserIdForUpdate(7L)).thenReturn(Optional.of(challenge));
         assertThat(at(NOW.plusSeconds(60)).register(form()).id()).isEqualTo(challenge.getId());
         var wrong = form(); wrong.setPassword("SomebodyElse!");
-        assertThatThrownBy(() -> at(NOW.plusSeconds(120)).register(wrong)).isInstanceOf(RegistrationException.class);
-        verify(users, never()).saveAndFlush(any());
+        when(users.saveAndFlush(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        at(NOW.plusSeconds(120)).register(wrong);
+        verify(users).delete(user); // different details replace the unfinished sign-up instead of being blocked by it
+        verify(users, times(1)).saveAndFlush(any());
     }
     @Test void invalidAndDuplicateRegistrationNeverSendsMail() {
         var invalid = form(); invalid.setPassword("é".repeat(37));

@@ -25,7 +25,7 @@
     <div class="ute-app-head">
         <div>
             <h1>Phí hoàn hàng và Phụ thu cân nặng (Vận đơn <c:out value="${fees.trackingNumber()}"/>)</h1>
-            <p>Hiển thị các khoản phí phát sinh khi kiện hàng bị hoàn trả về gốc hoặc chênh lệch khối lượng khi cân đo thực tế tại bưu cục.</p>
+            <p>Phí hoàn hàng và phụ thu chênh lệch khối lượng.</p>
         </div>
     </div>
     <c:set var="totalDue" value="${fees.forwardDue() + fees.returnDue() + fees.surchargeDue()}"/>
@@ -35,7 +35,7 @@
     <fmt:formatNumber value="${totalDue}" pattern="#,##0" var="totalFormatted"/>
     <c:choose>
         <c:when test="${totalDue == 0}">
-            <div id="shipment-fees-empty" class="ute-fee-alert" role="status">Hiện không có phí hoàn hoặc phụ thu cần thanh toán. Bạn có thể quay lại chi tiết để xem trạng thái đơn.</div>
+            <div id="shipment-fees-empty" class="ute-fee-alert" role="status">Không có khoản phí cần thanh toán.</div>
         </c:when>
         <c:otherwise>
             <div class="ute-fee-alert" role="status">Còn khoản chưa thanh toán: tổng <strong>${fn:replace(totalFormatted, ',', '.')} đ</strong>.</div>
@@ -71,7 +71,7 @@
                             <button type="submit" class="btn ute-btn-warm-outline w-100">Thanh toán qua VNPAY</button>
                             <div class="form-check mt-2">
                                 <input id="confirm-demo-${kind}" class="form-check-input" type="checkbox" name="confirmDemo" value="true" required>
-                                <label class="form-check-label small" for="confirm-demo-${kind}">Tôi xác nhận thanh toán VNPay mô phỏng, không phát sinh giao dịch ngân hàng thật.</label>
+                                <label class="form-check-label small" for="confirm-demo-${kind}">Tôi xác nhận thanh toán VNPay mô phỏng (không có giao dịch thật).</label>
                             </div>
                         </form>
                     </div>
