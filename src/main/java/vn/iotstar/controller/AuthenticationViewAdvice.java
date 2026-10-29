@@ -35,4 +35,14 @@ public class AuthenticationViewAdvice {
         }
         return null;
     }
+
+    @ModelAttribute("userDisplayName")
+    public String userDisplayName(Authentication authentication) {
+        if (authentication != null && authentication.getPrincipal() instanceof User user) {
+            if (user.getFullName() != null && !user.getFullName().isBlank()) {
+                return user.getFullName().trim();
+            }
+        }
+        return authentication != null && authentication.getName() != null ? authentication.getName() : "";
+    }
 }
