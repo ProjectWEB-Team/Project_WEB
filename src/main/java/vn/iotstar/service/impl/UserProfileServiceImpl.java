@@ -197,9 +197,12 @@ public class UserProfileServiceImpl implements UserProfileService {
                 throw new RegistrationException("Địa chỉ email không đúng định dạng.");
             }
             if (emailToSend.equalsIgnoreCase(user.getEmail())) {
-                throw new RegistrationException("Email mới trùng với email hiện tại.");
-            }
-            if (users.existsByEmail(emailToSend)) {
+                if (user.isEmailVerified()) {
+                    throw new RegistrationException("Email hiện tại đã được xác thực.");
+                }
+                // Xác thực lại email hiện tại (chưa verified) — cho phép gửi OTP,
+                // bỏ qua kiểm tra trùng email bên dưới vì email này thuộc về chính user.
+            } else if (users.existsByEmail(emailToSend)) {
                 throw new RegistrationException("Email này đã được sử dụng bởi tài khoản khác.");
             }
         } else {
