@@ -78,20 +78,6 @@ Kiểm tra thực tế sau khi có credentials:
 3. Quên mật khẩu bằng email đã xác thực, thử mã sai/hết hạn và đăng nhập bằng mật khẩu mới.
 4. Tạo/cập nhật đơn trên tài khoản có email đã xác thực, kiểm tra thư nhận và thư rác.
 
-## 5. Chọn dịch vụ OTP điện thoại ở Việt Nam
+## 5. OTP điện thoại
 
-**Đã bổ sung adapter SpeedSMS cho Verify/Notify.** Xem [hướng dẫn cấu hình và kiểm tra SMS](SPEEDSMS_SETUP.md). Token điền riêng trong `.local/sms-provider.properties` hoặc `/etc/uteexpress.env`; bật profile `sms` và bỏ `otp-local`. Chưa gửi SMS thật cho tới khi bạn cấu hình và thử trên số của mình.
-
-SMTP không gửi SMS. Chỉ bật gửi điện thoại thật sau khi chọn nhà cung cấp, được cấp khóa và hoàn tất kết nối API.
-
-| Phương án | Phù hợp khi | Cần chuẩn bị |
-|---|---|---|
-| [eSMS](https://esms.vn/) hoặc [SpeedSMS](https://speedsms.vn/) | Muốn gửi SMS tới số Việt Nam | Tài khoản dịch vụ, xác nhận hỗ trợ SMS OTP và đối tượng cá nhân/đồ án, điều kiện sender/brandname, khóa API, ngân sách gửi |
-| [Twilio Verify](https://www.twilio.com/en-us/verify) | Muốn dùng dịch vụ xác thực quốc tế | Tài khoản, kiểm tra khả năng gửi tới Việt Nam, giới hạn trial và các số được phép thử; Verify cần tích hợp cả API gửi và kiểm tra mã |
-| [Zalo Cloud](https://zalo.cloud/) | Đã có OA doanh nghiệp và mẫu tin được duyệt | OA, ứng dụng/khóa hoặc token, mẫu xác thực, điều kiện dịch vụ và tài khoản thanh toán |
-
-Khuyến nghị cho đồ án: làm Google + email thật trước; liên hệ eSMS/SpeedSMS để xác nhận có cấp thử nghiệm OTP cho tài khoản cá nhân hay không. Không mặc định có gói miễn phí, không cam kết giá hoặc khả năng nhận tin khi chưa được nhà cung cấp xác nhận. Chưa có OA thì Zalo thường cần thêm bước đăng ký/xác minh trước khi tích hợp.
-
-Sau khi chọn dịch vụ, cần tài liệu API, khóa tài khoản, sender/template được chấp thuận và số điện thoại thuộc quyền sử dụng của bạn để thử. Code điện thoại hiện có boundary `OtpDelivery`; nhà cung cấp gửi SMS trực tiếp có thể nối vào boundary đó. Không đổi SMTP thành SMS và không dùng mã giả lập để tuyên bố đã xác thực số điện thoại thật.
-
-Chưa bật Facebook theo lựa chọn Google trước. Không có khóa dịch vụ nào trong file mẫu này.
+Chưa bật. Khi có nhà cung cấp SMS được xác nhận, nối vào boundary `OtpDelivery`.
