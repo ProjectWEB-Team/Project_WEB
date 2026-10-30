@@ -2,6 +2,7 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <c:set var="ctx" value="${pageContext.request.contextPath}" />
 <c:set var="uteTopBar" value="true" scope="request" />
+<c:set var="canCreateShipment" value="${empty pageContext.request.userPrincipal or pageContext.request.isUserInRole('USER')}" />
 
 <jsp:include page="layout/header.jsp" />
 
@@ -22,7 +23,7 @@
                     <hr>
                     <div class="ute-action-row">
                         <h2>Bạn muốn gửi hàng?</h2>
-                        <div class="d-flex flex-wrap gap-3"><a class="btn btn-ute-accent" href="${ctx}/user/shipments/create">Tạo đơn gửi hàng</a><a class="btn btn-outline-secondary" href="${ctx}/pricing">Xem bảng giá</a></div>
+                        <div class="d-flex flex-wrap gap-3"><c:if test="${canCreateShipment}"><a class="btn btn-ute-accent" href="${ctx}/user/shipments/create">Tạo đơn gửi hàng</a></c:if><a class="btn btn-outline-secondary" href="${ctx}/pricing">Xem bảng giá</a></div>
                     </div>
                 </div>
             </div>
@@ -81,7 +82,7 @@
                             <li>Chọn dịch vụ: Tiêu chuẩn, Nhanh hoặc Hỏa tốc.</li>
                             <li>Xem báo giá và xác nhận đơn.</li>
                         </ul>
-                        <a class="btn btn-ute-accent mt-3" href="${ctx}/user/shipments/create">Tạo đơn gửi hàng</a>
+                        <c:if test="${canCreateShipment}"><a class="btn btn-ute-accent mt-3" href="${ctx}/user/shipments/create">Tạo đơn gửi hàng</a></c:if>
                     </div>
                     <div class="ute-mock" aria-label="Ví dụ báo giá">
                         <p class="ute-example-tag">Chi tiết cước phí <span class="badge badge-in-transit">Tiêu chuẩn</span></p>
@@ -197,6 +198,7 @@
     </section>
 
     <!-- BANNER KÊU GỌI HÀNH ĐỘNG (FIGMA cta-section: 1920x187) -->
+    <c:if test="${canCreateShipment}">
     <section class="ute-footer-cta-section" aria-labelledby="cta-title">
         <div class="ute-footer-cta-content">
             <div class="ute-footer-cta-text">
@@ -206,6 +208,7 @@
             <a class="ute-footer-cta-btn" href="${ctx}/user/shipments/create">Tạo đơn gửi hàng</a>
         </div>
     </section>
+    </c:if>
 
 </main>
 

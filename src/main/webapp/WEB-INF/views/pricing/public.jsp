@@ -94,7 +94,9 @@
         </c:choose>
         <div class="ute-price-note">
             <div><b>Lưu ý</b><p>Cước theo khối lượng thực tế. Có thể có phụ phí nếu bưu cục đo lại. Giá chính thức là giá khi tạo đơn.</p></div>
+            <c:if test="${empty pageContext.request.userPrincipal or pageContext.request.isUserInRole('USER')}">
             <a class="btn btn-ute-accent" href="${pageContext.request.contextPath}/user/shipments/create">Tạo đơn gửi hàng</a>
+            </c:if>
         </div>
     </section>
     </div>
