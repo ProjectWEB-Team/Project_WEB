@@ -87,7 +87,7 @@ Dự án tuân thủ nghiêm ngặt mô hình kiến trúc ba tầng chuẩn m�
   * Sử dụng cơ chế khóa chống trùng lặp yêu cầu (Idempotency Key) cho các thao tác quét mã vạch và giao dịch tiền tệ nhằm loại bỏ hiện tượng ghi nhận dữ liệu hai lần do lỗi mạng hoặc thao tác người dùng.
 * **Tầng dữ liệu (Data Access Layer):**
   * Quản trị dữ liệu qua Spring Data JPA và Hibernate ORM.
-  * Cấu trúc cơ sở dữ liệu quan hệ gồm 25 bảng nghiệp vụ được chuẩn hóa, quản lý lịch sử thay đổi cấu trúc tự động qua Flyway migrations (từ V1 đến V22).
+  * Cấu trúc cơ sở dữ liệu quan hệ gồm 25 bảng nghiệp vụ được chuẩn hóa, quản lý lịch sử thay đổi cấu trúc tự động qua Flyway migrations (từ V1 đến V24).
   * Sử dụng hệ quản trị cơ sở dữ liệu Microsoft SQL Server 2019+ trên cả môi trường phát triển cục bộ và dịch vụ Amazon RDS for SQL Server trên đám mây.
 
 ```text
@@ -147,7 +147,7 @@ Hệ thống thiết lập 6 vai trò chính (Canonical Roles) lưu trữ trong 
 * **Nền tảng phát triển:** Java 21 LTS, Spring Boot 3.3.4, Apache Maven, Tomcat 10.1 (embedded).
 * **Bảo mật và xác thực:** Spring Security 6, Google OAuth2 Client, thuật toán băm mật khẩu BCrypt.
 * **Giao diện người dùng:** JSP / JSTL 3.0 (Jakarta EE), Bootstrap 5.3, Bootstrap Icons, bản vẽ thiết kế nguyên mẫu trên Figma.
-* **Cơ sở dữ liệu:** Microsoft SQL Server 2019+ (phát triển nội bộ) và Amazon RDS for SQL Server (máy chủ đám mây), Flyway migration (V1 đến V22).
+* **Cơ sở dữ liệu:** Microsoft SQL Server 2019+ (phát triển nội bộ) và Amazon RDS for SQL Server (máy chủ đám mây), Flyway migration (V1 đến V24).
 * **Dịch vụ mạng và truyền thông:** JavaMailSender với Gmail SMTP (cổng 587 STARTTLS gửi mã OTP qua Outbox Worker), Spring WebSocket STOMP (thông báo thời gian thực).
 * **Kiểm thử tự động:** JUnit 5, Mockito, AssertJ, Spring Boot Test (tổng cộng 2.047 bài kiểm thử đơn vị và tích hợp chạy thành công 100%).
 * **Hạ tầng và vận hành:** Máy chủ đám mây AWS EC2 (Ubuntu Server 24.04 LTS), Amazon RDS for SQL Server, Nginx reverse proxy với chứng chỉ SSL Certbot, quy trình tự động hóa CI/CD qua GitHub Actions.
@@ -208,6 +208,8 @@ Khi kích hoạt hồ sơ dữ liệu mẫu (`demo`), hệ thống khởi tạo 
 | **Khách hàng gửi (`ROLE_USER`)** | `demo_sender` | `Demo@12345` | Khách hàng | Tạo đơn vận chuyển, tra cứu hành trình và quản lý ví COD |
 | **Khách hàng nhận (`ROLE_USER`)** | `demo_receiver` | `Demo@12345` | Khách hàng | Tra cứu hành trình bưu gửi và xác nhận đơn giao đến |
 
+> **Ghi chú thử nghiệm liên tỉnh:** Hệ thống có sẵn các tài khoản tương ứng tại chi nhánh Hà Nội (LOCAL2025-P01): demo_hub_hn, demo_shipper_hn, demo_driver_hn (mật khẩu chung: Demo@12345) để kiểm thử trọn vẹn luồng trung chuyển và giao nhận hai đầu Bắc - Nam.
+
 ---
 
 ## 5. Cấu trúc thư mục mã nguồn
@@ -225,7 +227,7 @@ Project_WEB/
 │   │   │   ├── service/         # Giao diện và lớp cài đặt xử lý logic nghiệp vụ
 │   │   │   └── worker/          # Tiến trình chạy ngầm quét hàng đợi Outbox gửi email OTP
 │   │   ├── resources/
-│   │   │   ├── db/migration/    # Kịch bản Flyway migration từ V1 đến V22
+│   │   │   ├── db/migration/    # Kịch bản Flyway migration từ V1 đến V24
 │   │   │   ├── db/demo/         # Dữ liệu bưu cục và tài khoản mẫu phục vụ thử nghiệm
 │   │   │   └── application*.properties # Cấu hình ứng dụng theo từng môi trường chạy
 │   │   └── webapp/
