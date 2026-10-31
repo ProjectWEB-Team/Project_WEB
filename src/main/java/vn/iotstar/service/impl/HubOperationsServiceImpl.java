@@ -72,6 +72,19 @@ public class HubOperationsServiceImpl implements HubOperationsService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public java.util.List<vn.iotstar.dto.hub.WaitingParcelResponse> waitingParcels() {
+        AuthenticatedActor actor = AuthenticatedActor.requireCurrent();
+        EmployeeProfile profile = requireActiveOperatorProfile(actor, "SORTER");
+        return hubOperationsRepository.findWaitingAtHub(profile.getHub().getId(), org.springframework.data.domain.PageRequest.of(0, 50)).stream()
+                .map(s -> new vn.iotstar.dto.hub.WaitingParcelResponse(s.getId(), s.getTrackingNumber(),
+                        s.getCurrentStatus() != ShipmentStatus.AT_HUB ? "Nhận kiện tại quầy (mục 1)"
+                                : profile.getHub().getId().equals(s.getDestinationHubId()) ? "Đã tới đích: gán shipper giao tại /hub/delivery-assignments"
+                                : "Phân loại (mục 2)"))
+                .toList();
+    }
+
+    @Override
     @Transactional
     public void receiveAtHub(InboundShipmentCommand command) {
         AuthenticatedActor actor = AuthenticatedActor.requireCurrent();

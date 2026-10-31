@@ -9,4 +9,5 @@ public interface HubOperationsService {
     void receiveAtHub(InboundShipmentCommand command);
     SortingDecisionResponse sortAtHub(SortShipmentCommand command);
     RouteDiagnosticResponse getRouteDiagnostic(Long shipmentId);
+    java.util.List<vn.iotstar.dto.hub.WaitingParcelResponse> waitingParcels();
 }
