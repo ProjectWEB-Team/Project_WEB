@@ -32,6 +32,7 @@ public class HubOperationsController {
         if (!model.containsAttribute("inboundShipmentCommand")) {
             model.addAttribute("inboundShipmentCommand", InboundShipmentCommand.pickupReceipt(null));
         }
+        model.addAttribute("waitingParcels", hubOperationsService.waitingParcels());
         return "hub/sorter-queue";
     }
 

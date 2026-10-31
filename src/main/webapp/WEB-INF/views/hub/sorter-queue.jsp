@@ -21,8 +21,25 @@
         </div>
     </c:if>
     <section class="ute-staff-card">
+        <h2 class="ute-staff-h2">Kiện đang chờ xử lý tại hub của bạn</h2>
+        <p class="ute-staff-note">Lấy ID ở cột đầu rồi nhập vào các mục bên dưới.</p>
+        <c:choose>
+            <c:when test="${empty waitingParcels}"><p class="ute-staff-note">Chưa có kiện nào chờ.</p></c:when>
+            <c:otherwise>
+                <table class="table table-sm">
+                    <thead><tr><th>ID đơn hàng</th><th>Mã vận đơn</th><th>Việc cần làm</th></tr></thead>
+                    <tbody>
+                    <c:forEach var="p" items="${waitingParcels}">
+                        <tr><td><strong><c:out value="${p.id}"/></strong></td><td><c:out value="${p.trackingNumber}"/></td><td><c:out value="${p.action}"/></td></tr>
+                    </c:forEach>
+                    </tbody>
+                </table>
+            </c:otherwise>
+        </c:choose>
+    </section>
+    <section class="ute-staff-card">
         <div>
-            <h2 class="ute-staff-h2">1. Nhận kiện hàng vào Hub &amp; Cân đo khối lượng thực tế</h2>
+            <h2 class="ute-staff-h2">1.Nhận kiện hàng vào Hub &amp; Cân đo khối lượng thực tế</h2>
             <p class="ute-staff-note">Quét mã vận đơn, nhập số đo thực tế và tiền mặt thu tại quầy (nếu có).</p>
         </div>
         <form class="ute-form-grid" method="post" action="${pageContext.request.contextPath}/hub/inbound">

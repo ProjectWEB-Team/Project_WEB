@@ -37,6 +37,11 @@ public interface HubOperationsRepository extends JpaRepository<ShipmentRoute, Lo
     List<HubRoutingRule> findActiveRules(@Param("currentHubId") Long currentHubId,
                                          @Param("region") String region, @Param("province") String province);
 
+    @Query("select s from Shipment s where s.onHold = false and ((s.currentHubId = :hubId and s.direction = 'FORWARD' "
+            + "and s.currentStatus = vn.iotstar.entity.ShipmentStatus.AT_HUB) or (s.pickupMethod = 'SELF_DROPOFF' and s.originHubId = :hubId "
+            + "and s.currentStatus = vn.iotstar.entity.ShipmentStatus.WAITING_FOR_HANDOVER)) order by s.id")
+    List<Shipment> findWaitingAtHub(@Param("hubId") Long hubId, org.springframework.data.domain.Pageable page);
+
     @Query("select h from Hub h where h.id = :id and h.status = 'ACTIVE'")
     Optional<vn.iotstar.entity.Hub> findActiveHub(@Param("id") Long id);
 
